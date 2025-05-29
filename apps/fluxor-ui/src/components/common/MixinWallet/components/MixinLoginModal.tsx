@@ -8,6 +8,7 @@ import { useAppStore, useTokenStore } from "../../../../store";
 import { Button } from "~/components/ui/button";
 import { IconX } from "@tabler/icons-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "~/components/ui/dialog";
+import Image from "next/image";
 
 export function MixinLoginModal(props: { isOpen: boolean; onClose: () => void }) {
   const { user, getMixinClient, setKeystore, getMe, updateBalances } = useAppStore((s) => ({
@@ -184,10 +185,12 @@ export function MixinLoginModal(props: { isOpen: boolean; onClose: () => void })
             <div className="text-center space-y-4">
               <p className="text-sm text-muted-foreground">请使用 Mixin Messenger 扫描二维码登录</p>
               <div className="flex justify-center">
-                <img
+                <Image
                   src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(loginCode)}`}
                   alt="Login QR Code"
                   className="w-48 h-48"
+                  width={200}
+                  height={200}
                 />
               </div>
               <p className="text-sm text-muted-foreground">或点击下方链接</p>

@@ -5,10 +5,12 @@ import { useRouter } from "next/router";
 import { useAppStore, useMrgnlendStore, useUiStore } from "~/store";
 import { Desktop, Mobile } from "~/mediaQueryUtils";
 import { ActionBox } from "~/components";
-import { ActionType } from "@mrgnlabs/marginfi-v2-ui-state";
+import { ActionType, ExtendedBankInfo } from "@mrgnlabs/marginfi-v2-ui-state";
 import { LendingModes, useConnection } from "@mrgnlabs/mrgn-utils";
 import dynamic from "next/dynamic";
 import { initComputerClient } from "@mrgnlabs/mrgn-common";
+import { AnnouncementBankItem, AnnouncementCustomItem, Announcements } from "~/components/common/Announcements";
+import { AnnouncementsDialog } from "~/components/common/Announcements";
 
 const AssetsList = dynamic(async () => (await import("~/components/desktop/AssetList")).AssetsList, {
   ssr: false,
@@ -55,6 +57,26 @@ export default function HomePage() {
     state.stakeAccounts,
   ]);
 
+  const annoucements = React.useMemo(() => {
+    let banks: (ExtendedBankInfo | undefined)[] = [];
+
+    if (marginfiClient?.banks) {
+      const latestBankKeys = Array.from(marginfiClient.banks.keys()).splice(0, 3);
+      banks.push(
+        ...latestBankKeys
+          .map((bankKey) => extendedBankInfos.find((bank) => bank.address.toBase58() === bankKey))
+          .filter((bank): bank is ExtendedBankInfo => bank !== undefined)
+      );
+    }
+
+    banks = banks.filter((bank): bank is ExtendedBankInfo => bank !== undefined);
+    return [
+      ...banks.map((bank) => ({
+        bank: bank,
+      })),
+    ] as (AnnouncementBankItem | AnnouncementCustomItem)[];
+  }, [extendedBankInfos, marginfiClient]);
+
   return (
     <>
       <Desktop>
@@ -63,6 +85,9 @@ export default function HomePage() {
           <>
             <div className="flex flex-col h-full justify-start content-start w-full xl:w-4/5 xl:max-w-7xl gap-4">
               <div className="p-4 space-y-4 w-full">
+                <Announcements items={annoucements} />
+                <AnnouncementsDialog />
+
                 <ActionBox.BorrowLend
                   useProvider={true}
                   lendProps={{
@@ -98,8 +123,8 @@ export default function HomePage() {
         {!isStoreInitialized && <Loader label="Loading mrgnlend..." className="mt-16" />}
         {isStoreInitialized && (
           <>
-            {/* <Announcements items={annoucements} />
-            <AnnouncementsDialog /> */}
+            <Announcements items={annoucements} />
+            <AnnouncementsDialog />
             <div className="p-4 space-y-4 w-full">
               <ActionBox.BorrowLend
                 useProvider={true}

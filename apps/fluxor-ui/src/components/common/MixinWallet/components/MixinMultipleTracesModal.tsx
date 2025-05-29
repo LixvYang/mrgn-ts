@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@mrgnlabs/mrgn-ui/src/components/ui/dialog";
 import { useEffect, useState } from "react";
 import { useAppStore } from "../../../../store";

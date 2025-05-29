@@ -22,7 +22,9 @@ import {
   MixinApi,
   newMixinInvoice,
   OperationTypeSystemCall,
+  OperationTypeUserDeposit,
   uniqueConversationID,
+  userIdToBytes,
 } from "@mixin.dev/mixin-node-sdk";
 
 import { AccountSummary, ActionType, ExtendedBankInfo } from "@mrgnlabs/marginfi-v2-ui-state";
@@ -53,8 +55,6 @@ import {
 import { SimulationStatus } from "~/components/action-box-v2/utils";
 import {
   ComputerUserResponse,
-  computerEmptyExtra,
-  buildInvoiceWithEntries,
   ComputerInfoResponse,
   initComputerClient,
   XIN_ASSET_ID,
@@ -302,6 +302,9 @@ async function handleRepayMixinSimulation({
     // 4. 构建最终交易
     const invoice = newMixinInvoice(getComputerRecipient());
     if (!invoice) throw new Error("invalid invoice recipient!");
+    const referenceExtra = Buffer.from(
+      buildComputerExtra(computerInfo.members.app_id, OperationTypeUserDeposit, userIdToBytes(computerAccount.id))
+    );
 
     let resultTrace = "";
     if (versionedTransactions.length >= 1 && actionType === ActionType.Repay) {
@@ -357,7 +360,7 @@ async function handleRepayMixinSimulation({
         trace_id: uniqueConversationID(repayTrace, balance.asset_id),
         asset_id: balance.asset_id,
         amount: amount.toString(),
-        extra: computerEmptyExtra,
+        extra: referenceExtra,
         index_references: [],
         hash_references: [],
       });
@@ -492,7 +495,7 @@ async function handleRepayMixinSimulation({
           trace_id: uniqueConversationID(repayCollatTrace, balance.asset_id),
           asset_id: balance.asset_id,
           amount: amount.toString(),
-          extra: computerEmptyExtra,
+          extra: referenceExtra,
           index_references: [],
           hash_references: [],
         });
@@ -557,7 +560,7 @@ async function handleRepayMixinSimulation({
           trace_id: uniqueConversationID(repayCollatTrace, balance.asset_id),
           asset_id: balance.asset_id,
           amount: amount.toString(),
-          extra: computerEmptyExtra,
+          extra: referenceExtra,
           index_references: [],
           hash_references: [],
         });

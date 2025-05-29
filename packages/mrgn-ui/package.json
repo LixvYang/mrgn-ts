@@ -18,7 +18,7 @@
     "@jup-ag/api": "^6.0.38",
     "@jup-ag/common": "^6.1.0",
     "@meso-network/meso-js": "^0.1.2",
-    "@mixin.dev/mixin-node-sdk": "^7.4.1",
+    "@mixin.dev/mixin-node-sdk": "^7.4.2",
     "@mrgnlabs/marginfi-client-v2": "workspace:*",
     "@mrgnlabs/marginfi-v2-ui-state": "workspace:*",
     "@mrgnlabs/mrgn-common": "workspace:*",

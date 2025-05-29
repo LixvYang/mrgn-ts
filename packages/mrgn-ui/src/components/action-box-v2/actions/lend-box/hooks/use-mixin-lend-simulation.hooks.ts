@@ -17,12 +17,15 @@ import {
   attachInvoiceEntry,
   attachStorageEntry,
   checkSystemCallSize,
+  encodeMtgExtra,
   formatUnits,
   getInvoiceString,
   MixinApi,
   newMixinInvoice,
   OperationTypeSystemCall,
+  OperationTypeUserDeposit,
   uniqueConversationID,
+  userIdToBytes,
 } from "@mixin.dev/mixin-node-sdk";
 
 import { AccountSummary, ActionType, ExtendedBankInfo } from "@mrgnlabs/marginfi-v2-ui-state";
@@ -293,6 +296,9 @@ async function handleLendMixinSimulation({
     // 4. 构建最终交易
     const invoice = newMixinInvoice(getComputerRecipient());
     if (!invoice) throw new Error("invalid invoice recipient!");
+    const referenceExtra = Buffer.from(
+      buildComputerExtra(computerInfo.members.app_id, OperationTypeUserDeposit, userIdToBytes(computerAccount.id))
+    );
 
     let resultTrace = "";
     if (versionedTransactions.length === 1) {
@@ -347,7 +353,7 @@ async function handleLendMixinSimulation({
           trace_id: uniqueConversationID(depositTrace, balance.asset_id),
           asset_id: balance.asset_id,
           amount: amount.toString(),
-          extra: computerEmptyExtra,
+          extra: referenceExtra,
           index_references: [],
           hash_references: [],
         });
@@ -606,7 +612,7 @@ async function handleLendMixinSimulation({
         trace_id: uniqueConversationID(depositTrace, balance.asset_id),
         asset_id: balance.asset_id,
         amount: amount.toString(),
-        extra: computerEmptyExtra,
+        extra: referenceExtra,
         index_references: [],
         hash_references: [],
       });

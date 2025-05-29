@@ -20,6 +20,12 @@ import { useMrgnlendStore, useUiStore } from "~/store";
 
 import { OverlaySpinner } from "~/components/ui/overlay-spinner";
 import { Loader } from "~/components/ui/loader";
+import {
+  AnnouncementBankItem,
+  AnnouncementCustomItem,
+  AnnouncementsDialog,
+  Announcements,
+} from "~/components/common/Announcements";
 
 const AssetsList = dynamic(async () => (await import("~/components/desktop/AssetList")).AssetsList, {
   ssr: false,
@@ -48,25 +54,25 @@ export default function HomePage() {
     state.stakeAccounts,
   ]);
 
-  // const annoucements = React.useMemo(() => {
-  //   let banks: (ExtendedBankInfo | undefined)[] = [];
+  const annoucements = React.useMemo(() => {
+    let banks: (ExtendedBankInfo | undefined)[] = [];
 
-  //   if (marginfiClient?.banks) {
-  //     const latestBankKeys = Array.from(marginfiClient.banks.keys()).splice(0, 3);
-  //     banks.push(
-  //       ...latestBankKeys
-  //         .map((bankKey) => extendedBankInfos.find((bank) => bank.address.toBase58() === bankKey))
-  //         .filter((bank): bank is ExtendedBankInfo => bank !== undefined)
-  //     );
-  //   }
+    if (marginfiClient?.banks) {
+      const latestBankKeys = Array.from(marginfiClient.banks.keys()).splice(0, 3);
+      banks.push(
+        ...latestBankKeys
+          .map((bankKey) => extendedBankInfos.find((bank) => bank.address.toBase58() === bankKey))
+          .filter((bank): bank is ExtendedBankInfo => bank !== undefined)
+      );
+    }
 
-  //   banks = banks.filter((bank): bank is ExtendedBankInfo => bank !== undefined);
-  //   return [
-  //     ...banks.map((bank) => ({
-  //       bank: bank,
-  //     })),
-  //   ] as (AnnouncementBankItem | AnnouncementCustomItem)[];
-  // }, [extendedBankInfos, marginfiClient]);
+    banks = banks.filter((bank): bank is ExtendedBankInfo => bank !== undefined);
+    return [
+      ...banks.map((bank) => ({
+        bank: bank,
+      })),
+    ] as (AnnouncementBankItem | AnnouncementCustomItem)[];
+  }, [extendedBankInfos, marginfiClient]);
 
   return (
     <>
@@ -76,15 +82,15 @@ export default function HomePage() {
           <>
             <div className="flex flex-col h-full justify-start content-start w-full xl:w-4/5 xl:max-w-7xl gap-4">
               {/* {walletAddress && selectedAccount && isOverride && (
-                <Banner
-                  text={`Read-only view of ${selectedAccount.address.toBase58()} (owner: ${shortenAddress(
-                    walletAddress
-                  )}) - All actions are simulated`}
-                  backgroundColor="#DCE85D"
-                />
-              )}
+                  <Banner
+                    text={`Read-only view of ${selectedAccount.address.toBase58()} (owner: ${shortenAddress(
+                      walletAddress
+                    )}) - All actions are simulated`}
+                    backgroundColor="#DCE85D"
+                  />
+                )} */}
               <Announcements items={annoucements} />
-              <AnnouncementsDialog /> */}
+              <AnnouncementsDialog />
               <div className="p-4 space-y-4 w-full">
                 <ActionBox.BorrowLend
                   useProvider={true}
@@ -115,8 +121,8 @@ export default function HomePage() {
         {!isStoreInitialized && <Loader label="Loading mrgnlend..." className="mt-16" />}
         {isStoreInitialized && (
           <>
-            {/* <Announcements items={annoucements} />
-            <AnnouncementsDialog /> */}
+            <Announcements items={annoucements} />
+            <AnnouncementsDialog />
             <div className="p-4 space-y-4 w-full">
               <ActionBox.BorrowLend
                 useProvider={true}

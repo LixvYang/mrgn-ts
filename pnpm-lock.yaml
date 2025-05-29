@@ -101,8 +101,8 @@ importers:
         specifier: ^0.1.2
         version: 0.1.10
       '@mixin.dev/mixin-node-sdk':
-        specifier: ^7.4.1
-        version: 7.4.1(bufferutil@4.0.9)(debug@4.4.0)(utf-8-validate@5.0.10)
+        specifier: ^7.4.2
+        version: 7.4.2(bufferutil@4.0.9)(debug@4.4.0)(utf-8-validate@5.0.10)
       '@moongate/moongate-adapter':
         specifier: ^0.6.2
         version: 0.6.3(@react-native-async-storage/async-storage@1.24.0(react-native@0.71.8(@babel/core@7.26.9)(@babel/preset-env@7.26.9(@babel/core@7.26.9))(bufferutil@4.0.9)(react@18.3.1)(utf-8-validate@5.0.10)))(@solana/wallet-adapter-base@0.9.26(@solana/web3.js@1.98.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)))(@solana/web3.js@1.98.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(@types/react@18.3.18)(bufferutil@4.0.9)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.7.3)(use-sync-external-store@1.5.0(react@18.3.1))(utf-8-validate@5.0.10)(zod@3.24.2)
@@ -438,8 +438,8 @@ importers:
         specifier: ^0.1.2
         version: 0.1.10
       '@mixin.dev/mixin-node-sdk':
-        specifier: ^7.4.1
-        version: 7.4.1(bufferutil@4.0.9)(debug@4.4.0)(utf-8-validate@5.0.10)
+        specifier: ^7.4.2
+        version: 7.4.2(bufferutil@4.0.9)(debug@4.4.0)(utf-8-validate@5.0.10)
       '@moongate/moongate-adapter':
         specifier: ^0.6.2
         version: 0.6.3(@react-native-async-storage/async-storage@1.24.0(react-native@0.71.8(@babel/core@7.26.9)(@babel/preset-env@7.26.9(@babel/core@7.26.9))(bufferutil@4.0.9)(react@18.3.1)(utf-8-validate@5.0.10)))(@solana/wallet-adapter-base@0.9.26(@solana/web3.js@1.98.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)))(@solana/web3.js@1.98.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(@types/react@18.3.18)(bufferutil@4.0.9)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.7.3)(use-sync-external-store@1.5.0(react@18.3.1))(utf-8-validate@5.0.10)(zod@3.24.2)
@@ -1734,8 +1734,8 @@ importers:
         specifier: ^0.30.1
         version: 0.30.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       '@mixin.dev/mixin-node-sdk':
-        specifier: ^7.4.1
-        version: 7.4.1(bufferutil@4.0.9)(debug@4.4.0)(utf-8-validate@5.0.10)
+        specifier: ^7.4.2
+        version: 7.4.2(bufferutil@4.0.9)(debug@4.4.0)(utf-8-validate@5.0.10)
       '@mrgnlabs/marginfi-client-v2':
         specifier: workspace:*
         version: link:../marginfi-client-v2
@@ -1795,8 +1795,8 @@ importers:
         specifier: ^0.30.1
         version: 0.30.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       '@mixin.dev/mixin-node-sdk':
-        specifier: ^7.4.1
-        version: 7.4.1(bufferutil@4.0.9)(debug@4.4.0)(utf-8-validate@5.0.10)
+        specifier: ^7.4.2
+        version: 7.4.2(bufferutil@4.0.9)(debug@4.4.0)(utf-8-validate@5.0.10)
       '@solana/buffer-layout':
         specifier: 4.0.1
         version: 4.0.1
@@ -1908,8 +1908,8 @@ importers:
         specifier: ^0.1.2
         version: 0.1.10
       '@mixin.dev/mixin-node-sdk':
-        specifier: ^7.4.1
-        version: 7.4.1(bufferutil@4.0.9)(debug@4.4.0)(utf-8-validate@5.0.10)
+        specifier: ^7.4.2
+        version: 7.4.2(bufferutil@4.0.9)(debug@4.4.0)(utf-8-validate@5.0.10)
       '@mrgnlabs/marginfi-client-v2':
         specifier: workspace:*
         version: link:../marginfi-client-v2
@@ -2152,8 +2152,8 @@ importers:
         specifier: ^0.1.7
         version: 0.1.7(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       '@mixin.dev/mixin-node-sdk':
-        specifier: ^7.4.1
-        version: 7.4.1(bufferutil@4.0.9)(debug@4.4.0)(utf-8-validate@5.0.10)
+        specifier: ^7.4.2
+        version: 7.4.2(bufferutil@4.0.9)(debug@4.4.0)(utf-8-validate@5.0.10)
       '@mrgnlabs/marginfi-client-v2':
         specifier: workspace:*
         version: link:../marginfi-client-v2
@@ -4499,8 +4499,8 @@ packages:
   '@metaplex-foundation/umi-serializers@0.8.9':
     resolution: {integrity: sha512-Sve8Etm3zqvLSUfza+MYRkjTnCpiaAFT7VWdqeHzA3n58P0AfT3p74RrZwVt/UFkxI+ln8BslwBDJmwzcPkuHw==}
 
-  '@mixin.dev/mixin-node-sdk@7.4.1':
-    resolution: {integrity: sha512-93YopQGNsCvJAXcTQYlqAVnzM9NHQC41Js3AoHZCCxBScPJ3hpvZum/da2PdoCKWROob++Ya73DcZYmWKGMRsw==}
+  '@mixin.dev/mixin-node-sdk@7.4.2':
+    resolution: {integrity: sha512-UQ1Bia/6zyKLTW1nn7mPufKYK0Jjfb8dK8Lb7NUpvmU7Zvc137Gi9JUCJzSaaS2LLsK2dHUKBmf5/Ij3t5ZTHA==}
     engines: {node: '>=10'}
 
   '@mobily/ts-belt@3.13.1':
@@ -8340,9 +8340,6 @@ packages:
   axe-core@4.10.2:
     resolution: {integrity: sha512-RE3mdQ7P3FRSe7eqCWoeQ/Z9QXrtniSjp1wUjt5nRC3WIpz5rSCve6o3fsZ2aCpJtrZjSZgjwXAoTO5k4tEI0w==}
     engines: {node: '>=4'}
-
-  axios-retry@3.4.0:
-    resolution: {integrity: sha512-VdgaP+gHH4iQYCCNUWF2pcqeciVOdGrBBAYUfTY+wPcO5Ltvp/37MLFNCmJKo7Gj3SHvCSdL8ouI1qLYJN3liA==}
 
   axios-retry@4.5.0:
     resolution: {integrity: sha512-aR99oXhpEDGo0UuAlYcn2iGRds30k366Zfa05XWScR9QaQD4JYiP3/1Qt1u7YlefUOK+cn0CcwoL1oefavQUlQ==}
@@ -17787,15 +17784,15 @@ snapshots:
       '@metaplex-foundation/umi-serializers-encodings': 0.8.9
       '@metaplex-foundation/umi-serializers-numbers': 0.8.9
 
-  '@mixin.dev/mixin-node-sdk@7.4.1(bufferutil@4.0.9)(debug@4.4.0)(utf-8-validate@5.0.10)':
+  '@mixin.dev/mixin-node-sdk@7.4.2(bufferutil@4.0.9)(debug@4.4.0)(utf-8-validate@5.0.10)':
     dependencies:
       '@noble/ciphers': 1.2.1
       '@noble/curves': 1.8.1
       '@noble/hashes': 1.7.1
       axios: 1.8.2(debug@4.4.0)
-      axios-retry: 3.4.0
+      axios-retry: 4.5.0(axios@1.8.2(debug@4.4.0))
       bignumber.js: 9.1.2
-      bs58: 5.0.0
+      bs58: 6.0.0
       int64-buffer: 1.1.0
       is-retry-allowed: 2.2.0
       lodash.merge: 4.6.2
@@ -23645,9 +23642,9 @@ snapshots:
 
   axe-core@4.10.2: {}
 
-  axios-retry@3.4.0:
+  axios-retry@4.5.0(axios@1.8.2(debug@4.4.0)):
     dependencies:
-      '@babel/runtime': 7.26.9
+      axios: 1.8.2(debug@4.4.0)
       is-retry-allowed: 2.2.0
 
   axios-retry@4.5.0(axios@1.9.0(debug@4.4.0)):
@@ -25100,8 +25097,8 @@ snapshots:
       '@typescript-eslint/parser': 8.24.1(eslint@8.57.1)(typescript@5.7.3)
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.9
-      eslint-import-resolver-typescript: 3.8.2(eslint-plugin-import@2.31.0)(eslint@8.57.1)
-      eslint-plugin-import: 2.31.0(@typescript-eslint/parser@8.24.1(eslint@8.57.1)(typescript@5.7.3))(eslint-import-resolver-typescript@3.8.2)(eslint@8.57.1)
+      eslint-import-resolver-typescript: 3.8.2(eslint-plugin-import@2.31.0(@typescript-eslint/parser@8.24.1(eslint@8.57.1)(typescript@5.7.3))(eslint@8.57.1))(eslint@8.57.1)
+      eslint-plugin-import: 2.31.0(@typescript-eslint/parser@8.24.1(eslint@8.57.1)(typescript@5.7.3))(eslint-import-resolver-typescript@3.8.2(eslint-plugin-import@2.31.0(@typescript-eslint/parser@8.24.1(eslint@8.57.1)(typescript@5.7.3))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1)
       eslint-plugin-jsx-a11y: 6.10.2(eslint@8.57.1)
       eslint-plugin-react: 7.37.4(eslint@8.57.1)
       eslint-plugin-react-hooks: 5.1.0(eslint@8.57.1)
@@ -25124,7 +25121,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-import-resolver-typescript@3.8.2(eslint-plugin-import@2.31.0)(eslint@8.57.1):
+  eslint-import-resolver-typescript@3.8.2(eslint-plugin-import@2.31.0(@typescript-eslint/parser@8.24.1(eslint@8.57.1)(typescript@5.7.3))(eslint@8.57.1))(eslint@8.57.1):
     dependencies:
       '@nolyfill/is-core-module': 1.0.39
       debug: 4.4.0(supports-color@8.1.1)
@@ -25135,22 +25132,22 @@ snapshots:
       stable-hash: 0.0.4
       tinyglobby: 0.2.12
     optionalDependencies:
-      eslint-plugin-import: 2.31.0(@typescript-eslint/parser@8.24.1(eslint@8.57.1)(typescript@5.7.3))(eslint-import-resolver-typescript@3.8.2)(eslint@8.57.1)
+      eslint-plugin-import: 2.31.0(@typescript-eslint/parser@8.24.1(eslint@8.57.1)(typescript@5.7.3))(eslint-import-resolver-typescript@3.8.2(eslint-plugin-import@2.31.0(@typescript-eslint/parser@8.24.1(eslint@8.57.1)(typescript@5.7.3))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1)
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.12.0(@typescript-eslint/parser@8.24.1(eslint@8.57.1)(typescript@5.7.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.8.2)(eslint@8.57.1):
+  eslint-module-utils@2.12.0(@typescript-eslint/parser@8.24.1(eslint@8.57.1)(typescript@5.7.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.8.2(eslint-plugin-import@2.31.0(@typescript-eslint/parser@8.24.1(eslint@8.57.1)(typescript@5.7.3))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
       '@typescript-eslint/parser': 8.24.1(eslint@8.57.1)(typescript@5.7.3)
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.9
-      eslint-import-resolver-typescript: 3.8.2(eslint-plugin-import@2.31.0)(eslint@8.57.1)
+      eslint-import-resolver-typescript: 3.8.2(eslint-plugin-import@2.31.0(@typescript-eslint/parser@8.24.1(eslint@8.57.1)(typescript@5.7.3))(eslint@8.57.1))(eslint@8.57.1)
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-import@2.31.0(@typescript-eslint/parser@8.24.1(eslint@8.57.1)(typescript@5.7.3))(eslint-import-resolver-typescript@3.8.2)(eslint@8.57.1):
+  eslint-plugin-import@2.31.0(@typescript-eslint/parser@8.24.1(eslint@8.57.1)(typescript@5.7.3))(eslint-import-resolver-typescript@3.8.2(eslint-plugin-import@2.31.0(@typescript-eslint/parser@8.24.1(eslint@8.57.1)(typescript@5.7.3))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.1.8
@@ -25161,7 +25158,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.12.0(@typescript-eslint/parser@8.24.1(eslint@8.57.1)(typescript@5.7.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.8.2)(eslint@8.57.1)
+      eslint-module-utils: 2.12.0(@typescript-eslint/parser@8.24.1(eslint@8.57.1)(typescript@5.7.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.8.2(eslint-plugin-import@2.31.0(@typescript-eslint/parser@8.24.1(eslint@8.57.1)(typescript@5.7.3))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1)
       hasown: 2.0.2
       is-core-module: 2.16.1
       is-glob: 4.0.3

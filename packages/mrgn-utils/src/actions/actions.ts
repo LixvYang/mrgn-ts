@@ -272,7 +272,7 @@ export async function executeMixinLendingAction(props: ExecuteMixinLendingAction
 
           // 如果状态为failed,显示错误但继续查询
           if (call?.state === "failed") {
-            toast.setFailed("Transaction failed, retrying...");
+            toast.setFailed("Transaction failed!");
           }
 
           // 超过最大重试次数才停止
@@ -494,7 +494,6 @@ export async function ExecuteRepayAction(props: ExecuteRepayActionProps) {
   props.callbacks.captureEvent &&
     props.callbacks.captureEvent(`user_${props.actionType}`, { uuid: props.attemptUuid, ...props.infoProps });
 }
-
 
 export interface ExecuteMixinRepayActionProps extends ExecuteRepayActionProps {
   traceId: string;

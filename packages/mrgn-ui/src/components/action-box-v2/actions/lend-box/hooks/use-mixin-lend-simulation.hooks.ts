@@ -146,6 +146,10 @@ async function handleLendMixinSimulation({
     throw new Error("Missing required props");
   }
 
+  console.log("lendMode: ", lendMode);
+  console.log("bank address: ", selectedBank.meta.address.toBase58());
+  console.log("selectedBank: ", selectedBank.meta);
+
   // 如果金额为0或缺少必要参数，直接返回空交易
   if (amount === 0 || !selectedBank || !marginfiClient) {
     return [];
@@ -326,7 +330,7 @@ async function handleLendMixinSimulation({
           payerKey: new PublicKey(computerInfo.payer),
           recentBlockhash: nonce2.nonce_hash,
           instructions: [nonce2Ins, ...depositInx],
-        }).compileToV0Message();
+        }).compileToV0Message(depositAddressLookups);
 
         const depositTx = new VersionedTransaction(message1V0);
         if (updatedTransactions[0].signers) {
@@ -338,6 +342,8 @@ async function handleLendMixinSimulation({
         if (!checkSystemCallSize(depositTxBuf)) {
           throw new Error("Transaction size exceeds limit");
         }
+        console.log("depositTxBuf(base64): ", depositTxBuf.toString("base64"));
+
         const depositTrace = uniqueConversationID(depositTxBuf.toString("hex"), "system call");
 
         const depositExtra = buildComputerExtra(
@@ -395,7 +401,7 @@ async function handleLendMixinSimulation({
           payerKey: new PublicKey(computerInfo.payer),
           recentBlockhash: nonce2.nonce_hash,
           instructions: [nonce2Ins, ...borrowInx],
-        }).compileToV0Message();
+        }).compileToV0Message(borrowAddressLookups);
 
         const borrowTx = new VersionedTransaction(message1V0);
         if (updatedTransactions[0].signers) {
@@ -462,7 +468,7 @@ async function handleLendMixinSimulation({
           payerKey: new PublicKey(computerInfo.payer),
           recentBlockhash: nonce2.nonce_hash,
           instructions: [nonce2Ins, ...withdrawInx],
-        }).compileToV0Message();
+        }).compileToV0Message(withdrawAddressLookups);
 
         const withdrawTx = new VersionedTransaction(message1V0);
         if (updatedTransactions[0].signers) {
@@ -528,7 +534,7 @@ async function handleLendMixinSimulation({
         payerKey: new PublicKey(computerInfo.payer),
         recentBlockhash: nonce1.nonce_hash,
         instructions: [nonce1Ins, ...createAccountInx],
-      }).compileToV0Message();
+      }).compileToV0Message(initAccountAddressLookups);
 
       const createAccountTx = new VersionedTransaction(createAccountMessage);
       if (updatedTransactions[0].signers) {
@@ -585,7 +591,7 @@ async function handleLendMixinSimulation({
         payerKey: new PublicKey(computerInfo.payer),
         recentBlockhash: nonce2.nonce_hash,
         instructions: [nonce2Ins, ...depositInx],
-      }).compileToV0Message();
+      }).compileToV0Message(depositAddressLookups);
 
       const depositTx = new VersionedTransaction(message1V0);
       if (updatedTransactions[1].signers) {
@@ -597,6 +603,8 @@ async function handleLendMixinSimulation({
       if (!checkSystemCallSize(depositTxBuf)) {
         throw new Error("Transaction size exceeds limit");
       }
+      console.log("depositTxBuf(base64): ", depositTxBuf.toString("base64"));
+
       const depositTrace = uniqueConversationID(depositTxBuf.toString("hex"), "system call");
 
       const depositExtra = buildComputerExtra(

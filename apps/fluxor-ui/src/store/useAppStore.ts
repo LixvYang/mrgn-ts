@@ -206,6 +206,7 @@ const createAppStore = () => {
             balanceAddressMap: {},
             info: undefined,
             account: undefined,
+            connected: false,
           });
         },
       }),

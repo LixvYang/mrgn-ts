@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import dynamic from "next/dynamic";
 import { AppProps } from "next/app";
 import React, { useMemo } from "react";

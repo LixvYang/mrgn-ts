@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useOs, useIsMobile, cn } from "@mrgnlabs/mrgn-utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "~/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "~/components/ui/sheet";
@@ -155,38 +155,59 @@ const MixinMultipleTracesModal = ({
   const [index, setIndex] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const isPollingRef = useRef<boolean>(false);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setIsClosing(true);
     setTimeout(() => {
       onOpenChange(false);
       setIsClosing(false);
       setIsCompleted(false);
     }, 800);
-  };
+  }, [onOpenChange]);
 
   useEffect(() => {
-    if (!fetchTransaction) return;
-    const timer = setInterval(async () => {
-      const trace = requests[index].trace;
-      try {
-        const tx = await fetchTransaction(trace);
-        if (tx.state !== "spent") return;
+    if (!fetchTransaction || !open || isPollingRef.current) {
+      return;
+    }
 
-        if (index === requests.length - 1) {
-          setIsCompleted(true);
-          clearInterval(timer);
-          // 延迟关闭时间延长到 4 秒，给动画更多时间
-          setTimeout(() => {
-            handleClose();
-          }, 4000);
-        } else {
-          setIndex((i) => i + 1);
+    const pollTransaction = async () => {
+      if (!requests[index]?.trace) return;
+
+      try {
+        isPollingRef.current = true;
+        const tx = await fetchTransaction(requests[index].trace);
+
+        if (tx.state === "spent") {
+          if (index === requests.length - 1) {
+            setIsCompleted(true);
+            setTimeout(() => {
+              handleClose();
+            }, 4000);
+          } else {
+            setIndex((i) => i + 1);
+          }
         }
-      } catch (e) {}
-    }, 1000 * 5);
-    return () => clearInterval(timer);
-  }, [index]);
+      } catch (e) {
+        console.error("Error fetching transaction:", e);
+      } finally {
+        isPollingRef.current = false;
+      }
+    };
+
+    timerRef.current = setInterval(pollTransaction, 5000);
+    // 立即执行一次
+    pollTransaction();
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      isPollingRef.current = false;
+    };
+  }, [index, fetchTransaction, open, requests, handleClose]);
 
   if (shouldShowDialog) {
     return (

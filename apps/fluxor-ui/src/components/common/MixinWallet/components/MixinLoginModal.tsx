@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
 // import { useTranslation } from 'react-i18next';
 import { AuthorizationResponse, base64RawURLEncode, getChallenge, getED25519KeyPair } from "@mixin.dev/mixin-node-sdk";
@@ -9,6 +10,7 @@ import { Button } from "~/components/ui/button";
 import { IconX } from "@tabler/icons-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "~/components/ui/dialog";
 import Image from "next/image";
+import { QrCode } from "~/components/Qrcode";
 
 export function MixinLoginModal(props: { isOpen: boolean; onClose: () => void }) {
   const { user, getMixinClient, setKeystore, getMe, updateBalances } = useAppStore((s) => ({
@@ -192,6 +194,7 @@ export function MixinLoginModal(props: { isOpen: boolean; onClose: () => void })
                   width={200}
                   height={200}
                 />
+                {/* <QrCode value={loginCode} /> */}
               </div>
               <p className="text-sm text-muted-foreground">或点击下方链接</p>
               <Button variant="outline" className="w-full" onClick={() => window.open(loginCode, "_blank")}>

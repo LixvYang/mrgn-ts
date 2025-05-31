@@ -1,3 +1,4 @@
+import { cn } from "@mrgnlabs/mrgn-utils";
 import QRCodeStyling from "qr-code-styling";
 import type {
   DrawType,
@@ -11,6 +12,7 @@ import type {
 import { useEffect, useRef } from "react";
 
 interface QrCodeProps {
+  className?: string;
   value: string;
 }
 
@@ -61,7 +63,7 @@ function QrCode(props: QrCodeProps) {
   });
 
   return (
-    <div className="relative w-full h-full flex items-center justify-center">
+    <div className={cn("relative w-full h-full flex items-center justify-center", props.className)}>
       <div className="qrcode-container" ref={qrCodeContainer}></div>
     </div>
   );

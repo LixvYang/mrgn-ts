@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from "react";
 import { Dialog, DialogContent } from "@mrgnlabs/mrgn-ui/src/components/ui/dialog";
 import { Button } from "@mrgnlabs/mrgn-ui/src/components/ui/button";
-import QRCode from "react-qr-code";
+// import QRCode from "react-qr-code";
 import {
   AuthorizationResponse,
   base64RawURLEncode,
@@ -15,6 +15,7 @@ import {
 } from "@mixin.dev/mixin-node-sdk";
 import { useAuthorization } from "../../../hooks";
 import { useAppStore } from "../../../store";
+import { QrCode } from "~/components/Qrcode";
 
 interface LoginModalProps {
   open: boolean;
@@ -101,7 +102,7 @@ export const LoginModal = ({ open, onClose }: LoginModalProps) => {
         <div className="w-[300px] h-[300px] mx-auto">
           {loginCode ? (
             <>
-              <QRCode value={loginCode} level="H" size={300} className="w-full h-full dark:bg-white p-4 rounded-lg" />
+              <QrCode value={loginCode} className="w-full h-full  p-4 rounded-lg" />
               <Button
                 variant="default"
                 size="lg"

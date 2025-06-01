@@ -379,7 +379,6 @@ async function handleLendMixinSimulation({
         });
       } else if (txAction === TransactionType.BORROW) {
         // 2. borrow
-        const nonce2 = await client.getNonce(getUserMix());
         const borrowAddressLookupsRes = await Promise.all(
           (versionedTransactions[0] as VersionedTransaction).message.addressTableLookups.map((a) =>
             connection.getAddressLookupTable(a.accountKey)
@@ -393,6 +392,7 @@ async function handleLendMixinSimulation({
           addressLookupTableAccounts: borrowAddressLookups,
         }).instructions;
 
+        const nonce2 = await client.getNonce(getUserMix());
         const nonce2Ins = SystemProgram.nonceAdvance({
           noncePubkey: new PublicKey(nonce2.nonce_address),
           authorizedPubkey: new PublicKey(computerInfo.payer),
@@ -401,13 +401,13 @@ async function handleLendMixinSimulation({
           payerKey: new PublicKey(computerInfo.payer),
           recentBlockhash: nonce2.nonce_hash,
           instructions: [nonce2Ins, ...borrowInx],
-        }).compileToV0Message(borrowAddressLookups);
+        }).compileToV0Message();
 
         const borrowTx = new VersionedTransaction(message1V0);
         if (updatedTransactions[0].signers) {
           borrowTx.sign(updatedTransactions[0].signers);
         }
-        console.log("borrowTx: ", borrowTx);
+        console.log("borrowTx: ", Buffer.from(borrowTx.serialize()).toString("base64"));
         const borrowTxBuf = Buffer.from(borrowTx.serialize());
         if (!checkSystemCallSize(borrowTxBuf)) {
           throw new Error("Transaction size exceeds limit");

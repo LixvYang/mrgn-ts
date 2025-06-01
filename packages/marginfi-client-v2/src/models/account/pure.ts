@@ -624,10 +624,20 @@ class MarginfiAccount {
     excludedBanks: Bank[] = [],
     bankMetadataMap: BankMetadataMap
   ): AccountMeta[] {
+    for (const balance of this.activeBalances) {
+      console.log("activeBalance", balance.bankPk.toBase58());
+    }
+    for (const balance of this.balances) {
+      console.log("balance", balance.bankPk.toBase58());
+    }
+    for (const bank of mandatoryBanks) {
+      console.log("mandatoryBank", bank.address.toBase58());
+    }
     const mandatoryBanksSet = new Set(mandatoryBanks.map((b) => b.address.toBase58()));
     const excludedBanksSet = new Set(excludedBanks.map((b) => b.address.toBase58()));
     const activeBanks = new Set(this.activeBalances.map((b) => b.bankPk.toBase58()));
     const banksToAdd = new Set([...mandatoryBanksSet].filter((x) => !activeBanks.has(x)));
+    console.log("banksToAdd", banksToAdd);
 
     let slotsToKeep = banksToAdd.size;
     const projectedActiveBanks = this.balances
@@ -649,6 +659,19 @@ class MarginfiAccount {
         banksToAdd.delete(newBank);
         return new PublicKey(newBank);
       });
+
+    for (const bank of projectedActiveBanks) {
+      console.log("bank", bank.toBase58());
+    }
+    Object.values(bankMetadataMap).forEach((bankMetadata) => {
+      console.log("bankMetadata", bankMetadata.tokenAddress);
+    });
+
+    // console.log("projectedActiveBanks", projectedActiveBanks);
+    const res = makeHealthAccountMetas(banks, projectedActiveBanks, bankMetadataMap, this.authority);
+    for (const accountMeta of res) {
+      console.log("accountMeta", accountMeta.pubkey.toBase58());
+    }
 
     return makeHealthAccountMetas(banks, projectedActiveBanks, bankMetadataMap, this.authority);
   }
@@ -856,6 +879,8 @@ class MarginfiAccount {
     if (!bank) throw Error(`Bank ${bankAddress.toBase58()} not found`);
     const mintData = mintDatas.get(bankAddress.toBase58());
     if (!mintData) throw Error(`Mint data for bank ${bankAddress.toBase58()} not found`);
+    console.log("bankAddress", bankAddress.toBase58());
+    console.log("opt", opt);
 
     const wrapAndUnwrapSol = opt.wrapAndUnwrapSol ?? true;
     const createAtas = opt.createAtas ?? true;
@@ -877,6 +902,7 @@ class MarginfiAccount {
 
     let remainingAccounts = [];
     if (mintData.tokenProgram.equals(TOKEN_2022_PROGRAM_ID)) {
+      console.log("mintData.mint", mintData.mint.toBase58());
       remainingAccounts.push({ pubkey: mintData.mint, isSigner: false, isWritable: false });
     }
     if (opt?.observationBanksOverride !== undefined) {
@@ -884,8 +910,11 @@ class MarginfiAccount {
         ...makeHealthAccountMetas(banks, opt.observationBanksOverride, bankMetadataMap, this.authority)
       );
     } else {
+      console.log(111);
+      console.log("bankMetadataMap", bankMetadataMap);
       remainingAccounts.push(...this.getHealthCheckAccounts(banks, [bank], [], bankMetadataMap));
     }
+    console.log("remainingAccounts: ", remainingAccounts);
 
     const borrowIx = await instructions.makeBorrowIx(
       program,

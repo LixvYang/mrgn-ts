@@ -251,7 +251,7 @@ export const MovePositionDialog = ({
             <dl className="grid grid-cols-2 gap-y-2 ">
               <dt className="text-muted-foreground">Health:</dt>
               <dd
-                className={`flex justify-end text-right items-center gap-2 text-right  ${
+                className={`flex justify-end text-right items-center gap-2  ${
                   actionSummary.health >= 0.5
                     ? "text-success"
                     : actionSummary.health >= 0.25
@@ -260,7 +260,7 @@ export const MovePositionDialog = ({
                 }`}
               >
                 <>
-                  {accountSummary?.healthFactor && percentFormatter.format(accountSummary?.healthFactor)}
+                  {accountSummary?.healthFactor && percentFormatter.format(accountSummary?.healthFactor.computedHealth)}
                   <IconArrowRight width={12} height={12} />
                   {percentFormatter.format(actionSummary.health)}
                 </>
@@ -272,7 +272,7 @@ export const MovePositionDialog = ({
           (actionMessage, idx) =>
             actionMessage.description && (
               <div key={idx}>
-                <ActionMessage _actionMessage={actionMessage} />
+                <ActionMessage actionMessage={actionMessage} />
               </div>
             )
         )}

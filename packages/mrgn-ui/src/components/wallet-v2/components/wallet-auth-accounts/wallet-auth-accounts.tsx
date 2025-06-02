@@ -323,6 +323,11 @@
 //                             ? "Switching..."
 //                             : shortenAddress(account.address.toBase58())}
 //                         </span>
+                        // <span id={account.address.toBase58()} className="text-muted-foreground text-[10px]">
+                        //   {isActivatingAccountDelay === index
+                        //     ? "Switching..."
+                        //     : shortenAddress(account.address.toBase58())}
+                        // </span>
 
 //                         {isActivatingAccount === null && isActiveAccount && (
 //                           <Badge className="text-xs p-1 h-5">active</Badge>

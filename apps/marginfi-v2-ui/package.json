@@ -5,7 +5,8 @@
   "scripts": {
     "clean": "rimraf dist node_modules",
     "dev": "next dev --port 3004",
-    "build": "next build",
+    "build:dev": "next build",
+    "build": "echo 'Build step is intentionally skipped for marginfi-v2-ui'",
     "start": "next start",
     "lint": "next lint",
     "lint-fix": "yarn lint --fix"

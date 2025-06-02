@@ -1,14 +1,11 @@
 import React from "react";
 
-import Image from "next/image";
-
-import { numeralFormatter, shortenAddress, usdFormatter, WSOL_MINT } from "@mrgnlabs/mrgn-common";
+import { shortenAddress, usdFormatter, WSOL_MINT } from "@mrgnlabs/mrgn-common";
 import { ExtendedBankInfo } from "@mrgnlabs/marginfi-v2-ui-state";
 import { cn, LendingModes } from "@mrgnlabs/mrgn-utils";
 import { dynamicNumeralFormatter } from "@mrgnlabs/mrgn-common";
-import { Tooltip, TooltipContent, TooltipPortal, TooltipProvider, TooltipTrigger } from "~/components/ui/tooltip";
-import { IconInfoCircle } from "@tabler/icons-react";
-import { OracleSetup } from "@mrgnlabs/marginfi-client-v2";
+import { EmodeTag, OracleSetup } from "@mrgnlabs/marginfi-client-v2";
+import { IconEmode } from "~/components/ui/icons";
 
 type BankItemProps = {
   bank: ExtendedBankInfo;
@@ -18,9 +15,13 @@ type BankItemProps = {
   rate?: string;
   lendingMode?: LendingModes;
   isRepay?: boolean;
-  available?: boolean;
   showStakedAssetLabel?: boolean;
+  // <<<<<<< HEAD
   isMixin?: boolean;
+  // =======
+  highlightEmodeLabel?: boolean;
+  available?: boolean;
+  // >>>>>>> main
 };
 
 export const BankItem = ({
@@ -31,6 +32,7 @@ export const BankItem = ({
   rate,
   lendingMode,
   isRepay,
+  highlightEmodeLabel,
   available = true,
   showStakedAssetLabel = false,
   isMixin,
@@ -75,6 +77,7 @@ export const BankItem = ({
         <div>
           <div className="flex items-center">
             <p className="font-medium">{bank.meta.tokenSymbol}</p>
+            {bank.info.state.hasEmode && <IconEmode size={18} className="ml-1" />}
             {!available && <span className="text-[11px] ml-1 font-light">(currently unavailable)</span>}
           </div>
           {bank.info.rawBank.config.assetTag !== 2 ? (

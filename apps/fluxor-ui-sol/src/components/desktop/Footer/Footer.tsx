@@ -59,7 +59,7 @@ export const Footer = () => {
     <footer className="bg-background-gray text-muted-foreground fixed bottom-0 w-full px-4 py-2">
       <nav className="flex items-center justify-between">
         <Link
-          href="https://support.marginfi.com/"
+          href="https://docs.fluxor.cc/"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-2 text-sm font-medium"

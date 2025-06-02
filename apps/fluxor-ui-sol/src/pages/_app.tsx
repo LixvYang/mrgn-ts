@@ -99,7 +99,7 @@ export default function MrgnApp({ Component, pageProps, path }: AppProps & MrgnA
       const rpcEndpoint = await generateEndpoint(config.rpcEndpoint, process.env.NEXT_PUBLIC_RPC_PROXY_KEY ?? "");
       setRpcEndpoint(rpcEndpoint);
       setReady(true);
-      initAnalytics();
+      // initAnalytics();
     };
 
     init();
@@ -152,7 +152,7 @@ export default function MrgnApp({ Component, pageProps, path }: AppProps & MrgnA
                           <MobileNavbar />
                         </Mobile>
 
-                        <Analytics />
+                        {/* <Analytics /> */}
                         {/* <Tutorial /> */}
                         <AuthDialog
                           mrgnState={{ marginfiClient, selectedAccount, extendedBankInfos, nativeSolBalance }}

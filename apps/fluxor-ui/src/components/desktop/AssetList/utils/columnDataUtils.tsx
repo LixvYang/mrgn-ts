@@ -106,7 +106,10 @@ export const getAction = (
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex px-0 sm:pl-4 gap-4 justify-center lg:justify-end items-center">
+              <div
+                id={bank.address.toBase58()}
+                className="flex px-0 sm:pl-4 gap-4 justify-center lg:justify-end items-center"
+              >
                 <ActionBoxCell
                   bank={bank}
                   isInLendingMode={isInLendingMode}
@@ -122,7 +125,10 @@ export const getAction = (
       )}
 
       {marginfiAccount !== null && (
-        <div className="flex px-0 sm:pl-4 gap-4 justify-center lg:justify-end items-center">
+        <div
+          id={bank.address.toBase58()}
+          className="flex px-0 sm:pl-4 gap-4 justify-center lg:justify-end items-center"
+        >
           <ActionBoxCell
             bank={bank}
             isInLendingMode={isInLendingMode}

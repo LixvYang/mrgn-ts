@@ -48,7 +48,7 @@ export default function HomePage() {
 
   React.useEffect(() => {
     if (connected) {
-      setPublishStreamUrl(`rtmp://miku-test-push.yanglixin.com/lxtest12/${user?.user_id}`);
+      setPublishStreamUrl(`rtmp://publish.miku.fluxor.cc/fluxor/${user?.user_id}`);
     }
   }, [connected, user]);
 
@@ -61,15 +61,15 @@ export default function HomePage() {
     const data: LiveMessageRequest = {
       height: 480,
       thumb_url: user?.avatar_url || "https://developers.mixin.one/zh-CN/images/favicon.ico",
-      url: `http://miku-test-play.yanglixin.com/lxtest12/${user?.user_id}.m3u8`,
+      url: `http://play.miku.fluxor.cc/fluxor/${user?.user_id}.m3u8`,
       width: 480,
       shareable: true,
     };
 
     const dataStr = JSON.stringify(data);
     const base64Str = Buffer.from(dataStr).toString("base64");
-    window.open("mixin://send?category=live&data=" + encodeURIComponent(base64Str));
     console.log("mixin://send?category=live&data=" + encodeURIComponent(base64Str));
+    window.open("mixin://send?category=live&data=" + encodeURIComponent(base64Str));
   };
 
   return (

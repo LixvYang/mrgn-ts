@@ -20,14 +20,25 @@ import { WSOL_MINT } from "@mrgnlabs/mrgn-common";
 export const AssetsList = () => {
   const [connected] = useAppStore((state) => [state.connected]);
 
-  const [extendedBankInfos, nativeSolBalance, selectedAccount, fetchMrgnlendState, stakedAssetBankInfos] =
-    useMrgnlendStore((state) => [
-      state.extendedBankInfos,
-      state.nativeSolBalance,
-      state.selectedAccount,
-      state.fetchMrgnlendState,
-      state.stakedAssetBankInfos,
-    ]);
+  const [
+    extendedBankInfos,
+    nativeSolBalance,
+    selectedAccount,
+    fetchMrgnlendState,
+    emodePairs,
+    groupedEmodeBanks,
+    collateralBanksByLiabilityBank,
+    liabilityBanksByCollateralBank,
+  ] = useMrgnlendStore((state) => [
+    state.extendedBankInfos,
+    state.nativeSolBalance,
+    state.selectedAccount,
+    state.fetchMrgnlendState,
+    state.emodePairs,
+    state.groupedEmodeBanks,
+    state.collateralBanksByLiabilityBank,
+    state.liabilityBanksByCollateralBank,
+  ]);
   const [poolFilter, isFilteredUserPositions, lendingMode, tokenFilter, setTokenFilter] = useUiStore((state) => [
     state.poolFilter,
     state.isFilteredUserPositions,
@@ -35,7 +46,6 @@ export const AssetsList = () => {
     state.tokenFilter,
     state.setTokenFilter,
   ]);
-
   const [isLSTDialogOpen, setIsLSTDialogOpen] = React.useState(false);
   const [lstDialogVariant, setLSTDialogVariant] = React.useState<LSTDialogVariants | null>(null);
   const [lstDialogCallback, setLSTDialogCallback] = React.useState<(() => void) | null>(null);
@@ -88,6 +98,10 @@ export const AssetsList = () => {
     return filterBanksByTokenType(banks);
   }, [isFilteredUserPositions, extendedBankInfos, filterBanksByTokenType]);
 
+  const emodeBanks = React.useMemo(() => {
+    return extendedBankInfos.filter((b) => b.info.state.hasEmode);
+  }, [extendedBankInfos]);
+
   const [sorting, setSorting] = React.useState<SortingState>([]);
 
   const globalPoolTableData = React.useMemo(() => {
@@ -100,6 +114,8 @@ export const AssetsList = () => {
       // walletContextState,
       solPrice,
       fetchMrgnlendState,
+      collateralBanksByLiabilityBank,
+      liabilityBanksByCollateralBank,
       true
     );
   }, [
@@ -111,6 +127,8 @@ export const AssetsList = () => {
     selectedAccount,
     solPrice,
     fetchMrgnlendState,
+    collateralBanksByLiabilityBank,
+    liabilityBanksByCollateralBank,
   ]);
 
   const isolatedPoolTableData = React.useMemo(() => {
@@ -123,6 +141,8 @@ export const AssetsList = () => {
       // walletContextState,
       solPrice,
       fetchMrgnlendState,
+      collateralBanksByLiabilityBank,
+      liabilityBanksByCollateralBank,
       true
     );
   }, [
@@ -134,6 +154,8 @@ export const AssetsList = () => {
     selectedAccount,
     solPrice,
     fetchMrgnlendState,
+    collateralBanksByLiabilityBank,
+    liabilityBanksByCollateralBank,
   ]);
 
   const stakedPoolTableData = React.useMemo(() => {
@@ -146,6 +168,8 @@ export const AssetsList = () => {
       // walletContextState,
       solPrice,
       fetchMrgnlendState,
+      collateralBanksByLiabilityBank,
+      liabilityBanksByCollateralBank,
       true
     );
   }, [
@@ -157,29 +181,8 @@ export const AssetsList = () => {
     selectedAccount,
     solPrice,
     fetchMrgnlendState,
-  ]);
-
-  const allStakedAssetsTableData = React.useMemo(() => {
-    return makeData(
-      stakedAssetBankInfos,
-      isInLendingMode,
-      nativeSolBalance,
-      selectedAccount,
-      connected,
-      // walletContextState,
-      solPrice,
-      fetchMrgnlendState,
-      true
-    );
-  }, [
-    connected,
-    // walletContextState,
-    stakedAssetBankInfos,
-    isInLendingMode,
-    nativeSolBalance,
-    selectedAccount,
-    solPrice,
-    fetchMrgnlendState,
+    collateralBanksByLiabilityBank,
+    liabilityBanksByCollateralBank,
   ]);
 
   const tableColumns = React.useMemo(() => {

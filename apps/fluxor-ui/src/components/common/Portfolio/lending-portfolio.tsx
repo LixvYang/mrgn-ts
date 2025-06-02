@@ -25,6 +25,8 @@ import { useRewardSimulation } from "./hooks";
 import { IconLoader } from "~/components/ui/icons";
 import { Button } from "~/components/ui/button";
 import MixinWallet from "../MixinWallet/MixinWallet";
+import { useEmodeLineConnections } from "../emode/hooks";
+import { EmodePortfolio } from "../emode/components";
 
 const initialRewardsState: RewardsType = {
   state: "NOT_FETCHED",
@@ -46,6 +48,8 @@ export const LendingPortfolio = () => {
     selectedAccount,
     marginfiAccounts,
     fetchMrgnlendState,
+    userActiveEmodes,
+    emodePairs,
   ] = useMrgnlendStore((state) => [
     state.initialized,
     state.extendedBankInfos,
@@ -55,6 +59,8 @@ export const LendingPortfolio = () => {
     state.selectedAccount,
     state.marginfiAccounts,
     state.fetchMrgnlendState,
+    state.userActiveEmodes,
+    state.emodePairs,
   ]);
   const [priorityFees, broadcastType, accountLabels, setGlobalActionBoxProps, globalActionBoxProps] = useUiStore(
     (state) => [
@@ -66,6 +72,12 @@ export const LendingPortfolio = () => {
     ]
   );
   const [userPointsData] = useUserProfileStore((state) => [state.userPointsData]);
+  const [filterEmode, setFilterEmode] = React.useState(false);
+  const [openAccordions, setOpenAccordions] = React.useState<Record<string, boolean>>({});
+
+  // Highlighted emode line indices for hover (array for multiple lines)
+  const [hoveredPairIndices, setHoveredPairIndices] = React.useState<number[] | null>(null);
+  const hoverDebounceRef = React.useRef<NodeJS.Timeout | null>(null);
 
   // Rewards
   const [rewardsState, setRewardsState] = React.useState<RewardsType>(initialRewardsState);
@@ -177,9 +189,9 @@ export const LendingPortfolio = () => {
     if (accountSummary.healthFactor) {
       let color: string;
 
-      if (accountSummary.healthFactor >= 0.5) {
+      if (accountSummary.healthFactor.computedHealth >= 0.5) {
         color = "#75BA80"; // green color " : "#",
-      } else if (accountSummary.healthFactor >= 0.25) {
+      } else if (accountSummary.healthFactor.computedHealth >= 0.25) {
         color = "#B8B45F"; // yellow color
       } else {
         color = "#CF6F6F"; // red color
@@ -190,7 +202,6 @@ export const LendingPortfolio = () => {
       return "#fff";
     }
   }, [accountSummary.healthFactor]);
-
   const isLoading = React.useMemo(
     () =>
       (!isStoreInitialized ||
@@ -200,6 +211,51 @@ export const LendingPortfolio = () => {
       !lendingBanks.length &&
       !borrowingBanks.length,
     [isStoreInitialized, walletConnectionDelay, isRefreshingStore, accountSummary.balance, lendingBanks, borrowingBanks]
+  ); // Create refs for each lending and borrowing card, keyed by address
+  const lendingRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
+  const borrowingRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
+
+  // Build connection pairs: only connect assets in the same e-mode group
+  // Also build a mapping from asset address to pair indices
+  const { refPairs, assetToPairIndices } = React.useMemo(() => {
+    if (!selectedAccount) return { refPairs: [], assetToPairIndices: {} };
+    const pairs: [{ current: HTMLDivElement | null }, { current: HTMLDivElement | null }][] = [];
+    const assetToPairIndices: Record<string, number[]> = {};
+    let pairIdx = 0;
+    userActiveEmodes.forEach((emodePair) => {
+      lendingBanks
+        .filter((bank) => bank.info.rawBank.emode.emodeTag === emodePair.collateralBankTag)
+        .forEach((lendingBank) => {
+          const lendingRef = lendingRefs.current[lendingBank.address.toBase58()];
+          const borrowingRef = borrowingRefs.current[emodePair.liabilityBank.toBase58()];
+          if (lendingRef && borrowingRef) {
+            pairs.push([{ current: lendingRef }, { current: borrowingRef }]);
+            // Map both lending and borrowing asset addresses to this pair index
+            const lendAddr = lendingBank.address.toBase58();
+            const borrowAddr = emodePair.liabilityBank.toBase58();
+            if (!assetToPairIndices[lendAddr]) assetToPairIndices[lendAddr] = [];
+            if (!assetToPairIndices[borrowAddr]) assetToPairIndices[borrowAddr] = [];
+            assetToPairIndices[lendAddr].push(pairIdx);
+            assetToPairIndices[borrowAddr].push(pairIdx);
+            pairIdx++;
+          }
+        });
+    });
+    return { refPairs: pairs, assetToPairIndices };
+  }, [userActiveEmodes, selectedAccount, lendingBanks]);
+
+  // Use the hook
+  const { containerRef, LineConnectionSvg } = useEmodeLineConnections(
+    refPairs,
+    {
+      color: "rgba(147, 51, 234, 0.3)",
+      pulseColor: "rgba(147, 51, 234, 0.8)",
+      pulseSpeed: 3,
+      cornerRadius: 10,
+      lineSpacing: 40,
+      useUniqueColors: false,
+    },
+    hoveredPairIndices ?? undefined
   );
 
   React.useEffect(() => {
@@ -295,7 +351,7 @@ export const LendingPortfolio = () => {
         <div className="flex justify-between w-full">
           <h2 className="font-medium text-xl">Lend/borrow</h2>
 
-          <div className="flex text-sm items-center gap-1.5">
+          <div className="flex text-sm items-center gap-1.5 ml-auto">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger className="inline-flex items-center gap-1">
@@ -339,8 +395,8 @@ export const LendingPortfolio = () => {
             </TooltipProvider>
           </div>
         </div>
-        <div className="text-muted-foreground">
-          <dl className="flex justify-between items-center gap-2">
+        <div className="text-muted-foreground mt-8">
+          <dl className="flex justify-between items-center gap-1.5">
             <dt className="flex items-center gap-1.5 text-sm">
               Lend/borrow health factor
               <TooltipProvider>
@@ -370,15 +426,15 @@ export const LendingPortfolio = () => {
               </TooltipProvider>
             </dt>
             <dd className="text-xl md:text-2xl font-medium" style={{ color: healthColor }}>
-              {numeralFormatter(accountSummary.healthFactor * 100)}%
+              {numeralFormatter(accountSummary.healthFactor.computedHealth * 100)}%
             </dd>
           </dl>
-          <div className="h-2 bg-background-gray-light rounded-full">
+          <div className="h-2 bg-background-gray-light rounded-full mt-1 mb-4">
             <div
               className="h-2 rounded-full"
               style={{
                 backgroundColor: healthColor,
-                width: `${accountSummary.healthFactor * 100}%`,
+                width: `${accountSummary.healthFactor.computedHealth * 100}%`,
               }}
             />
           </div>
@@ -389,95 +445,197 @@ export const LendingPortfolio = () => {
             points={numeralFormatter(userPointsData.totalPoints)}
           />
         </div>
-        <div className="flex flex-col md:flex-row justify-between flex-wrap gap-8 md:gap-20">
-          <div className="flex flex-col flex-1 gap-4 md:min-w-[340px]">
-            <dl className="flex justify-between items-center gap-2 text-xl font-medium">
-              <dt>Supplied</dt>
-              <dd className="text-lg">{accountSupplied}</dd>
-            </dl>
-            {isStoreInitialized ? (
-              lendingBanks.length > 0 ? (
-                <div className="flex flex-col gap-4">
-                  {lendingBanks.map((bank) => (
-                    <PortfolioAssetCard
-                      key={bank.meta.tokenSymbol}
-                      bank={bank}
-                      isInLendingMode={true}
-                      isBorrower={borrowingBanks.length > 0}
-                      accountLabels={accountLabels}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-muted-foreground flex flex-wrap items-center gap-1">
-                  <span>No lending positions found.</span>
-                  <span
-                    className="border-b border-primary/50 transition-colors hover:border-primary cursor-pointer"
-                    onClick={() => {
-                      setGlobalActionBoxProps({
-                        ...globalActionBoxProps,
-                        isOpen: true,
-                        actionType: ActionType.Deposit,
-                      });
-                    }}
-                  >
-                    Search the pools
-                  </span>
-                  <span>to lend assets.</span>
-                </div>
-              )
-            ) : (
-              <PortfolioAssetCardSkeleton />
+        <div ref={containerRef} className="relative flex flex-col gap-6 mt-8">
+          <div
+            className={cn(
+              "transition-opacity duration-500 absolute inset-0 pointer-events-none z-10",
+              filterEmode ? "opacity-100" : "opacity-0"
             )}
+          >
+            <LineConnectionSvg />
           </div>
-          <div className="flex flex-wrap flex-col flex-1 gap-4 md:min-w-[340px]">
-            <dl className="flex justify-between items-center gap-2 text-xl font-medium">
-              <dt>Borrowed</dt>
-              <dd className="text-lg">{accountBorrowed}</dd>
-            </dl>
-            {isStoreInitialized ? (
-              borrowingBanks.length > 0 ? (
-                <div className="flex flex-col gap-4">
-                  {borrowingBanks.map((bank) => (
-                    <PortfolioAssetCard
-                      key={bank.meta.tokenSymbol}
-                      bank={bank}
-                      isInLendingMode={false}
-                      isBorrower={borrowingBanks.length > 0}
-                    />
-                  ))}
-                </div>
+          {emodePairs.length > 0 && (
+            <EmodePortfolio
+              userActiveEmodes={userActiveEmodes}
+              filterEmode={filterEmode}
+              setFilterEmode={setFilterEmode}
+            />
+          )}
+          <div className="flex flex-col md:flex-row justify-between flex-wrap gap-8 md:gap-20">
+            <div className="flex flex-col flex-1 gap-4 md:min-w-[340px]">
+              <dl className="flex justify-between items-center gap-2 text-xl font-medium">
+                <dt>Supplied</dt>
+                <dd className="text-lg">{accountSupplied}</dd>
+              </dl>
+              {isStoreInitialized ? (
+                lendingBanks.length > 0 ? (
+                  <div className="flex flex-col gap-4">
+                    {lendingBanks.map((bank, i) => {
+                      const eModeActive = userActiveEmodes.some(
+                        (pair) => pair.collateralBankTag === bank.info.rawBank.emode.emodeTag
+                      );
+                      const pairIndices = assetToPairIndices[bank.address.toBase58()] || [];
+                      return (
+                        <div
+                          key={bank.meta.tokenSymbol}
+                          ref={(el) => {
+                            lendingRefs.current[bank.address.toBase58()] = el;
+                          }}
+                          className={cn(
+                            "transition-opacity duration-500",
+                            filterEmode && "cursor-pointer",
+                            filterEmode && !eModeActive && "opacity-10"
+                          )}
+                          onMouseEnter={() => {
+                            if (hoverDebounceRef.current) clearTimeout(hoverDebounceRef.current);
+                            hoverDebounceRef.current = setTimeout(() => {
+                              if (pairIndices.length > 0) setHoveredPairIndices(pairIndices);
+                            }, 120);
+                          }}
+                          onMouseLeave={() => {
+                            if (hoverDebounceRef.current) clearTimeout(hoverDebounceRef.current);
+                            hoverDebounceRef.current = setTimeout(() => {
+                              setHoveredPairIndices(null);
+                            }, 120);
+                          }}
+                        >
+                          <PortfolioAssetCard
+                            bank={bank}
+                            isInLendingMode={true}
+                            isBorrower={borrowingBanks.length > 0}
+                            accountLabels={accountLabels}
+                            variant={filterEmode ? "simple" : "accordion"}
+                            {...(!filterEmode && {
+                              disabled: filterEmode,
+                              open: !!openAccordions[bank.meta.tokenSymbol],
+                              onOpenChange: (isOpen: boolean) =>
+                                setOpenAccordions((prev) => ({
+                                  ...prev,
+                                  [bank.meta.tokenSymbol]: isOpen,
+                                })),
+                            })}
+                            {...(filterEmode && {
+                              onCardClick: () => {
+                                if (filterEmode) setFilterEmode(false);
+                              },
+                            })}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-muted-foreground flex flex-wrap items-center gap-1">
+                    <span>No lending positions found.</span>
+                    <span
+                      className="border-b border-primary/50 transition-colors hover:border-primary cursor-pointer"
+                      onClick={() => {
+                        setGlobalActionBoxProps({
+                          ...globalActionBoxProps,
+                          isOpen: true,
+                          actionType: ActionType.Deposit,
+                        });
+                      }}
+                    >
+                      Search the pools
+                    </span>
+                    <span>to lend assets.</span>
+                  </div>
+                )
               ) : (
-                <div className="text-muted-foreground flex flex-wrap items-center gap-1">
-                  <span>No borrow positions found.</span>
-                  <span
-                    className="border-b border-primary/50 transition-colors hover:border-primary cursor-pointer"
-                    onClick={() => {
-                      setGlobalActionBoxProps({ ...globalActionBoxProps, isOpen: true, actionType: ActionType.Borrow });
-                    }}
-                  >
-                    Search the pools
-                  </span>{" "}
-                  <span>and open a new borrow.</span>
-                </div>
-              )
-            ) : (
-              <PortfolioAssetCardSkeleton />
-            )}
+                <PortfolioAssetCardSkeleton />
+              )}
+            </div>
+            <div className="flex flex-wrap flex-col flex-1 gap-4 md:min-w-[340px]">
+              <dl className="flex justify-between items-center gap-2 text-xl font-medium">
+                <dt>Borrowed</dt>
+                <dd className="text-lg">{accountBorrowed}</dd>
+              </dl>
+              {isStoreInitialized ? (
+                borrowingBanks.length > 0 ? (
+                  <div className="flex flex-col gap-4">
+                    {borrowingBanks.map((bank) => {
+                      const pairIndices = assetToPairIndices[bank.address.toBase58()] || [];
+                      return (
+                        <div
+                          key={bank.address.toBase58()}
+                          ref={(el) => {
+                            borrowingRefs.current[bank.address.toBase58()] = el;
+                          }}
+                          onMouseEnter={() => {
+                            if (hoverDebounceRef.current) clearTimeout(hoverDebounceRef.current);
+                            hoverDebounceRef.current = setTimeout(() => {
+                              if (pairIndices.length > 0) setHoveredPairIndices(pairIndices);
+                            }, 120);
+                          }}
+                          onMouseLeave={() => {
+                            if (hoverDebounceRef.current) clearTimeout(hoverDebounceRef.current);
+                            hoverDebounceRef.current = setTimeout(() => {
+                              setHoveredPairIndices(null);
+                            }, 120);
+                          }}
+                        >
+                          <PortfolioAssetCard
+                            bank={bank}
+                            isInLendingMode={false}
+                            isBorrower={borrowingBanks.length > 0}
+                            accountLabels={accountLabels}
+                            variant={filterEmode ? "simple" : "accordion"}
+                            {...(!filterEmode && {
+                              disabled: filterEmode,
+                              open: !!openAccordions[bank.meta.tokenSymbol],
+                              onOpenChange: (isOpen: boolean) =>
+                                setOpenAccordions((prev) => ({
+                                  ...prev,
+                                  [bank.meta.tokenSymbol]: isOpen,
+                                })),
+                            })}
+                            {...(filterEmode && {
+                              onCardClick: () => {
+                                if (filterEmode) setFilterEmode(false);
+                              },
+                            })}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-muted-foreground flex flex-wrap items-center gap-1">
+                    <span>No borrow positions found.</span>
+                    <span
+                      className="border-b border-primary/50 transition-colors hover:border-primary cursor-pointer"
+                      onClick={() => {
+                        setGlobalActionBoxProps({
+                          ...globalActionBoxProps,
+                          isOpen: true,
+                          actionType: ActionType.Borrow,
+                        });
+                      }}
+                    >
+                      Search the pools
+                    </span>{" "}
+                    <span>and open a new borrow.</span>
+                  </div>
+                )
+              ) : (
+                <PortfolioAssetCardSkeleton />
+              )}
+            </div>
           </div>
+          <RewardsDialog
+            availableRewards={rewardsState}
+            onClose={() => {
+              setRewardsDialogOpen(false);
+            }}
+            open={rewardsDialogOpen}
+            onOpenChange={(open) => {
+              setRewardsDialogOpen(open);
+            }}
+            onCollect={handleCollectRewardsAction}
+            isLoading={rewardsLoading}
+          />
         </div>
-        <RewardsDialog
-          availableRewards={rewardsState}
-          onClose={() => {
-            setRewardsDialogOpen(false);
-          }}
-          open={rewardsDialogOpen}
-          onOpenChange={(open) => {
-            setRewardsDialogOpen(open);
-          }}
-          onCollect={handleCollectRewardsAction}
-          isLoading={rewardsLoading}
-        />
       </div>
     </div>
   );

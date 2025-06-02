@@ -5,7 +5,7 @@ import { useRouter } from "next/router";
 
 import { WSOL_MINT } from "@mrgnlabs/mrgn-common";
 import { ExtendedBankInfo, ActionType } from "@mrgnlabs/marginfi-v2-ui-state";
-import { LendSelectionGroups, LendingModes, cn, computeBankRate } from "@mrgnlabs/mrgn-utils";
+import { LendSelectionGroups, LendingModes, cn, computeBankRate, getEmodeStrategies } from "@mrgnlabs/mrgn-utils";
 
 import { CommandEmpty, CommandGroup, CommandItem } from "~/components/ui/command";
 import { BankItem, BankListCommand } from "~/components/action-box-v2/components";
@@ -68,6 +68,26 @@ export const BankList = ({
 
     return hasBankTokens;
   }, [banks]);
+
+  const emodeStrategies = React.useMemo(() => {
+    return getEmodeStrategies(banks);
+  }, [banks]);
+
+  const enableEmodeByBank = React.useMemo(() => {
+    console.log({ emodeStrategies });
+    const enableEmodeByBank: Record<string, boolean> = {};
+    if (actionType === ActionType.Deposit) {
+      emodeStrategies.activateSupplyEmodeBanks.forEach((bank) => {
+        enableEmodeByBank[bank.address.toBase58()] = true;
+      });
+    }
+    if (actionType === ActionType.Borrow) {
+      emodeStrategies.activateBorrowEmodeBanks.forEach((bank) => {
+        enableEmodeByBank[bank.address.toBase58()] = true;
+      });
+    }
+    return enableEmodeByBank;
+  }, [actionType, emodeStrategies]);
 
   /////// FILTERS
 
@@ -234,6 +254,7 @@ export const BankList = ({
                       showStakedAssetLabel={true}
                       solPrice={solPrice}
                       isMixin={isMixin}
+                      highlightEmodeLabel={enableEmodeByBank[bank.address.toBase58()]}
                     />
                   </CommandItem>
                 );
@@ -281,6 +302,7 @@ export const BankList = ({
                   nativeSolBalance={nativeSolBalance}
                   showStakedAssetLabel={true}
                   solPrice={solPrice}
+                  highlightEmodeLabel={enableEmodeByBank[bank.address.toBase58()]}
                 />
               </CommandItem>
             ))}
@@ -311,6 +333,7 @@ export const BankList = ({
                   showBalanceOverride={false}
                   nativeSolBalance={nativeSolBalance}
                   solPrice={solPrice}
+                  highlightEmodeLabel={enableEmodeByBank[bank.address.toBase58()]}
                 />
               </CommandItem>
             ))}
@@ -344,6 +367,7 @@ export const BankList = ({
                     showBalanceOverride={false}
                     nativeSolBalance={nativeSolBalance}
                     solPrice={solPrice}
+                    highlightEmodeLabel={enableEmodeByBank[bank.address.toBase58()]}
                   />
                 </CommandItem>
               );
@@ -376,6 +400,7 @@ export const BankList = ({
                     showBalanceOverride={false}
                     nativeSolBalance={nativeSolBalance}
                     solPrice={solPrice}
+                    highlightEmodeLabel={enableEmodeByBank[bank.address.toBase58()]}
                   />
                 </CommandItem>
               );
@@ -410,6 +435,7 @@ export const BankList = ({
                         showBalanceOverride={false}
                         nativeSolBalance={nativeSolBalance}
                         solPrice={solPrice}
+                        highlightEmodeLabel={enableEmodeByBank[bank.address.toBase58()]}
                       />
                     </CommandItem>
                   );

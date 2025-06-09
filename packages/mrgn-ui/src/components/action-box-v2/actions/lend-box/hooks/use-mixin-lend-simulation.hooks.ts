@@ -401,7 +401,7 @@ async function handleLendMixinSimulation({
           payerKey: new PublicKey(computerInfo.payer),
           recentBlockhash: nonce2.nonce_hash,
           instructions: [nonce2Ins, ...borrowInx],
-        }).compileToV0Message();
+        }).compileToV0Message(borrowAddressLookups);
 
         const borrowTx = new VersionedTransaction(message1V0);
         if (updatedTransactions[0].signers) {

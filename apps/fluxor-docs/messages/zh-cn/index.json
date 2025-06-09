@@ -1,0 +1,134 @@
+{
+  "Hero": {
+    "title": "Fluxor 赋能 Mixin 跨链体验",
+    "getStarted": "开始使用",
+    "github": "GitHub"
+  },
+  "Maintenance": {
+    "title": "我们很快回来",
+    "description": "Fluxor 目前正在维护中，以更好地为您服务"
+  },
+  "Work": {
+    "title": "工作原理",
+    "description": "了解 Fluxor 如何简化文档创建",
+    "steps": "3个简单步骤",
+    "step1": {
+      "title": "克隆 Fluxor 模板",
+      "description": "Lorem ipsum dolor sit amet, elit ut aliquam, purus sit lorem ipsum dolor sit amet"
+    },
+    "step2": {
+      "title": "删除旧内容",
+      "description": "Lorem ipsum dolor sit amet, elit ut aliquam, purus sit lorem ipsum dolor sit amet"
+    },
+    "step3": {
+      "title": "开始新内容",
+      "description": "Lorem ipsum dolor sit amet, elit ut aliquam, purus sit lorem ipsum dolor sit amet"
+    }
+  },
+  "FAQ": {
+    "title": "常见问题",
+    "description": "Fluxor 的常见问题",
+    "questions": [
+      {
+        "key": 1,
+        "question": "有快速开始 Fluxor 的指南吗？",
+        "answer": "是的，你可以找到用户使用指南在文档中。 我们目前正在全面修订我们的文档，因此希望很快就能得到改进。如有其他问题，请加入我们的Mixin 群组"
+      },
+      {
+        "key": 2,
+        "question": "费用是多少？",
+        "answer": "Fluxor 保险金库 2.5%, 清算费用 10%"
+      },
+      {
+        "key": 3,
+        "question": "我如何为 Fluxor 做出贡献？",
+        "answer": "Fluxor 是一个开源项目，你可以在 [GitHub](https://github.com/lixvyang/fluxor) 上找到源代码。"
+      },
+      {
+        "key": 4,
+        "question": "健康因子是什么？",
+        "answer": "健康因子表达账户的健康程度, 当健康因子 < 0 时，账户可被清算。"
+      }
+    ],
+    "support": "找不到您要找的答案？请联系我们的",
+    "supportLink": "客户支持团队。"
+  },
+  "Testimonial": {
+    "title": "用户评价",
+    "description": "听听使用 Fluxor 的开发者怎么说"
+  },
+  "Newsletter": {
+    "title": "订阅我们的通讯",
+    "description": "及时了解 Fluxor 的相关信息",
+    "placeholder": "输入您的电子邮箱",
+    "submit": "提交"
+  },
+  "Footer": {
+    "description": "Mixin Ecosystem",
+    "solution": {
+      "title": "解决方案",
+      "marketing": "市场营销",
+      "analytics": "数据分析",
+      "commerce": "电子商务",
+      "insights": "洞察"
+    },
+    "support": {
+      "title": "支持",
+      "pricing": "定价",
+      "documentation": "文档",
+      "guides": "指南",
+      "apiStatus": "API 状态"
+    },
+    "docs": {
+      "title": "文档",
+      "pricing": "定价",
+      "apiGuide": "API 指南",
+      "apiStatus": "API 状态",
+      "devGuide": "开发指南"
+    },
+    "company": {
+      "title": "公司",
+      "about": "关于",
+      "blog": "博客",
+      "jobs": "工作机会",
+      "press": "新闻",
+      "partners": "合作伙伴"
+    },
+    "about": {
+      "title": "关于",
+      "terms": "服务条款",
+      "license": "许可协议",
+      "privacy": "隐私政策"
+    },
+    "social": [
+      {
+        "name": "Github",
+        "url": "https://github.com/lixvyang"
+      },
+      {
+        "name": "Mixin",
+        "url": "https://mixin.one/codes/6530b1e8-3e81-42ab-ab65-96cbf709b771"
+      },
+      {
+        "name": "Website",
+        "url": "https://app.fluxor.cc"
+      }
+    ],
+    "copyright": "© 2025 版权所有",
+    "terms": "服务条款",
+    "license": "许可协议",
+    "privacy": "隐私政策"
+  },
+  "Navigation": {
+    "home": "首页",
+    "documentation": "文档",
+    "blog": "博客",
+    "about": "关于我们",
+    "changelog": "更新日志"
+  },
+  "BlogNav": {
+    "computerScience": "计算机科学",
+    "photography": "摄影",
+    "programming": "编程"
+  }
+}

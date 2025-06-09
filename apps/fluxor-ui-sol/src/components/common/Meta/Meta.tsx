@@ -8,14 +8,14 @@ export const Meta = ({ path }: MrgnProps) => {
   const customPages: Record<string, { description: string }> = {
     "/": {
       description:
-        "Earn high yields with dome's DeFi lending and borrowing protocol using SOL, USDC, USDT, and more. Borrow assets, compound returns, and access instant liquidity in just a few clicks.",
+        "Earn high yields with Fluxor's DeFi lending and borrowing protocol using SOL, USDC, USDT, and more. Borrow assets, compound returns, and access instant liquidity in just a few clicks.",
     },
     // "/stake": {
     //   description:
     //     "Unlock high-yield Solana staking on marginfi. Stake your assets, hedge against inflation, and earn yield safely and securely.",
     // },
   };
-  const title = `Domelabs Lend ${path !== "/" ? ` - ${path.substring(1)}` : ""}`;
+  const title = `Fluxor Lend ${path !== "/" ? ` - ${path.substring(1)}` : ""}`;
   const description = customPages[path] ? customPages[path].description : null;
   return (
     <Head>

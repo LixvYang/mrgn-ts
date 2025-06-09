@@ -1,0 +1,134 @@
+{
+  "Hero": {
+    "title": "Fluxor 賦能 Mixin 跨鏈體驗",
+    "getStarted": "開始使用",
+    "github": "GitHub"
+  },
+  "Maintenance": {
+    "title": "我們很快回來",
+    "description": "Fluxor 目前正在維護中，以更好地為您服務"
+  },
+  "Work": {
+    "title": "工作原理",
+    "description": "了解 Fluxor 如何簡化文檔創建",
+    "steps": "3個簡單步驟",
+    "step1": {
+      "title": "克隆 Fluxor 模板",
+      "description": "Lorem ipsum dolor sit amet, elit ut aliquam, purus sit lorem ipsum dolor sit amet"
+    },
+    "step2": {
+      "title": "刪除舊內容",
+      "description": "Lorem ipsum dolor sit amet, elit ut aliquam, purus sit lorem ipsum dolor sit amet"
+    },
+    "step3": {
+      "title": "開始新內容",
+      "description": "Lorem ipsum dolor sit amet, elit ut aliquam, purus sit lorem ipsum dolor sit amet"
+    }
+  },
+  "FAQ": {
+    "title": "常見問題",
+    "description": "查找有關 Fluxor 的常見問題的答案",
+    "questions": [
+      {
+        "key": 1,
+        "question": "有快速開始 Fluxor 的指南嗎？",
+        "answer": "是的，你可以找到用戶指南在文檔中。 我們目前正在全面修訂我們的文檔，因此希望很快就能得到改進。 如有其他問題，請加入我們的 Mixin 群組"
+      },
+      {
+        "key": 2,
+        "question": "Fluxor 的保險基金是什麼？",
+        "answer": "Fluxor 的保險基金是為了保護用戶的資金安全而設立的。"
+      },
+      {
+        "key": 3,
+        "question": "我如何為 Fluxor 做出貢獻？",
+        "answer": "Fluxor 是一個開源項目，你可以在 [GitHub](https://github.com/lixvyang/fluxor) 上找到源代碼。"
+      },
+      {
+        "key": 4,
+        "question": "健康因子是什麼？",
+        "answer": "健康因子表達賬戶的健康程度, 當健康因子 < 0 時，賬戶可被清算。"
+      }
+    ],
+    "support": "找不到您要找的答案？請聯繫我們的",
+    "supportLink": "客戶支持團隊。"
+  },
+  "Testimonial": {
+    "title": "用戶評價",
+    "description": "聽聽使用 Fluxor 的開發者怎麼說"
+  },
+  "Newsletter": {
+    "title": "訂閱我們的通訊",
+    "description": "及時了解 Fluxor 的相關信息",
+    "placeholder": "輸入您的電子郵箱",
+    "submit": "提交"
+  },
+  "Footer": {
+    "description": "Mixin 生態",
+    "solution": {
+      "title": "解決方案",
+      "marketing": "市場營銷",
+      "analytics": "數據分析",
+      "commerce": "電子商務",
+      "insights": "洞察"
+    },
+    "support": {
+      "title": "支持",
+      "pricing": "定價",
+      "documentation": "文檔",
+      "guides": "指南",
+      "apiStatus": "API 狀態"
+    },
+    "docs": {
+      "title": "文檔",
+      "pricing": "定價",
+      "apiGuide": "API 指南",
+      "apiStatus": "API 狀態",
+      "devGuide": "開發指南"
+    },
+    "company": {
+      "title": "公司",
+      "about": "關於",
+      "blog": "博客",
+      "jobs": "工作機會",
+      "press": "新聞",
+      "partners": "合作夥伴"
+    },
+    "about": {
+      "title": "關於",
+      "terms": "服務條款",
+      "license": "許可協議",
+      "privacy": "隱私政策"
+    },
+    "social": [
+      {
+        "name": "Github",
+        "url": "https://github.com/lixvyang"
+      },
+      {
+        "name": "Mixin",
+        "url": "https://mixin.one/codes/6530b1e8-3e81-42ab-ab65-96cbf709b771"
+      },
+      {
+        "name": "Website",
+        "url": "https://app.fluxor.cc"
+      }
+    ],
+    "copyright": "© 2025 版權所有",
+    "terms": "服務條款",
+    "license": "許可協議",
+    "privacy": "隱私政策"
+  },
+  "Navigation": {
+    "home": "首頁",
+    "documentation": "文檔",
+    "blog": "博客",
+    "about": "關於我們",
+    "changelog": "更新日誌"
+  },
+  "BlogNav": {
+    "computerScience": "計算機科學",
+    "photography": "攝影",
+    "programming": "編程"
+  }
+}

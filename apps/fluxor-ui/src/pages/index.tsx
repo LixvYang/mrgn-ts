@@ -80,7 +80,7 @@ export default function HomePage() {
   return (
     <>
       <Desktop>
-        {!isStoreInitialized && <Loader label="Loading Dome Lend..." className="mt-16" />}
+        {!isStoreInitialized && <Loader label="Loading Fluxor Lend..." className="mt-16" />}
         {isStoreInitialized && (
           <>
             <div className="flex flex-col h-full justify-start content-start w-full xl:w-4/5 xl:max-w-7xl gap-4">

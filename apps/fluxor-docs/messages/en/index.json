@@ -1,0 +1,134 @@
+{
+  "Hero": {
+    "title": "Fluxor empowers Mixin cross-chain experience.",
+    "getStarted": "Get Started",
+    "github": "GitHub"
+  },
+  "Maintenance": {
+    "title": "We'll be back soon",
+    "description": "Fluxor is currently undergoing maintenance to serve you better."
+  },
+  "Work": {
+    "title": "How it works",
+    "description": "Discover how Fluxor simplifies documentation creation",
+    "steps": "3 EASY STEPS",
+    "step1": {
+      "title": "Clone Fluxor Template",
+      "description": "Lorem ipsum dolor sit amet, elit ut aliquam, purus sit lorem ipsum dolor sit amet"
+    },
+    "step2": {
+      "title": "Remove Old content",
+      "description": "Lorem ipsum dolor sit amet, elit ut aliquam, purus sit lorem ipsum dolor sit amet"
+    },
+    "step3": {
+      "title": "Start new content",
+      "description": "Lorem ipsum dolor sit amet, elit ut aliquam, purus sit lorem ipsum dolor sit amet"
+    }
+  },
+  "FAQ": {
+    "title": "Frequently Asked Questions",
+    "description": "Find answers to common questions about Fluxor",
+    "questions": [
+      {
+        "key": 1,
+        "question": "Is there a quick start guide for Fluxor?",
+        "answer": "Yes, you can find user guides in the documentation. We are currently revising our documentation, so we hope to improve it soon. If you have any other questions, please join our Mixin group"
+      },
+      {
+        "key": 2,
+        "question": "What is the  fund?",
+        "answer": "The fund is a pool of funds that is used to cover the losses of the fund."
+      },
+      {
+        "key": 3,
+        "question": "How can I contribute to Fluxor?",
+        "answer": "Fluxor is an open source project, you can find the source code on [GitHub](https://github.com/lixvyang/fluxor)"
+      },
+      {
+        "key": 4,
+        "question": "What is the health factor?",
+        "answer": "The health factor expresses the health of the account, when the health factor < 0, the account can be liquidated."
+      }
+    ],
+    "support": "Can't find the answer you're looking for? Reach out to our",
+    "supportLink": "customer support team."
+  },
+  "Testimonial": {
+    "title": "What our users say",
+    "description": "Hear from developers who use Nextify"
+  },
+  "Newsletter": {
+    "title": "Join our newsletter",
+    "description": "Keep up to date with related Nextify.",
+    "placeholder": "Enter your email",
+    "submit": "Submit"
+  },
+  "Footer": {
+    "description": "Mixin Ecosystem",
+    "solution": {
+      "title": "Solution",
+      "marketing": "Marketing",
+      "analytics": "Analytics",
+      "commerce": "Commerce",
+      "insights": "Insights"
+    },
+    "support": {
+      "title": "Support",
+      "pricing": "Pricing",
+      "documentation": "Documentation",
+      "guides": "Guides",
+      "apiStatus": "API Status"
+    },
+    "docs": {
+      "title": "Docs",
+      "pricing": "Pricing",
+      "apiGuide": "API Guide",
+      "apiStatus": "API Status",
+      "devGuide": "Dev Guide"
+    },
+    "company": {
+      "title": "Company",
+      "about": "About",
+      "blog": "Blog",
+      "jobs": "Jobs",
+      "press": "Press",
+      "partners": "Partners"
+    },
+    "about": {
+      "title": "About",
+      "terms": "Terms of Service",
+      "license": "License",
+      "privacy": "Privacy Policy"
+    },
+    "social": [
+      {
+        "name": "Github",
+        "url": "https://github.com/lixvyang"
+      },
+      {
+        "name": "Mixin",
+        "url": "https://mixin.one/codes/6530b1e8-3e81-42ab-ab65-96cbf709b771"
+      },
+      {
+        "name": "Website",
+        "url": "https://app.fluxor.cc"
+      }
+    ],
+    "copyright": "© Copyright 2025. All rights reserved.",
+    "terms": "Terms of Service",
+    "license": "License",
+    "privacy": "Privacy Policy"
+  },
+  "Navigation": {
+    "home": "Home",
+    "documentation": "Documentation",
+    "blog": "Blog",
+    "about": "About us",
+    "changelog": "Change log"
+  },
+  "BlogNav": {
+    "computerScience": "Computer Science",
+    "photography": "Photography",
+    "programming": "Programming"
+  }
+}

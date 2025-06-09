@@ -332,7 +332,7 @@ async function handleRepayMixinSimulation({
         payerKey: new PublicKey(computerInfo.payer),
         recentBlockhash: nonce2.nonce_hash,
         instructions: [nonce2Ins, ...repayInx],
-      }).compileToV0Message();
+      }).compileToV0Message(repayAddressLookups);
 
       const repayTx = new VersionedTransaction(message1V0);
       if (!updatedTransactions[0].signers) {

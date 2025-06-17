@@ -37,7 +37,7 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
   }>;
 
   const layoutOptions: HomeLayout = {
-    githubUrl: "https://github.com/frontendweb3/Nextify",
+    githubUrl: "https://github.com/lixvyang/mrgn-ts",
     i18n: true,
     nav: {
       title: <Logo />,

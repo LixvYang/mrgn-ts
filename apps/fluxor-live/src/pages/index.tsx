@@ -48,7 +48,7 @@ export default function HomePage() {
 
   React.useEffect(() => {
     if (connected) {
-      setPublishStreamUrl(`rtmp://publish.miku.fluxor.cc/fluxor/${user?.user_id}`);
+      setPublishStreamUrl(`rtmp://publisher.mixinlive.top/mxone/${user?.user_id}`);
     }
   }, [connected, user]);
 
@@ -61,7 +61,7 @@ export default function HomePage() {
     const data: LiveMessageRequest = {
       height: 480,
       thumb_url: user?.avatar_url || "https://developers.mixin.one/zh-CN/images/favicon.ico",
-      url: `http://play.miku.fluxor.cc/fluxor/${user?.user_id}.m3u8`,
+      url: `http://player.mixinlive.top/mxone/${user?.user_id}.m3u8`,
       width: 480,
       shareable: true,
     };

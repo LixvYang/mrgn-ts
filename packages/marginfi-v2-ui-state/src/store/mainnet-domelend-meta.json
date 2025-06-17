@@ -14,6 +14,11 @@
       "tokenAddress": "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
       "tokenName": "USDT",
       "tokenSymbol": "USDT"
+    },
+    "FUjZmnqNMTYMdMTzrUR3UJ5hA8v3jMhpqP9RTxeVMU9E": {
+      "tokenAddress": "J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn",
+      "tokenName": "Jito Staked SOL",
+      "tokenSymbol": "JitoSOL"
     }
   },
   "tokenMetadata": {
@@ -52,6 +57,17 @@
         "coingeckoId": "tether",
         "serumV3Usdc": "77quYg4MGneUdjgXCunt9GgM1usmrxKY31twEy3WHwcS",
         "website": "https://tether.to/"
+      }
+    },
+    "JitoSOL": {
+      "symbol": "JitoSOL",
+      "address": "J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn",
+      "chainId": 101,
+      "decimals": 9,
+      "name": "Jito Staked SOL",
+      "logoURI": "https://storage.googleapis.com/token-metadata/JitoSOL-256.png",
+      "extensions": {
+        "coingeckoId": ""
       }
     }
   }

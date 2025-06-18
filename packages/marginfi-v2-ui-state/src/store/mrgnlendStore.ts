@@ -108,7 +108,10 @@ interface MrgnlendState {
     }[]
   >;
 
+  balancesAddressMap: Record<string, UserAssetBalance> | null;
+
   // Actions
+  resetBalancesAddressMap: (balancesAddressMap: Record<string, UserAssetBalance>) => void;
   fetchMrgnlendState: (args?: {
     marginfiConfig?: MarginfiConfig;
     connection?: Connection;
@@ -119,7 +122,7 @@ interface MrgnlendState {
     stageTokens?: string[];
     processTransactionStrategy?: ProcessTransactionStrategy;
     mixinPublicKey?: PublicKey | undefined;
-    mixinBalancesAddressMap?: Record<string, UserAssetBalance> | undefined;
+    balancesAddressMap?: Record<string, UserAssetBalance> | undefined;
   }) => Promise<void>;
   setIsRefreshingStore: (isRefreshingStore: boolean) => void;
   resetUserData: () => void;
@@ -195,8 +198,12 @@ const stateCreator: StateCreator<MrgnlendState, [], []> = (set, get) => ({
   userActiveEmodes: [],
   collateralBanksByLiabilityBank: {},
   liabilityBanksByCollateralBank: {},
+  balancesAddressMap: null,
 
   // Actions
+  resetBalancesAddressMap: (balancesAddressMap: Record<string, UserAssetBalance>) => {
+    set({ balancesAddressMap });
+  },
   fetchMrgnlendState: async (args?: {
     marginfiConfig?: MarginfiConfig;
     connection?: Connection;
@@ -207,7 +214,7 @@ const stateCreator: StateCreator<MrgnlendState, [], []> = (set, get) => ({
     stageTokens?: string[];
     processTransactionStrategy?: ProcessTransactionStrategy;
     mixinPublicKey?: PublicKey | undefined;
-    mixinBalancesAddressMap?: Record<string, UserAssetBalance> | undefined;
+    balancesAddressMap?: Record<string, UserAssetBalance> | undefined;
   }) => {
     try {
       const { MarginfiClient } = await import("@mrgnlabs/marginfi-client-v2");
@@ -216,93 +223,25 @@ const stateCreator: StateCreator<MrgnlendState, [], []> = (set, get) => ({
       const connection = args?.connection ?? get().marginfiClient?.provider.connection;
       if (!connection) throw new Error("Connection not found");
 
-      // <<<<<<< HEAD
       const wallet = args?.wallet ?? get().marginfiClient?.provider?.wallet;
       const publicKey = args?.mixinPublicKey ?? wallet?.publicKey;
 
-      // =======
-      // >>>>>>> main
       const marginfiConfig = args?.marginfiConfig ?? get().marginfiClient?.config;
       if (!marginfiConfig) throw new Error("Marginfi config must be provided at least once");
 
-      // const wallet = args?.wallet ?? get().marginfiClient?.provider?.wallet;
       const stageTokens = args?.stageTokens ?? get().stageTokens;
       const isReadOnly = args?.isOverride !== undefined ? !!args.isOverride : get().marginfiClient?.isReadOnly;
       const bundleSimRpcEndpoint = args?.bundleSimRpcEndpoint ?? get().bundleSimRpcEndpoint ?? undefined;
       const processTransactionStrategy =
         args?.processTransactionStrategy ?? get().processTransactionStrategy ?? undefined;
+      let balancesAddressMap = get().balancesAddressMap ?? args?.balancesAddressMap;
 
-      // <<<<<<< HEAD
-      //       let bankMetadataMap: { [address: string]: BankMetadata };
-      //       let tokenMetadataMap: { [symbol: string]: TokenMetadata };
-
-      //       if (marginfiConfig.environment === "production") {
-      //         // let results = await Promise.all([
-      //         //   loadBankMetadatas(process.env.NEXT_PUBLIC_BANKS_MAP),
-      //         //   loadTokenMetadatas(process.env.NEXT_PUBLIC_TOKENS_MAP),
-      //         // ]);
-      //         // bankMetadataMap = results[0];
-      //         // tokenMetadataMap = results[1];
-      //         const bankMetadataJson = (await import("./mainnet-domelend-meta.json")) as {
-      //           bankMetadata: BankMetadataMap;
-      //           tokenMetadata: TokenMetadataMap;
-      //         };
-      //         bankMetadataMap = bankMetadataJson.bankMetadata;
-      //         tokenMetadataMap = bankMetadataJson.tokenMetadata;
-      //       } else if (marginfiConfig.environment === "staging") {
-      //         if (process.env.NEXT_PUBLIC_BANKS_MAP && process.env.NEXT_PUBLIC_TOKENS_MAP) {
-      //           let results = await Promise.all([
-      //             loadBankMetadatas(process.env.NEXT_PUBLIC_BANKS_MAP),
-      //             loadTokenMetadatas(process.env.NEXT_PUBLIC_TOKENS_MAP),
-      //           ]);
-      //           bankMetadataMap = results[0];
-      //           tokenMetadataMap = results[1];
-      //         } else {
-      //           const bankMetadataJson = (await import("./staging-metadata.json")) as {
-      //             bankMetadata: BankMetadataMap;
-      //             tokenMetadata: TokenMetadataMap;
-      //           };
-      //           bankMetadataMap = bankMetadataJson.bankMetadata;
-      //           tokenMetadataMap = bankMetadataJson.tokenMetadata;
-      //         }
-      //       } else if (marginfiConfig.environment === "mainnet-test-1") {
-      //         const bankMetadataJson = (await import("./mainnet-test-1-metadata.json")) as {
-      //           bankMetadata: BankMetadataMap;
-      //           tokenMetadata: TokenMetadataMap;
-      //         };
-      //         bankMetadataMap = bankMetadataJson.bankMetadata;
-      //         tokenMetadataMap = bankMetadataJson.tokenMetadata;
-      //       } else {
-      //         throw new Error("Unknown environment");
-      //       }
-
-      //       let stakedAssetBankMetadataMap: BankMetadataMap = {};
-      //       let stakedAssetTokenMetadataMap: TokenMetadataMap = {};
-      //       if (args && args.mixinPublicKey) {
-      //       } else {
-      //         // // fetch staked asset metadata
-      //         // stakedAssetBankMetadataMap = await loadStakedBankMetadatas(
-      //         //   `${process.env.NEXT_PUBLIC_STAKING_BANKS || "https://storage.googleapis.com/mrgn-public/mrgn-staked-bank-metadata-cache.json"}?t=${new Date().getTime()}`
-      //         // );
-      //         // stakedAssetTokenMetadataMap = await loadTokenMetadatas(
-      //         //   `${process.env.NEXT_PUBLIC_STAKING_TOKENS || "https://storage.googleapis.com/mrgn-public/mrgn-staked-token-metadata-cache.json"}?t=${new Date().getTime()}`
-      //         // );
-      //       }
-
-      //       // merge staked asset metadata with main group metadata
-      //       bankMetadataMap = {
-      //         ...bankMetadataMap,
-      //         ...stakedAssetBankMetadataMap,
-      //       };
-      //       tokenMetadataMap = {
-      //         ...tokenMetadataMap,
-      //         ...stakedAssetTokenMetadataMap,
-      //       };
-      // =======
       const { bankMetadataMap, tokenMetadataMap } = await fetchStateMetaData(marginfiConfig);
-      // >>>>>>> main
-
       const bankAddresses = Object.keys(bankMetadataMap).map((address) => new PublicKey(address));
+
+      if (publicKey) {
+        console.log("publicKey: ", publicKey);
+      }
 
       const marginfiClient = await MarginfiClient.fetch(marginfiConfig, wallet ?? ({} as any), connection, {
         preloadedBankAddresses: bankAddresses,
@@ -333,12 +272,7 @@ const stateCreator: StateCreator<MrgnlendState, [], []> = (set, get) => ({
       let selectedAccount: MarginfiAccountWrapper | null = null;
       let stakeAccounts: ValidatorStakeGroup[] = [];
       let bankWeightsPreEmode: Record<string, { assetWeightMaint: BigNumber; assetWeightInit: BigNumber }> = {};
-      // <<<<<<< HEAD
       if (publicKey) {
-        // =======
-
-        //       if (wallet?.publicKey) {
-        // >>>>>>> main
         const [tokenData, marginfiAccountWrappers] = await Promise.all([
           fetchTokenAccounts(
             connection,
@@ -351,7 +285,7 @@ const stateCreator: StateCreator<MrgnlendState, [], []> = (set, get) => ({
             })),
             marginfiClient.mintDatas,
             false,
-            args?.mixinBalancesAddressMap
+            balancesAddressMap
           ),
           getCachedMarginfiAccountsForAuthority(publicKey, marginfiClient),
         ]);

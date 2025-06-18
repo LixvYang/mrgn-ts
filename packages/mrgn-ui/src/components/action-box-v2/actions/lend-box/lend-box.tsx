@@ -102,7 +102,6 @@ export type LendBoxProps = {
 
 export const LendBox = ({
   nativeSolBalance,
-  // tokenAccountMap,
   walletContextState,
   connected,
   marginfiClient,

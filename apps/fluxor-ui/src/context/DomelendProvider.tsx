@@ -17,12 +17,21 @@ export const DomelendProvider: React.FC<{
   const debounceId = React.useRef<NodeJS.Timeout | null>(null);
 
   const { connection } = useConnection();
-  const [fetchMrgnlendState, setIsRefreshingStore, resetUserData, marginfiAccounts] = useMrgnlendStore((state) => [
+  const [
+    balancesAddressMap,
+    fetchMrgnlendState,
+    setIsRefreshingStore,
+    resetUserData,
+    marginfiAccounts,
+    resetBalancesAddressMap,
+  ] = useMrgnlendStore((state) => [
+    state.balancesAddressMap,
     state.fetchMrgnlendState,
     state.setIsRefreshingStore,
     state.resetUserData,
 
     state.marginfiAccounts,
+    state.resetBalancesAddressMap,
   ]);
 
   const [fetchPriorityFee, fetchAccountLabels] = useUiStore((state) => [
@@ -41,6 +50,8 @@ export const DomelendProvider: React.FC<{
   const [hasFetchedAccountLabels, setHasFetchedAccountLabels] = React.useState(false);
   // if account set in query param then store inn local storage and remove from url
   React.useEffect(() => {
+    resetBalancesAddressMap(mixinBalancesAddressMap);
+
     const { account } = router.query;
     if (!account) return;
 
@@ -56,13 +67,14 @@ export const DomelendProvider: React.FC<{
       // wallet,
       // isOverride,
       processTransactionStrategy: getTransactionStrategy(),
-      mixinBalancesAddressMap: mixinBalancesAddressMap,
+      balancesAddressMap: mixinBalancesAddressMap,
       mixinPublicKey: solWalletAddress,
     });
   }, [router.query]); // eslint-disable-line react-hooks/exhaustive-deps
 
   React.useEffect(() => {
     const initializeAndFetch = () => {
+      resetBalancesAddressMap(mixinBalancesAddressMap);
       setIsRefreshingStore(true);
       fetchPriorityFee(connection);
       fetchMrgnlendState({
@@ -74,13 +86,14 @@ export const DomelendProvider: React.FC<{
         // wallet,
         // isOverride,
         processTransactionStrategy: getTransactionStrategy(),
-        mixinBalancesAddressMap: mixinBalancesAddressMap,
+        balancesAddressMap: mixinBalancesAddressMap,
         mixinPublicKey: solWalletAddress,
       }).catch(console.error);
     };
 
     const periodicFetch = () => {
       console.log("🔄 Periodically fetching marginfi state");
+      resetBalancesAddressMap(mixinBalancesAddressMap);
       setIsRefreshingStore(true);
       fetchPriorityFee(connection);
       fetchMrgnlendState({
@@ -92,7 +105,7 @@ export const DomelendProvider: React.FC<{
         // wallet,
         // isOverride,
         processTransactionStrategy: getTransactionStrategy(),
-        mixinBalancesAddressMap: mixinBalancesAddressMap,
+        balancesAddressMap: mixinBalancesAddressMap,
         mixinPublicKey: solWalletAddress,
       }).catch(console.error);
     };

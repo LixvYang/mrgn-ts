@@ -179,10 +179,6 @@ class MarginfiClient {
     if (clientOptions?.mixinPublicKey) {
       wallet.publicKey = new PublicKey(clientOptions.mixinPublicKey);
     }
-    console.log(
-      "clientOptions.mixinPublicKey: ",
-      clientOptions?.mixinPublicKey && clientOptions?.mixinPublicKey.toBase58()
-    );
 
     const provider = new AnchorProvider(connection, wallet, {
       ...AnchorProvider.defaultOptions(),

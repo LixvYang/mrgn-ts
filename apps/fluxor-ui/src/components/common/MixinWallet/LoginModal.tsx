@@ -73,7 +73,6 @@ export const LoginModal = ({ open, onClose }: LoginModalProps) => {
       const { verifier, challenge } = getChallenge();
 
       ws = useAuthorization(clientId, scope, challenge, (a: AuthorizationResponse) => {
-        console.log("a", a);
         if (a && !loginCode) {
           setLoginCode(`mixin://codes/${a.code_id}`);
         }

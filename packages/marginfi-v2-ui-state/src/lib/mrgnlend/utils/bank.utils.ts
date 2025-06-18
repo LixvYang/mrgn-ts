@@ -224,9 +224,7 @@ function makeExtendedBankInfo(
   userData?: UserDataProps,
   overrideIcon?: boolean,
   stakePoolMetadata?: StakePoolMetadata,
-  // <<<<<<< HEAD
   isMixin?: boolean,
-  // =======
   originalWeights?: { assetWeightMaint: BigNumber; assetWeightInit: BigNumber },
   emodeImpactByBank?: Record<string, ActionEmodeImpact>
   // >>>>>>> main

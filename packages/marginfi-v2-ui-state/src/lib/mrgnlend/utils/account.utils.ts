@@ -68,18 +68,18 @@ async function fetchTokenAccounts(
   bankInfos: { mint: PublicKey; mintDecimals: number; bankAddress: PublicKey; assetTag?: number }[],
   mintDatas: Map<string, MintData>,
   fetchStakeAccounts: boolean = true,
-  mixinBalancesAddressMap?: Record<string, UserAssetBalance> | undefined
+  balancesAddressMap?: Record<string, UserAssetBalance> | undefined
 ): Promise<{
   nativeSolBalance: number;
   tokenAccountMap: TokenAccountMap;
 }> {
   // 如果有 Mixin 余额，直接使用 Mixin 余额
-  if (mixinBalancesAddressMap) {
+  if (balancesAddressMap) {
     const tokenAccountMap = new Map();
     let nativeSolBalance = 0;
 
     for (const bank of bankInfos) {
-      const mixinBalance = mixinBalancesAddressMap[bank.mint.toBase58()];
+      const mixinBalance = balancesAddressMap[bank.mint.toBase58()];
 
       if (mixinBalance) {
         // 如果是 SOL，更新 nativeSolBalance

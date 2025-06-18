@@ -27,6 +27,7 @@ export default function HomePage() {
     getComputerRecipient,
     balanceAddressMap,
     getMixinClient,
+    publicKey,
   ] = useAppStore((state) => [
     state.connected,
     state.getUserMix,
@@ -35,6 +36,7 @@ export default function HomePage() {
     state.getComputerRecipient,
     state.balanceAddressMap,
     state.getMixinClient,
+    state.publicKey,
   ]);
   const mixinClient = getMixinClient();
   const { connection } = useConnection();

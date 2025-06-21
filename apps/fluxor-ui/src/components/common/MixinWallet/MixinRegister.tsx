@@ -5,7 +5,7 @@ import { useAppStore } from "../../../store";
 import { MixinLoginModal } from "./components/MixinLoginModal";
 import { MixinRegisterModal } from "./components/MixinRegisterModal";
 
-export default function MixinRegister(): React.FC {
+export default function MixinRegister() {
   const { user, connected, register } = useAppStore((s) => ({
     user: s.user,
     connected: s.connected,

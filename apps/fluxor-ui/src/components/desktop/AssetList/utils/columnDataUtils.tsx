@@ -97,7 +97,7 @@ export const getAction = (
   isInLendingMode: boolean,
   marginfiAccount: MarginfiAccountWrapper | null,
   connected: boolean,
-  register: boolean,
+  register: boolean | undefined,
   // walletContextState: WalletContextStateOverride | WalletContextState,
   fetchMrgnlendState: () => void
 ) => {
@@ -119,7 +119,8 @@ export const getAction = (
                   bank={bank}
                   isInLendingMode={isInLendingMode}
                   connected={connected}
-                  register={register}
+                  register={register ?? false}
+                  
                   // walletContextState={walletContextState}
                   fetchMrgnlendState={fetchMrgnlendState}
                 />
@@ -139,7 +140,7 @@ export const getAction = (
             bank={bank}
             isInLendingMode={isInLendingMode}
             connected={connected}
-            register={register}
+            register={register ?? false}
             // walletContextState={walletContextState}
             fetchMrgnlendState={fetchMrgnlendState}
           />

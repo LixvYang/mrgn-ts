@@ -32,7 +32,6 @@ function useComputer() {
 
   useEffect(() => {
     if (!publicKey) return;
-    // raydium.setOwner(publicKey)
   }, [publicKey]);
 }
 

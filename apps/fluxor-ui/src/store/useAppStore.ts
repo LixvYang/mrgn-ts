@@ -90,7 +90,7 @@ const createAppStore = () => {
                 connected: true,
                 publicKey: new PublicKey(account.chain_address),
               });
-            else set({ user });
+            else set({ user, connected: true });
           } catch {}
         },
 
@@ -157,7 +157,7 @@ const createAppStore = () => {
             },
             {} as Record<string, UserAssetBalance>
           );
-          
+
           const bs = Object.values(fbm).filter((b) => b.address);
           // const am = Object.fromEntries(bs.map((b) => [b.address, b])) as Record<string, UserAssetBalance>;
           // 转换地址

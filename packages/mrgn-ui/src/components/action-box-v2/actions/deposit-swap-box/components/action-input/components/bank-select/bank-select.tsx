@@ -20,6 +20,8 @@ type BankSelectProps = {
 
   walletTokens?: WalletToken[] | null;
   showOnlyUserOwnedTokens?: boolean;
+
+  isMixin?: boolean;
 };
 
 export const BankSelect = ({
@@ -33,6 +35,7 @@ export const BankSelect = ({
   setSelectedBank,
   walletTokens,
   showOnlyUserOwnedTokens,
+  isMixin = false,
 }: BankSelectProps) => {
   // idea check list if banks[] == 1 make it unselectable
   const [isOpen, setIsOpen] = React.useState(false);
@@ -61,6 +64,7 @@ export const BankSelect = ({
             showTokenSelectionGroups={showTokenSelectionGroups}
             walletTokens={walletTokens}
             showOnlyUserOwnedTokens={showOnlyUserOwnedTokens}
+            isMixin={isMixin}
           />
         }
       />

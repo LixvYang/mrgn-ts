@@ -16,7 +16,14 @@ import {
   ExecuteDepositSwapAction,
   logActivity,
 } from "@mrgnlabs/mrgn-utils";
-import { dynamicNumeralFormatter, nativeToUi, WalletToken } from "@mrgnlabs/mrgn-common";
+import {
+  ComputerInfoResponse,
+  ComputerUserResponse,
+  dynamicNumeralFormatter,
+  nativeToUi,
+  UserAssetBalance,
+  WalletToken,
+} from "@mrgnlabs/mrgn-common";
 
 import {
   ActionBoxContentWrapper,
@@ -34,6 +41,8 @@ import { useDepositSwapActionAmounts, useDepositSwapSimulation } from "./hooks";
 import { getBankByPk, getBankOrWalletTokenByPk } from "./utils";
 import { useDepositSwapBoxStore } from "./store";
 import { ActionInput, Preview } from "./components";
+import { Connection } from "@solana/web3.js";
+import { SequencerTransactionRequest } from "@mixin.dev/mixin-node-sdk";
 
 export type DepositSwapBoxProps = {
   nativeSolBalance: number;
@@ -58,6 +67,15 @@ export type DepositSwapBoxProps = {
   onComplete?: (infoProps: { walletToken?: WalletToken }) => void;
   captureEvent?: (event: string, properties?: Record<string, any>) => void;
   setDisplaySettings?: (displaySettings: boolean) => void;
+
+  isMixin?: boolean;
+  getUserMix?: () => string;
+  computerInfo?: ComputerInfoResponse;
+  connection?: Connection;
+  computerAccount?: ComputerUserResponse;
+  getComputerRecipient?: () => string;
+  balanceAddressMap?: Record<string, UserAssetBalance>;
+  fetchTransaction?: (transactionId: string) => Promise<SequencerTransactionRequest>;
 };
 
 export const DepositSwapBox = ({
@@ -80,6 +98,14 @@ export const DepositSwapBox = ({
   allBanks,
   displaySettings,
   setDisplaySettings,
+  isMixin,
+  getUserMix,
+  computerInfo,
+  connection,
+  computerAccount,
+  getComputerRecipient,
+  balanceAddressMap,
+  fetchTransaction,
 }: DepositSwapBoxProps) => {
   const [
     amountRaw,
@@ -164,6 +190,7 @@ export const DepositSwapBox = ({
     nativeSolBalance,
     actionMode: lendMode,
     walletTokens,
+    isMixin: isMixin ?? false,
   });
   const actionMessages = React.useMemo(() => {
     return checkDepositSwapActionAvailable({
@@ -407,6 +434,7 @@ export const DepositSwapBox = ({
           }}
           walletTokens={walletTokens}
           showOnlyUserOwnedTokens={true}
+          isMixin={isMixin}
         />
       </div>
 

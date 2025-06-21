@@ -127,6 +127,7 @@ interface MrgnlendState {
   setIsRefreshingStore: (isRefreshingStore: boolean) => void;
   resetUserData: () => void;
   fetchWalletTokens: (wallet: Wallet, extendedBankInfos: ExtendedBankInfo[]) => Promise<void>;
+  fetchMixinWalletTokens: (publicKey: PublicKey, extendedBankInfos: ExtendedBankInfo[]) => Promise<void>;
   updateWalletTokens: (connection: Connection) => Promise<void>;
   updateWalletToken: (tokenAddress: string, ata: string, connection: Connection) => Promise<void>;
 }
@@ -566,6 +567,34 @@ const stateCreator: StateCreator<MrgnlendState, [], []> = (set, get) => ({
   fetchWalletTokens: async (wallet: Wallet, extendedBankInfos: ExtendedBankInfo[]) => {
     try {
       const response = await fetch(`/api/user/wallet?wallet=${wallet.publicKey.toBase58()}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch wallet tokens");
+      }
+      const data = await response.json();
+
+      const mappedData: WalletToken[] = data.map((token: WalletToken) => {
+        return {
+          ...token,
+          address: new PublicKey(token.address),
+          ata: new PublicKey(token.ata),
+        };
+      });
+
+      const bankTokenSymbols = new Set(extendedBankInfos.map((bank) => bank.meta.tokenSymbol));
+      const bankTokenAddresses = new Set(extendedBankInfos.map((bank) => bank.address.toBase58()));
+
+      const filteredTokens = mappedData
+        .filter((token) => !bankTokenSymbols.has(token.symbol))
+        .filter((token) => !bankTokenAddresses.has(token.address.toBase58()));
+
+      set({ walletTokens: filteredTokens });
+    } catch (error) {
+      console.error("Failed to fetch wallet tokens:", error);
+    }
+  },
+  fetchMixinWalletTokens: async (publicKey: PublicKey, extendedBankInfos: ExtendedBankInfo[]) => {
+    try {
+      const response = await fetch(`/api/user/wallet?wallet=${publicKey.toBase58()}`);
       if (!response.ok) {
         throw new Error("Failed to fetch wallet tokens");
       }

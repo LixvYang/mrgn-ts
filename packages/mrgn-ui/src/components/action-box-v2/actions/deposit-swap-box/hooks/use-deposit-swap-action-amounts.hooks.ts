@@ -12,6 +12,7 @@ export function useDepositSwapActionAmounts({
   actionMode,
   maxAmountCollateral,
   walletTokens,
+  isMixin,
 }: {
   amountRaw: string;
   nativeSolBalance: number;
@@ -19,6 +20,7 @@ export function useDepositSwapActionAmounts({
   selectedBank: ExtendedBankInfo | WalletToken | null;
   maxAmountCollateral?: number;
   walletTokens: WalletToken[] | null;
+  isMixin: boolean;
 }) {
   const amount = React.useMemo(() => {
     const strippedAmount = amountRaw.replace(/,/g, "");
@@ -31,6 +33,11 @@ export function useDepositSwapActionAmounts({
     if (!selectedBank) return 0;
 
     if ("info" in selectedBank) {
+      if (isMixin) {
+        return selectedBank.info.state.mint?.equals(WSOL_MINT)
+          ? nativeSolBalance
+          : selectedBank.userInfo.tokenAccount.balance;
+      }
       // Case: ExtendedBankInfo
       return selectedBank.info.state.mint?.equals(WSOL_MINT)
         ? selectedBank.userInfo.tokenAccount.balance + nativeSolBalance

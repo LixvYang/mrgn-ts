@@ -11,12 +11,23 @@ import { Loader } from "~/components/ui/loader";
 import { WalletToken } from "@mrgnlabs/mrgn-common";
 
 export default function DepositSwapPage() {
-  const [connected] = useAppStore((state) => [state.connected]);
+  const [connected, publicKey, getUserMix, computerInfo, computerAccount, getComputerRecipient, balanceAddressMap] =
+    useAppStore((state) => [
+      state.connected,
+      state.publicKey,
+      state.getUserMix,
+      state.info,
+      state.account,
+      state.getComputerRecipient,
+      state.balanceAddressMap,
+    ]);
+
   const [
     walletTokens,
     initialized,
     extendedBankInfosWithoutStakedAssets,
     fetchWalletTokens,
+    fetchMixinWalletTokens,
     extendedBankInfos,
     marginfiClient,
     updateWalletTokens,
@@ -27,48 +38,51 @@ export default function DepositSwapPage() {
     state.initialized,
     state.extendedBankInfosWithoutStakedAssets,
     state.fetchWalletTokens,
+    state.fetchMixinWalletTokens,
     state.extendedBankInfos,
     state.marginfiClient,
     state.updateWalletTokens,
     state.updateWalletToken,
     state.fetchMrgnlendState,
   ]);
-  // const { connected, wallet } = useWallet();
   const { connection } = useConnection();
   const intervalId = React.useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // React.useEffect(() => {
-  //   if (
-  //     // wallet &&
-  //     extendedBankInfos &&
-  //     extendedBankInfos.length > 0 &&
-  //     (walletTokens === null || walletTokens.length === 0)
-  //   ) {
-  //     fetchWalletTokens(wallet, extendedBankInfos);
-  //   }
-  // }, [fetchWalletTokens, walletTokens, extendedBankInfos]);
+  React.useEffect(() => {
+    if (!publicKey) {
+      return;
+    }
+    if (
+      // wallet &&
+      extendedBankInfos &&
+      extendedBankInfos.length > 0 &&
+      (walletTokens === null || walletTokens.length === 0)
+    ) {
+      fetchMixinWalletTokens(publicKey, extendedBankInfos);
+    }
+  }, [fetchMixinWalletTokens, extendedBankInfos, publicKey, walletTokens]);
 
-  // const fetchAndUpdateTokens = React.useCallback(() => {
-  //   if (!wallet || !connection) {
-  //     return;
-  //   }
+  const fetchAndUpdateTokens = React.useCallback(() => {
+    if (!connection) {
+      return;
+    }
 
-  //   if (connection) {
-  //     console.log("🔄 Periodically fetching wallet tokens");
-  //     updateWalletTokens(connection);
-  //   }
-  // }, [wallet, connection, updateWalletTokens]);
+    if (connection) {
+      console.log("🔄 Periodically fetching wallet tokens");
+      updateWalletTokens(connection);
+    }
+  }, [connection, updateWalletTokens]);
 
-  // // Effect for periodic updates
-  // React.useEffect(() => {
-  //   intervalId.current = setInterval(fetchAndUpdateTokens, 60_000); // Periodic refresh
+  // Effect for periodic updates
+  React.useEffect(() => {
+    intervalId.current = setInterval(fetchAndUpdateTokens, 60_000); // Periodic refresh
 
-  //   return () => {
-  //     if (intervalId.current) {
-  //       clearInterval(intervalId.current);
-  //     }
-  //   };
-  // }, [wallet]); // eslint-disable-line react-hooks/exhaustive-deps
+    return () => {
+      if (intervalId.current) {
+        clearInterval(intervalId.current);
+      }
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>
@@ -105,6 +119,13 @@ export default function DepositSwapPage() {
                 }
                 fetchMrgnlendState();
               },
+              isMixin: true,
+              getUserMix: getUserMix,
+              computerInfo: computerInfo,
+              connection: connection,
+              computerAccount: computerAccount,
+              getComputerRecipient: getComputerRecipient,
+              balanceAddressMap: balanceAddressMap,
             }}
           /> */}
         </div>

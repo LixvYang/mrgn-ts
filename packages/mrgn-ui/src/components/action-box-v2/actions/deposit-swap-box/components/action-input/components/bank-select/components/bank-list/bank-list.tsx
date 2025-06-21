@@ -22,6 +22,8 @@ type BankListProps = {
 
   walletTokens?: WalletToken[] | null;
   showOnlyUserOwnedTokens?: boolean;
+
+  isMixin?: boolean;
 };
 
 export const BankList = ({
@@ -36,6 +38,7 @@ export const BankList = ({
   onClose,
   walletTokens,
   showOnlyUserOwnedTokens,
+  isMixin = false,
 }: BankListProps) => {
   const lendingMode = React.useMemo(
     () =>
@@ -213,6 +216,7 @@ export const BankList = ({
                         bank={token}
                         showBalanceOverride={true}
                         nativeSolBalance={nativeSolBalance}
+                        isMixin={isMixin}
                       />
                     </CommandItem>
                   );

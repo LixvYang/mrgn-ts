@@ -32,6 +32,8 @@ type ActionInputProps = {
 
   setAmountRaw: (amount: string) => void;
   setSelectedBank: (bank: ExtendedBankInfo | WalletToken | null) => void;
+
+  isMixin?: boolean;
 };
 
 export const ActionInput = ({
@@ -53,6 +55,7 @@ export const ActionInput = ({
   setSelectedBank,
   walletTokens,
   showOnlyUserOwnedTokens,
+  isMixin,
 }: ActionInputProps) => {
   const amountInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -99,6 +102,7 @@ export const ActionInput = ({
             connected={connected}
             walletTokens={walletTokens}
             showOnlyUserOwnedTokens={showOnlyUserOwnedTokens}
+            isMixin={isMixin}
           />
         </div>
         <div className="flex-auto flex flex-col gap-0 items-end">

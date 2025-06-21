@@ -142,6 +142,7 @@ export default function HomePage() {
                     fetchMrgnlendState();
                   },
                   isMixinLend: true,
+                  isMixinComputerRegister: register,
                   // getUserMix: getUserMix,
                   // computerInfo: computerInfo,
                   // connection: connection,

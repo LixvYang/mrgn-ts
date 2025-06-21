@@ -27,6 +27,7 @@ export default function HomePage() {
     getComputerRecipient,
     balanceAddressMap,
     getMixinClient,
+    register,
     publicKey,
   ] = useAppStore((state) => [
     state.connected,
@@ -36,6 +37,7 @@ export default function HomePage() {
     state.getComputerRecipient,
     state.balanceAddressMap,
     state.getMixinClient,
+    state.register,
     state.publicKey,
   ]);
   const mixinClient = getMixinClient();
@@ -104,6 +106,7 @@ export default function HomePage() {
                       fetchMrgnlendState();
                     },
                     isMixinLend: true,
+                    isMixinComputerRegister: register,
                     getUserMix: getUserMix,
                     computerInfo: computerInfo,
                     connection: connection,

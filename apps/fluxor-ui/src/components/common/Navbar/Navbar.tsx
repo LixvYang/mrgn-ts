@@ -17,6 +17,7 @@ import {
   IconLogout,
   IconKey,
   IconInfoCircleFilled,
+  IconCheck,
 } from "@tabler/icons-react";
 import { Button } from "~/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
@@ -37,6 +38,7 @@ import {
   SheetTrigger,
 } from "~/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import MixinRegister from "../MixinWallet/MixinRegister";
 
 // @todo implement second pretty navbar row
 export const Navbar: FC = () => {
@@ -75,12 +77,13 @@ export const Navbar: FC = () => {
     globalActionBoxProps: state.globalActionBoxProps,
   }));
 
-  const { user, balances, getMixinClient, setKeystore, clear } = useAppStore((s) => ({
+  const { user, balances, getMixinClient, setKeystore, clear, register } = useAppStore((s) => ({
     user: s.user,
     balances: s.balances,
     getMixinClient: s.getMixinClient,
     setKeystore: s.setKeystore,
     clear: s.clear,
+    register: s.register,
   }));
 
   const isLoggedIn = !!user;
@@ -248,7 +251,20 @@ export const Navbar: FC = () => {
 
                       <TabsContent value="settings">
                         <div className="mt-6 space-y-4">
-                          <Button variant="outline" className="w-full justify-between" onClick={handleLogout}>
+                          {!register && (
+                            <Button variant="outline" className="w-full justify-between">
+                              注册用户
+                              <MixinRegister />
+                              {/* <IconLogout size={18} /> */}
+                            </Button>
+                          )}
+                          {register && (
+                            <Button variant="outline" className="w-full justify-between">
+                              已注册
+                              <IconCheck size={18} />
+                            </Button>
+                          )}
+                          <Button variant="outline" className="w-full justify-between hover:bg-accent/50" onClick={handleLogout}>
                             断开连接
                             <IconLogout size={18} />
                           </Button>

@@ -40,11 +40,12 @@ export const DomelendProvider: React.FC<{
     state.accountLabels,
   ]);
 
-  const [solWalletAddress, mixinAccount, connected, mixinBalancesAddressMap] = useAppStore((state) => [
+  const [solWalletAddress, mixinAccount, connected, mixinBalancesAddressMap, register] = useAppStore((state) => [
     state.publicKey,
     state.account,
     state.connected,
     state.balanceAddressMap,
+    state.register,
   ]);
 
   const [hasFetchedAccountLabels, setHasFetchedAccountLabels] = React.useState(false);
@@ -125,7 +126,7 @@ export const DomelendProvider: React.FC<{
       }
       clearInterval(intervalId);
     };
-  }, [solWalletAddress]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [solWalletAddress, mixinBalancesAddressMap, register]); // eslint-disable-line react-hooks/exhaustive-deps
   // ^ crucial to omit both `connection` and `fetchMrgnlendState` from the dependency array
   // TODO: fix...
 

@@ -28,6 +28,7 @@ interface AppState {
   publicKey?: PublicKey;
   initialing: boolean;
   connected: boolean;
+  register: boolean;
 
   // Actions
   getMixinClient: () => MixinClient;
@@ -46,6 +47,7 @@ const initAppState = {
   balanceAddressMap: {},
   initialing: false,
   connected: false,
+  register: false,
 };
 
 const client = initComputerClient();
@@ -87,10 +89,11 @@ const createAppStore = () => {
               set({
                 user,
                 account,
+                register: true,
                 connected: true,
                 publicKey: new PublicKey(account.chain_address),
               });
-            else set({ user, connected: true });
+            else set({ user, connected: true, register: false });
           } catch {}
         },
 
@@ -183,8 +186,10 @@ const createAppStore = () => {
             set({
               account,
               connected: true,
+              register: true,
               publicKey: new PublicKey(account.chain_address),
             });
+          else set({ connected: true, register: false });
         },
 
         getComputerRecipient: () => {

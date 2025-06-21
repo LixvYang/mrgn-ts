@@ -27,6 +27,7 @@ import { Button } from "~/components/ui/button";
 import MixinWallet from "../MixinWallet/MixinWallet";
 import { useEmodeLineConnections } from "../emode/hooks";
 import { EmodePortfolio } from "../emode/components";
+import MixinRegister from "../MixinWallet/MixinRegister";
 
 const initialRewardsState: RewardsType = {
   state: "NOT_FETCHED",
@@ -36,7 +37,7 @@ const initialRewardsState: RewardsType = {
 };
 
 export const LendingPortfolio = () => {
-  const { connected } = useAppStore();
+  const { connected, register } = useAppStore();
   const { connection } = useConnection();
   const [walletConnectionDelay, setWalletConnectionDelay] = React.useState(false);
   const [
@@ -299,6 +300,10 @@ export const LendingPortfolio = () => {
 
   if (isStoreInitialized && !connected) {
     return <MixinWallet />;
+  }
+
+  if (isStoreInitialized && connected && !register) {
+    return <MixinRegister />;
   }
 
   if (isLoading) {

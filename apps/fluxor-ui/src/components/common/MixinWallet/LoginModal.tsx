@@ -14,8 +14,11 @@ import {
   type OAuthKeystore,
 } from "@mixin.dev/mixin-node-sdk";
 import { useAuthorization } from "../../../hooks";
-import { useAppStore } from "../../../store";
+import { useAppStore, useMrgnlendStore, useTokenStore } from "../../../store";
 import { QrCode } from "~/components/Qrcode";
+import { getTransactionStrategy } from "~/transaction.utils";
+import { useConnection } from "~/hooks/use-connection";
+import config from "~/config/marginfi";
 
 interface LoginModalProps {
   open: boolean;
@@ -25,11 +28,25 @@ interface LoginModalProps {
 export const LoginModal = ({ open, onClose }: LoginModalProps) => {
   const [loginCode, setLoginCode] = useState("");
   const [error, setError] = useState<string>();
-  const { getMixinClient, setKeystore, getMe } = useAppStore((s) => ({
-    getMixinClient: s.getMixinClient,
-    setKeystore: s.setKeystore,
-    getMe: s.getMe,
-  }));
+  const computerAssets = useTokenStore((s: any) => s.computerAssets);
+
+  const { getMixinClient, setKeystore, getMe, updateBalances, mixinBalancesAddressMap, solWalletAddress } = useAppStore(
+    (s) => ({
+      getMixinClient: s.getMixinClient,
+      setKeystore: s.setKeystore,
+      getMe: s.getMe,
+      updateBalances: s.updateBalances,
+      mixinBalancesAddressMap: s.balanceAddressMap,
+      solWalletAddress: s.publicKey,
+    })
+  );
+  const [resetBalancesAddressMap, fetchMrgnlendState] = useMrgnlendStore((s) => [
+    s.resetBalancesAddressMap,
+    s.fetchMrgnlendState,
+  ]);
+
+  const { connection } = useConnection();
+
   const clientId = process.env.NEXT_PUBLIC_MIXIN_BOT_ID as string;
 
   const handleLogin = async (code: string, codeVerifier: string) => {
@@ -58,6 +75,9 @@ export const LoginModal = ({ open, onClose }: LoginModalProps) => {
       };
       setKeystore(keystore);
       await getMe();
+      await updateBalances(computerAssets);
+      await resetBalancesAddressMap(mixinBalancesAddressMap);
+
       onClose();
     } catch (e) {
       console.error("Login failed:", e);

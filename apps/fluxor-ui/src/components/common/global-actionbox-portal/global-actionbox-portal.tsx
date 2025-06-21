@@ -7,7 +7,7 @@ import { capture } from "@mrgnlabs/mrgn-utils";
 import { useAppStore, useMrgnlendStore, useUiStore } from "~/store";
 
 export const GlobalActionBoxPortal = () => {
-  const [connected] = useAppStore((state) => [state.connected]);
+  const [connected, register] = useAppStore((state) => [state.connected, state.register]);
 
   // const { connected, walletContextState } = useWallet();
   const [stakeAccounts, fetchMrgnlendState] = useMrgnlendStore((state) => [
@@ -45,6 +45,7 @@ export const GlobalActionBoxPortal = () => {
                 fetchMrgnlendState();
               },
               isMixinLend: true,
+              isMixinComputerRegister: register,
             }}
           />
         </div>

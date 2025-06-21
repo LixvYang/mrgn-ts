@@ -51,6 +51,8 @@ import { useRepayBoxStore } from "./store";
 import { Connection } from "@solana/web3.js";
 import { SequencerTransactionRequest } from "@mixin.dev/mixin-node-sdk";
 import { MixinMultipleTracesModal } from "../../components/mixin-multiple-traces-modal";
+import Link from "next/link";
+import { toastManager } from "@mrgnlabs/mrgn-toasts";
 
 type AdditionalSettings = {
   showAvailableCollateral?: boolean;
@@ -77,6 +79,7 @@ export type RepayBoxProps = {
   setDisplaySettings?: (displaySettings: boolean) => void;
 
   isMixin?: boolean;
+  isMixinComputerRegister?: boolean;
   getUserMix?: () => string;
   computerInfo?: ComputerInfoResponse;
   connection?: Connection;
@@ -102,6 +105,7 @@ export const RepayBox = ({
   captureEvent,
   setDisplaySettings,
   isMixin,
+  isMixinComputerRegister = false,
   getUserMix,
   computerInfo,
   connection,
@@ -311,6 +315,21 @@ export const RepayBox = ({
     }
 
     if (isMixin) {
+      if (!isMixinComputerRegister) {
+        const toastController = toastManager.showCustomToast(
+          <div className="flex flex-col items-start gap-2">
+            <p className="text-sm text-muted-foreground">
+              You need to{" "}
+              <Link href="/portfolio" className="text-primary">
+                register
+              </Link>{" "}
+              with Mixin Computer to use this feature.
+            </p>
+          </div>
+        );
+        return;
+      }
+
       const systemCallRequest = await handleRepayMixinSimulation({
         amount: amount,
         selectedAccount,

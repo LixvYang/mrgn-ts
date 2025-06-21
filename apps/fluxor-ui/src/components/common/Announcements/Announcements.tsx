@@ -72,7 +72,7 @@ const Pagination = ({ itemsLength }: PaginationProps) => {
 
 export const Announcements = ({ items }: AnnouncementsProps) => {
   const [fetchMrgnlendState] = useMrgnlendStore((state) => [state.fetchMrgnlendState]);
-  const [connected] = useAppStore((state) => [state.connected]);
+  const [connected, register] = useAppStore((state) => [state.connected, state.register]);
   const [requestedAction, setRequestedAction] = React.useState<ActionType>();
   const [requestedBank, setRequestedBank] = React.useState<ExtendedBankInfo | null>(null);
 
@@ -118,6 +118,7 @@ export const Announcements = ({ items }: AnnouncementsProps) => {
                         fetchMrgnlendState();
                       },
                       isMixinLend: true,
+                      isMixinComputerRegister: register,
                     }}
                     dialogProps={{
                       trigger: (

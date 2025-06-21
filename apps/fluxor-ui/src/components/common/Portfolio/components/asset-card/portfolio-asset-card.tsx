@@ -467,7 +467,7 @@ const PortfolioAction = ({
   requestedAction: ActionType;
   buttonVariant?: "default" | "outline" | "outline-dark" | "secondary";
 }) => {
-  const [connected] = useAppStore((state) => [state.connected]);
+  const [connected, register] = useAppStore((state) => [state.connected, state.register]);
   // const { walletContextState, connected } = useWallet();
   const [fetchMrgnlendState, stakeAccounts] = useMrgnlendStore((state) => [
     state.fetchMrgnlendState,
@@ -507,6 +507,7 @@ const PortfolioAction = ({
             fetchMrgnlendState();
           },
           isMixinLend: true,
+          isMixinComputerRegister: register,
         }}
         isDialog={true}
         dialogProps={{
@@ -534,6 +535,7 @@ const PortfolioAction = ({
             fetchMrgnlendState();
           },
           isMixin: true,
+          isMixinComputerRegister: register,
         }}
         isDialog={true}
         dialogProps={{

@@ -72,7 +72,8 @@ export const makeData = (
     }[]
   >,
   liabilityBanksByCollateralBank?: Record<string, { liabilityBank: ExtendedBankInfo; emodePair: EmodePair }[]>,
-  isMixin?: boolean
+  isMixin?: boolean,
+  register?: boolean,
 ) => {
   return data.map((bank) => {
     const collateralBanks = collateralBanksByLiabilityBank?.[bank.address.toBase58()] || [];
@@ -88,7 +89,7 @@ export const makeData = (
       bankCap: getBankCapData(bank, isInLendingMode),
       utilization: getUtilizationData(bank),
       position: getPositionData(bank, nativeSolBalance, isInLendingMode, solPrice, isMixin),
-      action: getAction(bank, isInLendingMode, marginfiAccount, connected, fetchMrgnlendState),
+      action: getAction(bank, isInLendingMode, marginfiAccount, connected, register, fetchMrgnlendState),
     } as AssetListModel;
   });
 };

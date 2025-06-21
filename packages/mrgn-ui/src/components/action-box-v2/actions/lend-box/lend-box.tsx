@@ -58,6 +58,8 @@ import { useActionContext } from "../../contexts";
 import { replenishPoolIx } from "@mrgnlabs/marginfi-client-v2/dist/vendor";
 import { SequencerTransactionRequest } from "@mixin.dev/mixin-node-sdk";
 import { MixinMultipleTracesModal } from "../../components/mixin-multiple-traces-modal";
+import { toastManager } from "@mrgnlabs/mrgn-toasts";
+import { Button } from "~/components/ui/button";
 
 // error handling
 export type LendBoxProps = {
@@ -91,6 +93,7 @@ export type LendBoxProps = {
   setDisplaySettings?: (displaySettings: boolean) => void;
 
   isMixinLend?: boolean;
+  isMixinComputerRegister?: boolean;
   getUserMix?: () => string;
   computerInfo?: ComputerInfoResponse;
   connection?: Connection;
@@ -125,6 +128,7 @@ export const LendBox = ({
   setShouldBeHidden,
   initialAmount,
   isMixinLend = false,
+  isMixinComputerRegister = false,
   getUserMix,
   computerInfo,
   connection,
@@ -351,6 +355,21 @@ export const LendBox = ({
     if (!selectedBank || !amount || !transactionSettings || !marginfiClient) return;
 
     if (isMixinLend) {
+      if (!isMixinComputerRegister) {
+        const toastController = toastManager.showCustomToast(
+          <div className="flex flex-col items-start gap-2">
+            <p className="text-sm text-muted-foreground">
+              You need to{" "}
+              <Link href="/portfolio" className="text-primary">
+                register
+              </Link>{" "}
+              with Mixin Computer to use this feature.
+            </p>
+          </div>
+        );
+        return;
+      }
+
       // mixin here
       // 这里需要构造 actionTxns
       // eslint-disable-next-line react-hooks/rules-of-hooks

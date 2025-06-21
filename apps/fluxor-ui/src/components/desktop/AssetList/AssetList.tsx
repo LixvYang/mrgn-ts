@@ -18,7 +18,7 @@ import { TokenFilters } from "~/store/uiStore";
 import { WSOL_MINT } from "@mrgnlabs/mrgn-common";
 
 export const AssetsList = () => {
-  const [connected] = useAppStore((state) => [state.connected]);
+  const [connected, register] = useAppStore((state) => [state.connected, state.register]);
 
   const [
     extendedBankInfos,
@@ -116,10 +116,12 @@ export const AssetsList = () => {
       fetchMrgnlendState,
       collateralBanksByLiabilityBank,
       liabilityBanksByCollateralBank,
-      true
+      true,
+      register,
     );
   }, [
     connected,
+    register,
     // walletContextState,
     globalBanks,
     isInLendingMode,
@@ -143,10 +145,12 @@ export const AssetsList = () => {
       fetchMrgnlendState,
       collateralBanksByLiabilityBank,
       liabilityBanksByCollateralBank,
-      true
+      true,
+      register,
     );
   }, [
     connected,
+    register,
     // walletContextState,
     isolatedBanks,
     isInLendingMode,
@@ -170,10 +174,12 @@ export const AssetsList = () => {
       fetchMrgnlendState,
       collateralBanksByLiabilityBank,
       liabilityBanksByCollateralBank,
-      true
+      true,
+      register,
     );
   }, [
     connected,
+    register,
     // walletContextState,
     stakedAssetBanks,
     isInLendingMode,

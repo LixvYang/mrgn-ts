@@ -14,12 +14,14 @@ const ActionBoxCell = ({
   bank,
   isInLendingMode,
   connected,
+  register,
   // walletContextState,
   fetchMrgnlendState,
 }: {
   bank: ExtendedBankInfo;
   isInLendingMode: boolean;
   connected: boolean;
+  register: boolean;
   // walletContextState: WalletContextStateOverride | WalletContextState;
   fetchMrgnlendState: () => void;
 }) => {
@@ -44,6 +46,7 @@ const ActionBoxCell = ({
             capture(event, properties);
           },
           isMixin: true,
+          isMixinComputerRegister: register,
         }}
         dialogProps={{
           title: `${currentAction} ${bank.meta.tokenSymbol}`,
@@ -70,6 +73,7 @@ const ActionBoxCell = ({
             fetchMrgnlendState();
           },
           isMixinLend: true,
+          isMixinComputerRegister: register,
         }}
         dialogProps={{
           title: `${currentAction} ${bank.meta.tokenSymbol}`,
@@ -93,6 +97,7 @@ export const getAction = (
   isInLendingMode: boolean,
   marginfiAccount: MarginfiAccountWrapper | null,
   connected: boolean,
+  register: boolean,
   // walletContextState: WalletContextStateOverride | WalletContextState,
   fetchMrgnlendState: () => void
 ) => {
@@ -114,6 +119,7 @@ export const getAction = (
                   bank={bank}
                   isInLendingMode={isInLendingMode}
                   connected={connected}
+                  register={register}
                   // walletContextState={walletContextState}
                   fetchMrgnlendState={fetchMrgnlendState}
                 />
@@ -133,6 +139,7 @@ export const getAction = (
             bank={bank}
             isInLendingMode={isInLendingMode}
             connected={connected}
+            register={register}
             // walletContextState={walletContextState}
             fetchMrgnlendState={fetchMrgnlendState}
           />

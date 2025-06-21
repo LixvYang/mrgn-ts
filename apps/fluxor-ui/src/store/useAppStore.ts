@@ -212,6 +212,7 @@ const createAppStore = () => {
             info: undefined,
             account: undefined,
             connected: false,
+            register: false,
           });
         },
       }),

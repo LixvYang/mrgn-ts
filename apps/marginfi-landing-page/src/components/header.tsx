@@ -43,8 +43,8 @@ const CONTENT = {
         heading: "Products",
         links: [
           { label: "mrgnlend", href: "#products" },
-          { label: "LST & YBX", href: "#products" },
-          { label: "mrgnswap", href: "#products" },
+          { label: "The Arena", href: "#products" },
+          { label: "LST", href: "#products" },
         ],
       },
       {
@@ -67,10 +67,6 @@ const CONTENT = {
       {
         heading: "Resources",
         links: [
-          {
-            href: "https://mrgn.grafana.net/public-dashboards/a2700f1bbca64aeaa5582a90dbaeb276?orgId=1&refresh=1m",
-            label: "Analytics",
-          },
           {
             href: "https://github.com/mrgnlabs/marginfi-v2/tree/main/audits",
             label: "Audits",
@@ -249,7 +245,7 @@ export const Header = () => {
                       <span
                         className={cn(
                           debouncedLaunchPopoverOpen &&
-                            "bg-gradient-to-r from-mrgn-gold to-mrgn-chartreuse text-transparent bg-clip-text"
+                          "bg-gradient-to-r from-mrgn-gold to-mrgn-chartreuse text-transparent bg-clip-text"
                         )}
                       >
                         Launch App

@@ -938,6 +938,7 @@ class MarginfiAccount implements MarginfiAccountType {
     const healthAccounts = this.getHealthCheckAccounts([bank], []);
 
     const remainingAccounts: PublicKey[] = [];
+
     if (mintData.tokenProgram.equals(TOKEN_2022_PROGRAM_ID)) {
       remainingAccounts.push(mintData.mint);
     }
@@ -1260,14 +1261,14 @@ export function makeHealthAccountMetas(
   banksToInclude: PublicKey[],
   bankMetadataMap?: BankMetadataMap
 ): PublicKey[] {
-  return composeRemainingAccounts(
-    banksToInclude.flatMap((bankAddress) => {
+  const accounts = composeRemainingAccounts(
+    banksToInclude.map((bankAddress) => {
       const bank = banks.get(bankAddress.toBase58());
-      const accounts: PublicKey[][] = [];
       if (!bank) throw Error(`Bank ${bankAddress.toBase58()} not found`);
 
-      accounts.push([bankAddress, bank.oracleKey]);
+      const keys = [bankAddress, bank.oracleKey];
 
+      // for staked collateral banks (assetTag === 2), include additional accounts
       if (bank.config.assetTag === 2) {
         const bankMetadata = bankMetadataMap?.[bankAddress.toBase58()];
 
@@ -1279,12 +1280,14 @@ export function makeHealthAccountMetas(
         const solPool = findPoolStakeAddress(pool);
         const lstMint = findPoolMintAddress(pool);
 
-        accounts.push([lstMint, solPool]);
+        keys.push(lstMint, solPool);
       }
 
-      return accounts;
+      return keys;
     })
   );
+
+  return accounts;
 }
 
 export { MarginfiAccount, MarginRequirementType };

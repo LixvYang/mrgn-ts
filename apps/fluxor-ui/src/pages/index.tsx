@@ -125,7 +125,7 @@ export default function HomePage() {
       </Desktop>
 
       <Mobile>
-        {!isStoreInitialized && <Loader label="Loading mrgnlend..." className="mt-16" />}
+        {!isStoreInitialized && <Loader label="Loading Fluxor Lend..." className="mt-16" />}
         {isStoreInitialized && (
           <>
             <Announcements items={annoucements} />

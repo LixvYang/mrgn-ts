@@ -1,17 +1,22 @@
-export const env = {
-  PORT: process.env.PORT || 3000,
-  HOST: process.env.HOST || "0.0.0.0",
-  DATABASE_URL: process.env.DATABASE_URL || "postgresql://user:password@localhost:5432/fluxor?TimeZone=Asia/Shanghai",
-  REDIS_URL: process.env.REDIS_URL || "redis://localhost:6379",
-  DATABASE_POOL_MIN: Number(process.env.DATABASE_POOL_MIN || 1),
-  DATABASE_POOL_MAX: Number(process.env.DATABASE_POOL_MAX || 10),
-  API_PREFIX: process.env.API_PREFIX || "",
-  NODE_ENV: process.env.NODE_ENV || "development",
-  MIXIN_BOT_CLIENT_ID: process.env.MIXIN_BOT_CLIENT_ID,
-  MIXIN_BOT_CLIENT_SECRET: process.env.MIXIN_BOT_CLIENT_SECRET,
-  MIXIN_BOT_SESSION_ID: process.env.MIXIN_BOT_SESSION_ID,
-  MIXIN_BOT_SERVER_PUBLIC_KEY: process.env.MIXIN_BOT_SERVER_PUBLIC_KEY,
-  MIXIN_BOT_SESSION_PRIVATE_KEY: process.env.MIXIN_BOT_SESSION_PRIVATE_KEY,
-} as const;
+import { z } from "zod";
+
+const envSchema = z.object({
+  PORT: z.coerce.string().default("3000"),
+  HOST: z.string().default("0.0.0.0"),
+  DATABASE_URL: z.string(),
+  REDIS_URL: z.string(),
+  DATABASE_POOL_MIN: z.coerce.number().default(0),
+  DATABASE_POOL_MAX: z.coerce.number().default(10),
+  FLUXOR_RPC_URL: z.string().optional(),
+  MIXIN_BOT_CLIENT_ID: z.string().optional(),
+  MIXIN_BOT_SESSION_ID: z.string().optional(),
+  MIXIN_BOT_SERVER_PUBLIC_KEY: z.string().optional(),
+  MIXIN_BOT_SESSION_PRIVATE_KEY: z.string().optional(),
+  NEXT_PUBLIC_MARGINFI_ENVIRONMENT: z.string().optional(),
+  NEXT_PUBLIC_MARGINFI_GROUP_OVERRIDE: z.string().optional(),
+  NEXT_PUBLIC_MARGINFI_PROGRAM_OVERRIDE: z.string().optional(),
+});
+
+export const env = envSchema.parse(process.env);
 
 export type Env = typeof env;

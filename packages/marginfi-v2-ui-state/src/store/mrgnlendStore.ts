@@ -36,6 +36,7 @@ import {
   adjustBankWeightsWithEmodePairs,
   groupCollateralBanksByLiabilityBank,
   groupLiabilityBanksByCollateralBank,
+  fetchGroupDataFromFluxorApi,
 } from "../lib";
 import { getPointsSummary } from "../lib/points";
 import { create, StateCreator } from "zustand";
@@ -250,7 +251,7 @@ const stateCreator: StateCreator<MrgnlendState, [], []> = (set, get) => ({
         bundleSimRpcEndpoint,
         bankMetadataMap: bankMetadataMap,
         processTransactionStrategy,
-        fetchGroupDataOverride: fetchGroupData,
+        fetchGroupDataOverride: fetchGroupDataFromFluxorApi,
         mixinPublicKey: publicKey,
       });
       const clientBanks = [...marginfiClient.banks.values()];

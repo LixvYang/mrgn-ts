@@ -18,10 +18,11 @@ export const loggerMiddleware = new Elysia()
       requestId: crypto.randomUUID(),
     };
 
-    set.headers["X-Request-Id"] = store.loggerStore.requestId;
+    const requestId = store.loggerStore.requestId;
+    set.headers["X-Request-Id"] = requestId;
 
     logger.info({
-      requestId: store.loggerStore.requestId,
+      requestId,
       method: request.method,
       url: request.url,
       msg: "Incoming request",
@@ -29,21 +30,33 @@ export const loggerMiddleware = new Elysia()
   })
   .onAfterHandle(({ request, set, store }) => {
     const duration = Date.now() - store.loggerStore.startTime;
+    const requestId = store.loggerStore.requestId;
+
+    set.headers["X-Request-Id"] = requestId;
 
     logger.info({
-      requestId: store.loggerStore.requestId,
+      requestId,
       method: request.method,
       url: request.url,
       status: 200,
       duration: `${duration}ms`,
       msg: "Request completed",
     });
+
+    return {
+      headers: {
+        "X-Request-Id": requestId,
+      },
+    };
   })
-  .onError(({ error, request, store }) => {
+  .onError(({ error, request, set, store }) => {
     const duration = Date.now() - store.loggerStore.startTime;
+    const requestId = store.loggerStore.requestId;
+
+    set.headers["X-Request-Id"] = requestId;
 
     logger.error({
-      requestId: store.loggerStore.requestId,
+      requestId,
       method: request.method,
       url: request.url,
       error: error instanceof Error ? error.message : "Unknown error",
@@ -52,9 +65,11 @@ export const loggerMiddleware = new Elysia()
       msg: "Request failed",
     });
 
-    // 返回错误响应
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
+      headers: {
+        "X-Request-Id": requestId,
+      },
     };
   });

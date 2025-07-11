@@ -68,7 +68,7 @@ const ActionBoxCell = ({
           requestedLendType: currentAction,
           connected: connected,
           // walletContextState,
-          stakeAccounts,
+          // stakeAccounts,
           onComplete: () => {
             fetchMrgnlendState();
           },
@@ -120,7 +120,6 @@ export const getAction = (
                   isInLendingMode={isInLendingMode}
                   connected={connected}
                   register={register ?? false}
-                  
                   // walletContextState={walletContextState}
                   fetchMrgnlendState={fetchMrgnlendState}
                 />

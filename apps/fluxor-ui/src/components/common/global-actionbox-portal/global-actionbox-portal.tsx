@@ -36,8 +36,8 @@ export const GlobalActionBoxPortal = () => {
               requestedLendType: globalActionBoxProps.actionType,
               connected,
               // walletContextState,
-              stakeAccounts,
-              searchMode: true,
+              // stakeAccounts,
+              // searchMode: true,
               captureEvent: (event: string, properties: any) => {
                 capture(event, properties);
               },

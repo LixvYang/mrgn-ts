@@ -14,8 +14,8 @@ export function useAssetItemData({ bank, isInLendingMode }: { bank: ExtendedBank
         ? emissionsRate
         : 0
       : emissions == Emissions.Borrowing
-      ? emissionsRate
-      : 0;
+        ? emissionsRate
+        : 0;
 
     return interestRate + emissionRate;
   }, [isInLendingMode, bank?.info?.state]);

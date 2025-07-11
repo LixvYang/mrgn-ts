@@ -22,6 +22,7 @@ import {
   getDepositsData,
   getPositionData,
   PoolTypes,
+  getAssetWeightDataLegacy,
 } from "@mrgnlabs/mrgn-utils";
 
 import {
@@ -73,7 +74,7 @@ export const makeData = (
   >,
   liabilityBanksByCollateralBank?: Record<string, { liabilityBank: ExtendedBankInfo; emodePair: EmodePair }[]>,
   isMixin?: boolean,
-  register?: boolean,
+  register?: boolean
 ) => {
   return data.map((bank) => {
     const collateralBanks = collateralBanksByLiabilityBank?.[bank.address.toBase58()] || [];
@@ -84,7 +85,7 @@ export const makeData = (
       "validator-rate": bank.meta.stakePool?.validatorRewards || "",
       price: getAssetPriceData(bank),
       rate: getRateData(bank, isInLendingMode),
-      weight: getAssetWeightData(bank, isInLendingMode, undefined, collateralBanks, liabilityBanks),
+      weight: getAssetWeightDataLegacy(bank, isInLendingMode, undefined, collateralBanks, liabilityBanks),
       deposits: getDepositsData(bank, isInLendingMode),
       bankCap: getBankCapData(bank, isInLendingMode),
       utilization: getUtilizationData(bank),

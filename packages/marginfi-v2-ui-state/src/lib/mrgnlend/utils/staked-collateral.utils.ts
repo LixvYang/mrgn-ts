@@ -8,7 +8,7 @@ import {
   findPoolMintAddress,
   findPoolStakeAddress,
   findPoolOnRampAddress,
-} from "@mrgnlabs/marginfi-client-v2/dist/vendor";
+} from "@mrgnlabs/marginfi-client-v2/src/vendor";
 
 /**
  * Fetches stake accounts for a given public key from API

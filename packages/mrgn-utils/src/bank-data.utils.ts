@@ -1,20 +1,26 @@
+import { PublicKey } from "@solana/web3.js";
+import BigNumber from "bignumber.js";
+
 import {
   getPriceWithConfidence,
   OracleSetup,
-  PriceBias,
   MarginRequirementType,
   EmodeTag,
   EmodePair,
+  PriceBias,
+  getPrice,
+  ValidatorStakeGroup,
+  OperationalState,
 } from "@mrgnlabs/marginfi-client-v2";
-import { ExtendedBankInfo, Emissions, StakePoolMetadata } from "@mrgnlabs/marginfi-v2-ui-state";
+import { ExtendedBankInfo, Emissions, StakePoolMetadata } from "@mrgnlabs/mrgn-state";
 import { aprToApy, nativeToUi, WSOL_MINT } from "@mrgnlabs/mrgn-common";
 
 import { isBankOracleStale } from "./mrgnUtils";
-import BigNumber from "bignumber.js";
 
 export const REDUCE_ONLY_BANKS = ["stSOL", "RLB"];
 
 export interface AssetData {
+  address: PublicKey;
   symbol: string;
   name: string;
   image: string;
@@ -25,6 +31,7 @@ export interface AssetData {
   assetWeight: number;
   originalAssetWeight: number;
   emodeActive: boolean;
+  isReduceOnly: boolean;
   collateralBanks: {
     collateralBank: ExtendedBankInfo;
     emodePair: EmodePair;
@@ -42,6 +49,8 @@ export interface RateData {
   rateAPY: number;
   symbol: string;
   isInLendingMode: boolean;
+  bankAddress: PublicKey;
+  mintAddress: PublicKey;
 }
 
 export interface AssetPriceData {
@@ -54,7 +63,24 @@ export interface AssetPriceData {
   isInLendingMode?: boolean;
 }
 
+export interface AssetWeightDataLegacy {
+  assetWeight: number;
+  originalAssetWeight?: number;
+  emodeActive?: boolean;
+  isInLendingMode?: boolean;
+  collateralBanks?: {
+    collateralBank: ExtendedBankInfo;
+    emodePair: EmodePair;
+  }[];
+  liabilityBanks?: {
+    liabilityBank: ExtendedBankInfo;
+    emodePair: EmodePair;
+  }[];
+}
+
 export interface AssetWeightData {
+  bank: ExtendedBankInfo;
+  extendedBankInfos: ExtendedBankInfo[];
   assetWeight: number;
   originalAssetWeight?: number;
   emodeActive?: boolean;
@@ -81,6 +107,8 @@ export interface DepositsData {
   symbol: string;
   isInLendingMode: boolean;
   isStakedAsset: boolean;
+  bankAddress: PublicKey;
+  mintAddress: PublicKey;
 }
 
 export interface BankCapData {
@@ -99,6 +127,7 @@ export interface PositionData {
   solPrice: number | null;
   assetTag: number;
   walletAmount: number;
+  stakedAmount?: number;
   symbol: string;
   positionAmount?: number;
   positionUsd?: number;
@@ -121,10 +150,10 @@ export const getAssetData = (
   }[]
 ): AssetData => {
   return {
+    address: bank.address,
     symbol: bank.meta.tokenSymbol,
     name: bank.meta.tokenName,
     image: bank.meta.tokenLogoUri,
-    stakePool: bank.meta.stakePool,
     hasEmode: bank.info.state.hasEmode,
     emodeTag: bank.info.state.hasEmode ? EmodeTag[bank.info.rawBank.emode.emodeTag] : "",
     isInLendingMode,
@@ -135,6 +164,7 @@ export const getAssetData = (
     emodeActive: bank.isActive && bank.position.emodeActive,
     collateralBanks: collateralBanks ?? [],
     liabilityBanks: liabilityBanks ?? [],
+    isReduceOnly: bank?.info.rawBank.config.operationalState === OperationalState.ReduceOnly,
   };
 };
 
@@ -164,6 +194,8 @@ export const getRateData = (bank: ExtendedBankInfo, isInLendingMode: boolean): R
     rateAPY,
     symbol: bank.meta.tokenSymbol,
     isInLendingMode,
+    bankAddress: bank.address,
+    mintAddress: bank.info.rawBank.mint,
   };
 };
 
@@ -190,8 +222,8 @@ export const getAssetPriceData = (bank: ExtendedBankInfo): AssetPriceData => {
   }
 
   const assetPriceOffset = Math.max(
-    bank.info.rawBank.getPrice(bank.info.oraclePrice, PriceBias.Highest).toNumber() - bank.info.state.price,
-    bank.info.state.price - bank.info.rawBank.getPrice(bank.info.oraclePrice, PriceBias.Lowest).toNumber()
+    getPrice(bank.info.oraclePrice, PriceBias.Highest).toNumber() - bank.info.state.price,
+    bank.info.state.price - getPrice(bank.info.oraclePrice, PriceBias.Lowest).toNumber()
   );
 
   const isOracleStale = isBankOracleStale(bank);
@@ -206,7 +238,7 @@ export const getAssetPriceData = (bank: ExtendedBankInfo): AssetPriceData => {
   };
 };
 
-export const getAssetWeightData = (
+export const getAssetWeightDataLegacy = (
   bank: ExtendedBankInfo,
   isInLendingMode: boolean,
   assetWeightInitOverride?: BigNumber,
@@ -218,7 +250,7 @@ export const getAssetWeightData = (
     liabilityBank: ExtendedBankInfo;
     emodePair: EmodePair;
   }[]
-): AssetWeightData => {
+): AssetWeightDataLegacy => {
   if (!bank?.info?.rawBank?.getAssetWeight) {
     return {
       assetWeight: 0,
@@ -251,6 +283,69 @@ export const getAssetWeightData = (
   };
 };
 
+export const getAssetWeightData = (
+  bank: ExtendedBankInfo,
+  isInLendingMode: boolean,
+  extendedBankInfos: ExtendedBankInfo[] = [],
+  assetWeightInitOverride?: BigNumber,
+  collateralBanks?: {
+    collateralBank: ExtendedBankInfo;
+    emodePair: EmodePair;
+  }[],
+  liabilityBanks?: {
+    liabilityBank: ExtendedBankInfo;
+    emodePair: EmodePair;
+  }[],
+  userActiveEmodes: EmodePair[] = []
+): AssetWeightData => {
+  if (!bank?.info?.rawBank?.getAssetWeight) {
+    return {
+      bank,
+      assetWeight: 0,
+      isInLendingMode,
+      extendedBankInfos,
+    };
+  }
+  const assetWeightInit = bank.info.rawBank
+    .getAssetWeight(MarginRequirementType.Initial, bank.info.oraclePrice, false, assetWeightInitOverride)
+    .toNumber();
+
+  const originalAssetWeight = bank.info.state.originalWeights.assetWeightInit.toNumber();
+
+  if (assetWeightInit <= 0) {
+    return {
+      bank,
+      extendedBankInfos,
+      assetWeight: 0,
+      originalAssetWeight,
+      isInLendingMode,
+    };
+  }
+
+  let emodeActive = false;
+
+  if (bank.isActive) {
+    if (bank.position.isLending && isInLendingMode && bank.position.emodeActive) {
+      emodeActive = true;
+    } else if (!bank.position.isLending && !isInLendingMode) {
+      emodeActive = !!userActiveEmodes.find((emodePair) => emodePair.liabilityBank.equals(bank.address));
+    }
+  }
+
+  const assetWeight = isInLendingMode ? assetWeightInit : 1 / bank.info.rawBank.config.liabilityWeightInit.toNumber();
+
+  return {
+    bank,
+    extendedBankInfos,
+    assetWeight,
+    originalAssetWeight,
+    emodeActive,
+    collateralBanks: collateralBanks,
+    liabilityBanks: liabilityBanks,
+    isInLendingMode,
+  };
+};
+
 export const getDepositsData = (bank: ExtendedBankInfo, isInLendingMode: boolean): DepositsData => {
   const bankCap = nativeToUi(
     isInLendingMode ? bank.info.rawBank.config.depositLimit : bank.info.rawBank.config.borrowLimit,
@@ -262,7 +357,7 @@ export const getDepositsData = (bank: ExtendedBankInfo, isInLendingMode: boolean
 
   const isBankHigh = (isInLendingMode ? bank.info.state.totalDeposits : bank.info.state.totalBorrows) >= bankCap * 0.9;
 
-  const isReduceOnly = bank?.meta?.tokenSymbol ? REDUCE_ONLY_BANKS.includes(bank.meta.tokenSymbol) : false;
+  const isReduceOnly = bank?.info.rawBank.config.operationalState === OperationalState.ReduceOnly;
 
   const bankDeposits = isInLendingMode
     ? bank.info.state.totalDeposits
@@ -288,6 +383,8 @@ export const getDepositsData = (bank: ExtendedBankInfo, isInLendingMode: boolean
     symbol: bank.meta.tokenSymbol,
     isInLendingMode,
     isStakedAsset,
+    bankAddress: bank.address,
+    mintAddress: bank.info.rawBank.mint,
   };
 };
 
@@ -316,7 +413,8 @@ export const getPositionData = (
   nativeSolBalance: number,
   isInLendingMode: boolean,
   solPrice: number | null,
-  isMixin?: boolean
+  isMixin?: boolean,
+  validatorStakeGroup?: ValidatorStakeGroup
 ): PositionData => {
   let positionAmount,
     liquidationPrice,
@@ -357,6 +455,7 @@ export const getPositionData = (
     symbol: bank.meta.tokenSymbol,
     assetTag: bank.info.rawBank.config.assetTag,
     denominationUSD: false,
+    stakedAmount: validatorStakeGroup?.totalStake,
     solPrice,
   };
 

@@ -80,7 +80,7 @@ function makeBankInfo(
   }
 
   return {
-    price: bank.getPrice(oraclePrice, PriceBias.None).toNumber(),
+    price: Bank.getPrice(oraclePrice, PriceBias.None).toNumber(),
     mint: bank.mint,
     mintDecimals: bank.mintDecimals,
     lendingRate: isNaN(lendingRate.toNumber()) ? 0 : lendingRate.toNumber(),
@@ -698,7 +698,7 @@ async function fetchStateMetaData(marginfiConfig: MarginfiConfig) {
       tokenMetadataMap = results[1];
     } else {
       bankMetadataMap = stagingStaticBankMetadata;
-      tokenMetadataMap = stagingStaticTokenMetadata;
+      tokenMetadataMap = stagingStaticTokenMetadata as any;
     }
   } else {
     throw new Error("Unknown environment");

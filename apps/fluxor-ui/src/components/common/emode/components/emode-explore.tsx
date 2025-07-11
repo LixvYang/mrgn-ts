@@ -21,7 +21,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "~/components/ui/table";
 import { Label } from "~/components/ui/label";
 import Link from "next/link";
-import { getAssetWeightData } from "~/bank-data.utils";
+import { getAssetWeightData, getAssetWeightDataLegacy } from "~/bank-data.utils";
 import { EmodeDiff } from "./emode-diff";
 import BigNumber from "bignumber.js";
 import { cn } from "~/theme";
@@ -208,7 +208,7 @@ const EmodeExplore = ({ trigger, initialBank, emodeTag }: EmodeExploreProps) => 
 
                 const emodePair = bank.emodePair;
                 const bankWeight = selectedSide === "lend" ? selectedBank : bnk;
-                const { assetWeight, originalAssetWeight } = getAssetWeightData(bankWeight, true);
+                const { assetWeight, originalAssetWeight } = getAssetWeightDataLegacy(bankWeight, true);
                 const { maxLeverage } = computeMaxLeverage(bnk.info.rawBank, selectedBank.info.rawBank, {
                   assetWeightInit: BigNumber.max(emodePair.assetWeightInit, bnk.info.rawBank.config.assetWeightInit),
                 });

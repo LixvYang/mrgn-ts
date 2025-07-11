@@ -3,7 +3,7 @@ import React from "react";
 import { IconFilter, IconSearch, IconX } from "@tabler/icons-react";
 
 import { cn, LendingModes, PoolTypes } from "@mrgnlabs/mrgn-utils";
-import { ActiveBankInfo } from "@mrgnlabs/marginfi-v2-ui-state";
+import { ActiveBankInfo } from "@mrgnlabs/mrgn-state";
 
 import { useUiStore, useMrgnlendStore } from "~/store";
 import { TokenFilters } from "~/store/uiStore";

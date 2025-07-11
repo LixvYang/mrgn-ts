@@ -51,7 +51,7 @@ export const useMoveSimulation = ({
       const { transactions } = await selectedAccount.makeMovePositionTx(
         activeBank.position.amount,
         activeBank.address,
-        accountToMoveTo
+        accountToMoveTo.address
       );
       return [...transactions];
     } catch (error) {

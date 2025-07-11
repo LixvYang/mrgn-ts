@@ -1,7 +1,7 @@
 import React from "react";
 
 import { WalletToken, WSOL_MINT } from "@mrgnlabs/mrgn-common";
-import { ExtendedBankInfo, ActionType } from "@mrgnlabs/marginfi-v2-ui-state";
+import { ExtendedBankInfo, ActionType } from "@mrgnlabs/mrgn-state";
 import { LendingModes, cn, computeBankRate } from "@mrgnlabs/mrgn-utils";
 
 import { CommandEmpty, CommandGroup, CommandItem } from "~/components/ui/command";
@@ -17,6 +17,7 @@ type BankListProps = {
   lendMode: ActionType;
   connected: boolean;
   showTokenSelectionGroups?: boolean;
+  enableEmodeByBank: Record<string, boolean>;
   onSetSelectedBank: (selectedTokenBank: ExtendedBankInfo | WalletToken | null) => void;
   onClose: () => void;
 
@@ -32,6 +33,7 @@ export const BankList = ({
   nativeSolBalance,
   lendMode,
   connected,
+  enableEmodeByBank,
   showTokenSelectionGroups = true,
   onSetSelectedBank,
   isOpen,
@@ -119,7 +121,7 @@ export const BankList = ({
   const filteredWalletTokens = React.useMemo(() => {
     if (!walletTokens) return [];
     if (searchQuery.length === 0) return walletTokens;
-    return walletTokens.filter((token) => token.symbol.toLowerCase().includes(searchQuery.toLowerCase()));
+    return walletTokens.filter((token) => token.symbol?.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [walletTokens, searchQuery]);
 
   // other banks without positions
@@ -217,6 +219,7 @@ export const BankList = ({
                         showBalanceOverride={true}
                         nativeSolBalance={nativeSolBalance}
                         isMixin={isMixin}
+                        highlightEmodeLabel={enableEmodeByBank[token.address.toBase58()]}
                       />
                     </CommandItem>
                   );
@@ -272,6 +275,7 @@ export const BankList = ({
                     bank={bank}
                     showBalanceOverride={false}
                     nativeSolBalance={nativeSolBalance}
+                    highlightEmodeLabel={enableEmodeByBank[bank.address.toBase58()]}
                   />
                 </CommandItem>
               );
@@ -303,6 +307,7 @@ export const BankList = ({
                     bank={bank}
                     showBalanceOverride={false}
                     nativeSolBalance={nativeSolBalance}
+                    highlightEmodeLabel={enableEmodeByBank[bank.address.toBase58()]}
                   />
                 </CommandItem>
               );

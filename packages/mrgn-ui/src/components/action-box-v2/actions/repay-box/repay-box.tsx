@@ -7,7 +7,7 @@ import {
   AccountSummary,
   computeAccountSummary,
   DEFAULT_ACCOUNT_SUMMARY,
-} from "@mrgnlabs/marginfi-v2-ui-state";
+} from "@mrgnlabs/mrgn-state";
 import { MarginfiAccountWrapper, MarginfiClient } from "@mrgnlabs/marginfi-client-v2";
 import {
   ActionMessageType,
@@ -193,10 +193,8 @@ export const RepayBox = ({
   const [platformFeeBps] = useActionBoxStore((state) => [state.platformFeeBps]);
 
   const accountSummary = React.useMemo(() => {
-    return (
-      accountSummaryArg ?? (selectedAccount ? computeAccountSummary(selectedAccount, banks) : DEFAULT_ACCOUNT_SUMMARY)
-    );
-  }, [accountSummaryArg, selectedAccount, banks]);
+    return accountSummaryArg ?? (selectedAccount ? computeAccountSummary(selectedAccount) : DEFAULT_ACCOUNT_SUMMARY);
+  }, [accountSummaryArg, selectedAccount]);
 
   const actionMode = React.useMemo(() => {
     return selectedBank?.address.toBase58() !== selectedSecondaryBank?.address.toBase58()
@@ -293,10 +291,11 @@ export const RepayBox = ({
       connected,
       selectedBank,
       selectedSecondaryBank,
+      marginfiAccount: selectedAccount,
       actionQuote: actionTxns?.actionQuote ?? null,
       maxOverflowHit,
     });
-  }, [amount, connected, selectedBank, selectedSecondaryBank, actionTxns.actionQuote, maxOverflowHit]);
+  }, [amount, connected, selectedBank, selectedSecondaryBank, actionTxns.actionQuote, maxOverflowHit, selectedAccount]);
 
   //////////////////
   // Repay Action //

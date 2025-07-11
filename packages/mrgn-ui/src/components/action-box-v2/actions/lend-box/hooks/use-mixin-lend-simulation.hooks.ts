@@ -28,11 +28,12 @@ import {
   userIdToBytes,
 } from "@mixin.dev/mixin-node-sdk";
 
-import { AccountSummary, ActionType, ExtendedBankInfo } from "@mrgnlabs/marginfi-v2-ui-state";
+import { AccountSummary, ActionType, ExtendedBankInfo } from "@mrgnlabs/mrgn-state";
 import {
   BroadcastMethodType,
   DEFAULT_PROCESS_TX_OPTS,
   DEFAULT_PROCESS_TX_STRATEGY,
+  formatTransactions,
   MarginfiAccountWrapper,
   MarginfiClient,
   ProcessTransactionError,
@@ -76,7 +77,6 @@ import {
   MARGINFI_ACCOUNT_WITHDRAW_RENT_SIZES,
 } from "@mrgnlabs/mrgn-common";
 import { buildComputerExtra, buildSystemCallInvoiceExtra } from "@mrgnlabs/mrgn-common/src/mixin";
-import { formatTransactions } from "@mrgnlabs/marginfi-client-v2/dist/services/transaction/helpers";
 import { MARGINFI_ACCOUNT_DEPOSIT_RENT_SIZES } from "@mrgnlabs/mrgn-common/src/constants";
 import BigNumber from "bignumber.js";
 
@@ -164,7 +164,12 @@ async function handleLendMixinSimulation({
       bank: selectedBank,
       lendMode,
       amount,
-      stakeAccount: selectedStakeAccount,
+      // stakeOpts: {
+      //   stakeAccount: selectedStakeAccount,
+      //   stakePoolMetadata: selectedBank.info.rawBank.config.stakePoolMetadata,
+      //   stakeAmount: 0,
+      //   walletAmount: 0,
+      // },
     });
 
     if (!actionTxns.finalAccount) {

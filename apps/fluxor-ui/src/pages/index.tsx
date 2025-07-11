@@ -137,7 +137,7 @@ export default function HomePage() {
                   requestedLendType: lendingMode === LendingModes.LEND ? ActionType.Deposit : ActionType.Borrow,
                   connected: connected,
                   // walletContextState: walletContextState,
-                  stakeAccounts,
+                  // stakeAccounts,
                   onComplete: () => {
                     fetchMrgnlendState();
                   },

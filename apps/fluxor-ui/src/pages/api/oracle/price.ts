@@ -11,6 +11,7 @@ import {
   OracleSetup,
   parseOracleSetup,
   parsePriceInfo,
+  PythPushFeedIdMap,
 } from "@mrgnlabs/marginfi-client-v2";
 import {
   CrossbarSimulatePayload,
@@ -20,7 +21,7 @@ import {
   findPoolStakeAddress,
   getStakeAccount,
   StakeAccount,
-} from "@mrgnlabs/marginfi-client-v2/dist/vendor";
+} from "@mrgnlabs/marginfi-client-v2/src/vendor";
 import {
   BankMetadata,
   chunkedGetRawMultipleAccountInfoOrdered,
@@ -104,14 +105,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const feedIdMapRaw: Record<string, string> = await fetch(
       `${host}/api/oracle/pythFeedMap?groupPk=${banksMap[0].data.group.toBase58()}`
     ).then((response) => response.json());
-    const feedIdMap: Map<string, PublicKey> = new Map(
-      Object.entries(feedIdMapRaw).map(([key, value]) => [key, new PublicKey(value)])
+    const feedIdMap: PythPushFeedIdMap = new Map(
+      Object.entries(feedIdMapRaw).map(([key, value]) => [key, { feedId: new PublicKey(value) }])
     );
 
     const feedHashMintMap = new Map<string, PublicKey>();
 
     const requestedOraclesData = banksMap.map((b) => {
-      const oracleKey = findOracleKey(BankConfig.fromAccountParsed(b.data.config), feedIdMap).toBase58();
+      const oracleKey = findOracleKey(BankConfig.fromAccountParsed(b.data.config), feedIdMap).oracleKey.toBase58();
 
       return {
         bankAddress: b.address,

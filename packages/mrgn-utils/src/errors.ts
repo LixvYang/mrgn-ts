@@ -1,9 +1,10 @@
-import { ActionType, ExtendedBankInfo } from "@mrgnlabs/marginfi-v2-ui-state";
+import { JUPITER_PROGRAM_V6_ID } from "@jup-ag/common";
 
+import { ActionType, ExtendedBankInfo } from "@mrgnlabs/mrgn-state";
 import { percentFormatter } from "@mrgnlabs/mrgn-common";
+
 import { ActionMessageType } from "./actions";
 import { MAX_SLIPPAGE_PERCENTAGE } from "./slippage.consts";
-import { JUPITER_PROGRAM_V6_ID } from "@jup-ag/common";
 
 // Static info messages
 export const STATIC_INFO_MESSAGES: { [key: string]: ActionMessageType } = {
@@ -335,6 +336,20 @@ export const STATIC_SIMULATION_ERRORS: { [key: string]: ActionMessageType } = {
     actionSubType: "EMODE",
     code: 157,
   },
+  HEALTH_SIMULATION_CHECK: {
+    description:
+      "Health simulation failed. The displayed health factor is estimated and may not reflect real-time accuracy. Refresh the page to try again.",
+    isEnabled: true,
+    actionMethod: "WARNING",
+    code: 158,
+  },
+  SEND_TRANSACTION_TUPLE_CHECK: {
+    description:
+      "Transaction confirmation failed. The transaction may have landed on-chain but confirmation failed. Please check your wallet and try again.",
+    isEnabled: true,
+    actionMethod: "WARNING",
+    code: 159,
+  },
 };
 
 const createEmodeReduceCheck = (): ActionMessageType => ({
@@ -608,6 +623,10 @@ export const handleError = (
     if (error?.message) {
       if (error.message.includes("RangeError") || error.message.toLowerCase().includes("too large")) {
         return STATIC_SIMULATION_ERRORS.TX_SIZE;
+      }
+
+      if (error.message.includes("tuple")) {
+        return STATIC_SIMULATION_ERRORS.SEND_TRANSACTION_TUPLE_CHECK;
       }
 
       if (

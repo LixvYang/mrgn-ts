@@ -51,8 +51,8 @@ async function fetchGroupData(
     const feedIdMapRaw: Record<string, string> = await fetch(
       `/api/oracle/pythFeedMap?groupPk=${groupAddress.toBase58()}`
     ).then((response) => response.json());
-    const feedIdMap: Map<string, PublicKey> = new Map(
-      Object.entries(feedIdMapRaw).map(([key, value]) => [key, new PublicKey(value)])
+    const feedIdMap: PythPushFeedIdMap = new Map(
+      Object.entries(feedIdMapRaw).map(([key, value]) => [key, { feedId: new PublicKey(value) }])
     );
     return feedIdMap;
   }

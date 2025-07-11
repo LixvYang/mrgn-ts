@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { initFirebaseIfNeeded } from "../user/utils";
 import * as admin from "firebase-admin";
-import { STATUS_INTERNAL_ERROR, STATUS_OK, STATUS_UNAUTHORIZED } from "@mrgnlabs/marginfi-v2-ui-state";
+import { STATUS_INTERNAL_ERROR, STATUS_OK, STATUS_UNAUTHORIZED } from "@mrgnlabs/mrgn-state";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
@@ -64,6 +64,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       accountLabel: activity.account ? accountLabelsMap.get(activity.account) : null,
     }));
 
+    // cache for 4 hours
+    res.setHeader("Cache-Control", "s-maxage=14400, stale-while-revalidate=300");
     return res.status(STATUS_OK).json({ activities: activitiesWithLabels });
   } catch (error: any) {
     console.error("Error fetching activities:", error);

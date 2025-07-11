@@ -1,7 +1,7 @@
 import React from "react";
 
 import { MarginfiAccountWrapper, MarginfiClient } from "@mrgnlabs/marginfi-client-v2";
-import { AccountSummary, ActiveBankInfo, ExtendedBankInfo } from "@mrgnlabs/marginfi-v2-ui-state";
+import { AccountSummary, ActiveBankInfo, ExtendedBankInfo } from "@mrgnlabs/mrgn-state";
 import { getSimulationResult, simulatedHealthFactor } from "../utils/move-position.utils";
 import { ActionMessageType } from "@mrgnlabs/mrgn-utils";
 import { SolanaTransaction } from "@mrgnlabs/mrgn-common";

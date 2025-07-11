@@ -1,4 +1,16 @@
+import {
+  VersionedTransaction,
+  Transaction,
+  TransactionSignature,
+  Connection,
+  ConfirmOptions,
+  PublicKey,
+  Commitment,
+  SimulatedTransactionResponse,
+  SolanaJSONRPCError,
+} from "@solana/web3.js";
 import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
+
 import {
   TransactionOptions,
   TransactionBroadcastType,
@@ -14,18 +26,9 @@ import {
   getComputeBudgetUnits,
   SKIP_SIMULATION,
 } from "@mrgnlabs/mrgn-common";
-import {
-  VersionedTransaction,
-  TransactionSignature,
-  Connection,
-  ConfirmOptions,
-  PublicKey,
-  Commitment,
-  SimulatedTransactionResponse,
-  SolanaJSONRPCError,
-} from "@solana/web3.js";
 
-import { parseTransactionError, ProcessTransactionError, ProcessTransactionErrorType } from "../../errors";
+import { ProcessTransactionError, ProcessTransactionErrorType, parseTransactionError } from "~/errors";
+
 import {
   formatTransactions,
   sendTransactionAsGrpcBundle,
@@ -37,13 +40,12 @@ import {
   BundleSimulationError,
   SendBundleError,
 } from "./helpers";
-import { Transaction } from "@solana/web3.js";
 
 // TEMPORARY
 export const MARGINFI_PROGRAM = new PublicKey("MFv2hWf31Z9kbCa1snEPYctwafyhdvnV7FZnsebVacA");
 
 export const DEFAULT_PROCESS_TX_OPTS = {
-  broadcastType: "BUNDLE" as TransactionBroadcastType,
+  broadcastType: "RPC" as TransactionBroadcastType,
   isSequentialTxs: true,
   isReadOnly: false,
 };
@@ -80,7 +82,7 @@ export type ProcessTransactionStrategy = {
 export const DEFAULT_PROCESS_TX_STRATEGY: ProcessTransactionStrategy = {
   splitExecutionsStrategy: {
     singleTx: "RPC",
-    multiTx: "BUNDLE",
+    multiTx: "RPC",
   },
   // if splitExecutionsStrategy is provided, the fallbackSequence will prioritize the first relevant broadcast method in the array
   fallbackSequence: [
@@ -495,54 +497,6 @@ const dryRunTransaction = async (
 
   return [];
 };
-
-// expo
-
-export async function confirmBundle(connection: Connection, bundleId: string, commitment: Commitment = "confirmed") {
-  const getStatus = async () => {
-    let attempts = 0;
-    const maxAttempts = 5;
-
-    while (attempts < maxAttempts) {
-      await sleep(2000);
-      attempts += 1;
-
-      const getBundleStatus = await fetch("https://mainnet.block-engine.jito.wtf/api/v1/bundles", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          jsonrpc: "2.0",
-          id: 1,
-          method: "getBundleStatuses",
-          params: [[bundleId]],
-        }),
-      });
-
-      const bundleStatus = await getBundleStatus.json();
-      if (bundleStatus.result.value) {
-        if (bundleStatus.result.value[0].bundle_id) {
-          const commitmentStatus = bundleStatus.result.value[0].confirmation_status;
-
-          if (commitmentStatus === "confirmed") {
-            return bundleId;
-          }
-        }
-      }
-
-      console.log("🔄 Waiting for confirmation...");
-    }
-    console.log("❌ Transaction failed to confirm in time.");
-    throw new Error("Transaction failed to confirm in time.");
-  };
-
-  const result = await Promise.race([getStatus(), setTimeoutPromise(20000, `Transaction failed to confirm in time.`)]);
-
-  if (result instanceof Error) {
-    throw result;
-  }
-
-  return result;
-}
 
 export async function confirmTransaction(
   connection: Connection,

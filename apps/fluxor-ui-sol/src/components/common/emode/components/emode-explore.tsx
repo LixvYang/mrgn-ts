@@ -3,7 +3,7 @@ import Image from "next/image";
 
 import { IconSearch } from "@tabler/icons-react";
 import { computeMaxLeverage, EmodeTag, MarginRequirementType } from "@mrgnlabs/marginfi-client-v2";
-import { ExtendedBankInfo } from "@mrgnlabs/marginfi-v2-ui-state";
+import { ExtendedBankInfo } from "@mrgnlabs/mrgn-state";
 import { numeralFormatter, percentFormatterMod } from "@mrgnlabs/mrgn-common";
 
 import { useMrgnlendStore } from "~/store";

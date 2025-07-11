@@ -1,6 +1,6 @@
 import React from "react";
 
-import { ExtendedBankInfo, ActionType } from "@mrgnlabs/marginfi-v2-ui-state";
+import { ExtendedBankInfo, ActionType, StakePoolMetadata } from "@mrgnlabs/mrgn-state";
 import { computeBankRate, LendingModes, LendSelectionGroups } from "@mrgnlabs/mrgn-utils";
 
 import { SelectedBankItem, BankListWrapper } from "~/components/action-box-v2/components";
@@ -15,6 +15,7 @@ type BankSelectProps = {
   connected: boolean;
   isSelectable?: boolean;
   selectionGroups?: LendSelectionGroups[];
+  stakePoolMetadata?: StakePoolMetadata;
   setSelectedBank: (selectedBank: ExtendedBankInfo | null) => void;
   isInitialOpen?: boolean;
   onCloseDialog?: () => void;
@@ -29,13 +30,13 @@ export const BankSelect = ({
   connected,
   isSelectable = true,
   selectionGroups,
+  stakePoolMetadata,
   setSelectedBank,
   isInitialOpen = false,
   onCloseDialog,
   isMixin,
 }: BankSelectProps) => {
-  // idea check list if banks[] == 1 make it unselectable
-  const [isOpen, setIsOpen] = React.useState(isInitialOpen);
+  const [isOpen, setIsOpen] = React.useState(false);
 
   const lendingMode = React.useMemo(
     () =>
@@ -55,7 +56,12 @@ export const BankSelect = ({
       {!isSelectable && (
         <div className="flex gap-3 w-full items-center">
           {selectedBank && (
-            <SelectedBankItem bank={selectedBank} lendingMode={lendingMode} rate={calculateRate(selectedBank)} />
+            <SelectedBankItem
+              bank={selectedBank}
+              lendingMode={lendingMode}
+              rate={calculateRate(selectedBank)}
+              stakePoolMetadata={stakePoolMetadata}
+            />
           )}
         </div>
       )}
@@ -64,15 +70,13 @@ export const BankSelect = ({
         <BankListWrapper
           isOpen={isOpen}
           setIsOpen={(open) => {
-            !open && onCloseDialog?.();
             setIsOpen(open);
           }}
           Trigger={<BankTrigger selectedBank={selectedBank} lendingMode={lendingMode} isOpen={isOpen} />}
           Content={
             <BankList
               isOpen={isOpen}
-              onClose={(hasSetBank) => {
-                !hasSetBank && onCloseDialog?.();
+              onClose={() => {
                 setIsOpen(false);
               }}
               selectedBank={selectedBank}
@@ -83,6 +87,7 @@ export const BankSelect = ({
               connected={connected}
               selectionGroups={selectionGroups}
               isMixin={isMixin}
+              stakePoolMetadata={stakePoolMetadata}
             />
           }
         />

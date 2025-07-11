@@ -19,6 +19,7 @@ import { ActionBoxProvider } from "~/components/action-box-v2/contexts/actionbox
 import { Connection } from "@solana/web3.js";
 import { ToastProvider } from "@mrgnlabs/mrgn-toasts";
 import { GlobalActionBoxPortal } from "~/components/common/global-actionbox-portal/global-actionbox-portal";
+import { AccountSummary } from "@mrgnlabs/mrgn-state";
 
 // Use require instead of import since order matters
 require("~/styles/globals.css");
@@ -128,7 +129,17 @@ export default function App({ Component, pageProps, path }: AppProps & MrgnAppPr
                     marginfiClient={marginfiClient}
                     selectedAccount={selectedAccount}
                     connected={connected}
-                    accountSummaryArg={accountSummary}
+                    accountSummaryArg={{
+                      healthFactor: accountSummary.healthFactor.computedHealth,
+                      balanceEquity: accountSummary.balance,
+                      lendingAmountEquity: accountSummary.lendingAmount,
+                      borrowingAmountEquity: accountSummary.borrowingAmount,
+                      lendingAmountMaintenance: accountSummary.lendingAmountWithBiasAndWeighted,
+                      borrowingAmountMaintenance: accountSummary.borrowingAmountWithBiasAndWeighted,
+                      signedFreeCollateral: accountSummary.balanceUnbiased,
+                      healthSimFailed: false,
+                      apy: accountSummary.apy,
+                    }}
                     setDisplaySettings={setDisplaySettings}
                     isMixinLend={true}
                     getUserMix={getUserMix}

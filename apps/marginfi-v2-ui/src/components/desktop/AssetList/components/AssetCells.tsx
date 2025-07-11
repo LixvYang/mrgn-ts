@@ -11,7 +11,7 @@ import {
   shortenAddress,
   usdFormatter,
 } from "@mrgnlabs/mrgn-common";
-import { IconAlertTriangle, IconExternalLink, IconInfoCircle } from "@tabler/icons-react";
+import { IconAlertTriangle, IconExternalLink, IconInfoCircle, IconChartAreaLineFilled } from "@tabler/icons-react";
 
 import {
   AssetData,
@@ -36,27 +36,38 @@ import { Table } from "~/components/ui/table";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { EmodePopover } from "~/components/common/emode/components/emode-popover";
 import { IconEmode } from "~/components/ui/icons";
+import { BankChartDialog } from "~/components/common/bank/components/bank-chart-dialog";
+import { Button } from "~/components/ui/button";
+import { Skeleton } from "~/components/ui/skeleton";
 
 export const getAssetCell = (asset: AssetData) => {
   return (
-    <div className="flex gap-2 justify-start items-center">
-      <div className="flex items-center gap-4">
-        <Image src={asset.image} alt={`${asset.symbol} logo`} height={25} width={25} className="rounded-full" />
-        <div>{asset.symbol}</div>
-        {/* {asset.hasEmode && asset.emodeTag && (
-          <EmodePopover
-            assetWeight={asset.assetWeight}
-            originalAssetWeight={asset.originalAssetWeight}
-            emodeActive={asset.emodeActive}
-            emodeTag={asset.emodeTag}
-            isInLendingMode={asset.isInLendingMode}
-            collateralBanks={asset.collateralBanks}
-            liabilityBanks={asset.liabilityBanks}
-            triggerType="tag"
-          />
-        )} */}
-      </div>
-    </div>
+    <Link
+      href={`/banks/${asset.address.toBase58()}`}
+      className="flex gap-2 justify-start items-center group-hover:text-chartreuse"
+      onClick={(e) => {
+        const linkElement = e.currentTarget;
+        const symbolDiv = linkElement.querySelector("div");
+        if (symbolDiv) {
+          symbolDiv.textContent = "Loading...";
+          symbolDiv.classList.add("group-hover:text-white");
+          linkElement.classList.add("animate-pulsate");
+        }
+      }}
+    >
+      <Image src={asset.image} alt={`${asset.symbol} logo`} height={25} width={25} className="rounded-full" />
+      <div>{asset.symbol}</div>
+      {asset.isReduceOnly && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <IconAlertTriangle size={14} className="text-destructive-foreground shrink-0" />
+            </TooltipTrigger>
+            <TooltipContent>This bank is in reduce-only mode.</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+    </Link>
   );
 };
 
@@ -156,6 +167,8 @@ export const getRateCell = ({
   emissionsRemaining,
   lendingRate,
   isInLendingMode,
+  bankAddress,
+  mintAddress,
 }: RateData) => {
   return (
     <div className={cn("flex justify-end items-center gap-2", isInLendingMode ? "text-success" : "text-warning")}>
@@ -247,12 +260,14 @@ export const getRateCell = ({
         </div>
       )}
 
-      <div className="flex justify-end">{percentFormatter.format(rateAPY)}</div>
+      <div className="flex items-center gap-0.5">{percentFormatter.format(rateAPY)}</div>
     </div>
   );
 };
 
 export const getAssetWeightCell = ({
+  bank,
+  extendedBankInfos,
   assetWeight,
   originalAssetWeight,
   emodeActive,
@@ -266,6 +281,8 @@ export const getAssetWeightCell = ({
       (collateralBanks && collateralBanks.length > 0) ||
       (liabilityBanks && liabilityBanks.length > 0) ? (
         <EmodePopover
+          bank={bank}
+          extendedBanks={extendedBankInfos}
           assetWeight={assetWeight}
           originalAssetWeight={originalAssetWeight}
           emodeActive={emodeActive}
@@ -287,18 +304,31 @@ export const getDepositsCell = (depositsData: DepositsData) => {
   return (
     <div
       className={cn(
-        "flex flex-col items-end gap-0.5 text-foreground",
-        (depositsData.isReduceOnly || depositsData.isBankHigh) && "text-warning",
-        depositsData.isBankFilled && "text-destructive-foreground"
+        "flex flex-col items-end text-foreground",
+        depositsData.isBankHigh && !depositsData.isReduceOnly && "text-warning",
+        depositsData.isBankFilled && !depositsData.isReduceOnly && "text-destructive-foreground"
       )}
     >
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-0.5">
         {dynamicNumeralFormatter(depositsData.bankDeposits, {
           forceDecimals: true,
         })}
 
-        {(depositsData.isReduceOnly || depositsData.isBankHigh || depositsData.isBankFilled) && (
-          <IconAlertTriangle size={14} />
+        {(depositsData.isBankHigh || depositsData.isBankFilled) && !depositsData.isReduceOnly && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <IconAlertTriangle size={14} />
+              </TooltipTrigger>
+              <TooltipContent>
+                {depositsData.isBankHigh && !depositsData.isBankFilled
+                  ? "This bank is approaching maximum capacity."
+                  : depositsData.isBankFilled
+                    ? "This bank is at maximum capacity."
+                    : "This bank is at maximum capacity."}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
       </div>
 
@@ -311,76 +341,6 @@ export const getDepositsCell = (depositsData: DepositsData) => {
     </div>
   );
 };
-
-// export const getDepositsCell = (depositsData: DepositsData) => {
-//   return (
-//     <TooltipProvider>
-//       <Tooltip>
-//         <TooltipTrigger asChild>
-//           <span
-//             className={cn(
-//               "flex items-center justify-end gap-1.5 text-white",
-//               (depositsData.isReduceOnly || depositsData.isBankHigh) && "text-warning",
-//               depositsData.isBankFilled && "text-destructive-foreground"
-//             )}
-//           >
-//             {depositsData.denominationUSD && "$"}
-//             {dynamicNumeralFormatter(depositsData.bankDeposits, {
-//               forceDecimals: true,
-//             })}
-
-//             {(depositsData.isReduceOnly || depositsData.isBankHigh || depositsData.isBankFilled) && (
-//               <IconAlertTriangle size={14} />
-//             )}
-//           </span>
-//         </TooltipTrigger>
-//         <TooltipContent className="text-left">
-//           {depositsData.isStakedAsset && !depositsData.isInLendingMode ? (
-//             <div>
-//               <span>Native stake can only be deposited at this time.</span>
-//             </div>
-//           ) : (
-//             <>
-//               <div>
-//                 {depositsData.isReduceOnly
-//                   ? "Reduce Only"
-//                   : depositsData.isBankHigh && (depositsData.isBankFilled ? "Limit Reached" : "Approaching Limit")}
-//               </div>
-
-//               {depositsData.isReduceOnly ? (
-//                 <span>{depositsData.symbol} is being discontinued.</span>
-//               ) : (
-//                 <>
-//                   <span>
-//                     {depositsData.symbol} {depositsData.isInLendingMode ? "deposits" : "borrows"} are at{" "}
-//                     {percentFormatterMod(depositsData.capacity, {
-//                       minFractionDigits: 0,
-//                       maxFractionDigits:
-//                         depositsData.isBankHigh && !depositsData.isBankFilled && depositsData.capacity >= 0.99 ? 4 : 2,
-//                     })}{" "}
-//                     capacity.
-//                   </span>
-//                   {!depositsData.isBankFilled && (
-//                     <>
-//                       <br />
-//                       <br />
-//                       <span>Available: {numeralFormatter(depositsData.available)}</span>
-//                     </>
-//                   )}
-//                 </>
-//               )}
-//               <br />
-//               <br />
-//               <a href="https://docs.marginfi.com">
-//                 <u>Learn more.</u>
-//               </a>
-//             </>
-//           )}
-//         </TooltipContent>
-//       </Tooltip>
-//     </TooltipProvider>
-//   );
-// };
 
 export const getBankCapCell = ({ bankCap, bankCapUsd }: BankCapData) => (
   <div className="flex flex-col items-end gap-0.5 text-foreground">
@@ -406,10 +366,10 @@ export const getPositionCell = (positionData: PositionData) => {
   const makeTokenAmount = (amount: number, symbol: string) => dynamicNumeralFormatter(amount) + " " + symbol;
   const tokenWalletAmount = makeTokenAmount(positionData.walletAmount, positionData.symbol);
   const tokenPositionAmount = makeTokenAmount(positionData.positionAmount!, positionData.symbol);
-  const tokenPrice = positionData.assetTag === 2 ? positionData.solPrice || positionData.price : positionData.price;
+  const tokenPrice = positionData.price;
 
   return (
-    <div className="w-full bg-background-gray rounded-md flex items-center gap-8 px-2 py-3">
+    <div className="mt-2 w-full bg-background-gray rounded-md flex items-center gap-8 px-2 py-3">
       <dl className="flex gap-2 items-center">
         <dt className="text-accent-foreground font-light">Wallet:</dt>
         <dd>
@@ -421,6 +381,19 @@ export const getPositionCell = (positionData: PositionData) => {
           </div>
         </dd>
       </dl>
+      {positionData.stakedAmount && (
+        <dl className="flex gap-2 items-center">
+          <dt className="text-accent-foreground font-light">Total staked:</dt>
+          <dd>
+            <div className="flex items-center gap-2">
+              <span className="text-foreground">{makeTokenAmount(positionData.stakedAmount, "SOL")}</span>
+              <span className="text-muted-foreground">
+                ({usdFormatter.format(positionData.stakedAmount * (positionData.solPrice || 0))})
+              </span>
+            </div>
+          </dd>
+        </dl>
+      )}
       {positionData.positionAmount && positionData.positionUsd && (
         <dl className="flex gap-2 items-center">
           <dt className="text-accent-foreground font-light">
@@ -470,7 +443,13 @@ export const getPositionCell = (positionData: PositionData) => {
 };
 
 export const getValidatorCell = (validatorVoteAccount: PublicKey) => {
-  if (!validatorVoteAccount) return null;
+  if (!validatorVoteAccount) {
+    return (
+      <div className="flex items-center justify-end gap-2">
+        <Skeleton className="h-3 w-16" />
+      </div>
+    );
+  }
   const pkStr = validatorVoteAccount.toBase58();
   return (
     <div className="flex items-center justify-end gap-2">
@@ -491,5 +470,12 @@ export const getValidatorCell = (validatorVoteAccount: PublicKey) => {
 };
 
 export const getValidatorRateCell = (rewardRate: number) => {
-  return <div className="text-right text-success">{rewardRate ? percentFormatter.format(rewardRate / 100) : 0}</div>;
+  if (!rewardRate) {
+    return (
+      <div className="flex items-center justify-end gap-2">
+        <Skeleton className="h-3 w-16" />
+      </div>
+    );
+  }
+  return <div className="text-right text-success">{percentFormatter.format(rewardRate / 100)}</div>;
 };

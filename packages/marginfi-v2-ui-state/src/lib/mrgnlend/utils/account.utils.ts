@@ -18,7 +18,7 @@ import { UserAssetBalance } from "@mrgnlabs/mrgn-common";
 
 function computeAccountSummary(marginfiAccount: MarginfiAccountWrapper, banks: ExtendedBankInfo[]): AccountSummary {
   const equityComponents = marginfiAccount.computeHealthComponents(MarginRequirementType.Equity);
-  const equityComponentsWithoutBias = marginfiAccount.computeHealthComponentsWithoutBias(MarginRequirementType.Equity);
+  const equityComponentsWithoutBias = marginfiAccount.computeHealthComponentsWithoutBiasLegacy(MarginRequirementType.Equity);
   const maintenanceComponentsWithBiasAndWeighted = marginfiAccount.computeHealthComponents(
     MarginRequirementType.Maintenance
   );

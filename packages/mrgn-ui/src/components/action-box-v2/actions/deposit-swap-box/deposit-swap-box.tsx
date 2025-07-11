@@ -7,7 +7,7 @@ import {
   AccountSummary,
   computeAccountSummary,
   DEFAULT_ACCOUNT_SUMMARY,
-} from "@mrgnlabs/marginfi-v2-ui-state";
+} from "@mrgnlabs/mrgn-state";
 import { MarginfiAccountWrapper, MarginfiClient } from "@mrgnlabs/marginfi-client-v2";
 import {
   ActionMessageType,
@@ -170,10 +170,8 @@ export const DepositSwapBox = ({
   };
 
   const accountSummary = React.useMemo(() => {
-    return (
-      accountSummaryArg ?? (selectedAccount ? computeAccountSummary(selectedAccount, banks) : DEFAULT_ACCOUNT_SUMMARY)
-    );
-  }, [accountSummaryArg, selectedAccount, banks]);
+    return accountSummaryArg ?? (selectedAccount ? computeAccountSummary(selectedAccount) : DEFAULT_ACCOUNT_SUMMARY);
+  }, [accountSummaryArg, selectedAccount]);
 
   const isDust = React.useMemo(
     () => selectedDepositBank?.isActive && selectedDepositBank?.position.isDust,
@@ -435,6 +433,7 @@ export const DepositSwapBox = ({
           walletTokens={walletTokens}
           showOnlyUserOwnedTokens={true}
           isMixin={isMixin}
+          depositBank={selectedDepositBank}
         />
       </div>
 
@@ -491,6 +490,7 @@ export const DepositSwapBox = ({
             }}
             isInputDisabled={true}
             showOnlyUserOwnedTokens={false}
+            depositBank={selectedDepositBank}
           />
         </div>
       )}

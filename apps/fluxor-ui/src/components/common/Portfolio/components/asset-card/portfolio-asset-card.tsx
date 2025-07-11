@@ -19,7 +19,14 @@ import {
 import { replenishPoolIx } from "@mrgnlabs/marginfi-client-v2/dist/vendor";
 import { ActiveBankInfo, ActionType, ExtendedBankInfo } from "@mrgnlabs/marginfi-v2-ui-state";
 import { AssetTag, EmodeTag } from "@mrgnlabs/marginfi-client-v2";
-import { capture, cn, composeExplorerUrl, executeActionWrapper, getAssetWeightData } from "@mrgnlabs/mrgn-utils";
+import {
+  capture,
+  cn,
+  composeExplorerUrl,
+  executeActionWrapper,
+  getAssetWeightData,
+  getAssetWeightDataLegacy,
+} from "@mrgnlabs/mrgn-utils";
 import { ActionBox, SVSPMEV, useWallet } from "@mrgnlabs/mrgn-ui";
 
 import { useAssetItemData } from "~/hooks/useAssetItemData";
@@ -121,12 +128,12 @@ export const PortfolioAssetCard = ({
   );
 
   const assetWeight = React.useMemo(
-    () => getAssetWeightData(bank, isInLendingMode).assetWeight,
+    () => getAssetWeightDataLegacy(bank, isInLendingMode).assetWeight,
     [bank, isInLendingMode]
   );
 
   const originalAssetWeight = React.useMemo(
-    () => getAssetWeightData(bank, isInLendingMode, bank.info.state.originalWeights.assetWeightInit).assetWeight,
+    () => getAssetWeightDataLegacy(bank, isInLendingMode, bank.info.state.originalWeights.assetWeightInit).assetWeight,
     [bank, isInLendingMode]
   );
 
@@ -512,7 +519,7 @@ const PortfolioAction = ({
           requestedBank: requestedBank ?? undefined,
           // walletContextState: walletContextState,
           connected: connected,
-          stakeAccounts: stakeAccounts,
+          // stakeAccounts: stakeAccounts,
           captureEvent: (event, properties) => {
             capture(event, properties);
           },

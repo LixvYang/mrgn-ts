@@ -5,7 +5,7 @@ import { useRouter } from "next/router";
 
 import { shortenAddress } from "@mrgnlabs/mrgn-common";
 import { capture, Desktop, getEmodeStrategies, LendingModes, Mobile } from "@mrgnlabs/mrgn-utils";
-import { ActionType, ExtendedBankInfo } from "@mrgnlabs/marginfi-v2-ui-state";
+import { ActionType, ExtendedBankInfo } from "@mrgnlabs/mrgn-state";
 import { ActionBox, useWallet } from "@mrgnlabs/mrgn-ui";
 
 import { useMrgnlendStore, useUiStore } from "~/store";

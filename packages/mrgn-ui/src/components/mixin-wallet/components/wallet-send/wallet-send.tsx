@@ -14,7 +14,7 @@ import {
 } from "@solana/web3.js";
 import { IconCheck, IconX, IconWallet } from "@tabler/icons-react";
 
-import { ExtendedBankInfo } from "@mrgnlabs/marginfi-v2-ui-state";
+import { ExtendedBankInfo } from "@mrgnlabs/mrgn-state";
 import {
   shortenAddress,
   numeralFormatter,
@@ -32,7 +32,7 @@ import { Button } from "~/components/ui/button";
 import { Label } from "~/components/ui/label";
 import { Input } from "~/components/ui/input";
 
-import { Token as TokenType } from "~/components/wallet-v2/components/wallet-tokens/wallet-tokens";
+// import { Token as TokenType } from "~/components/wallet-v2/components/wallet-tokens/wallet-tokens";
 import { confirmTransaction } from "@mrgnlabs/marginfi-client-v2";
 import { toastManager } from "@mrgnlabs/mrgn-toasts";
 
@@ -40,7 +40,7 @@ type WalletSendProps = {
   connection: Connection;
   extendedBankInfos: ExtendedBankInfo[];
   nativeSolBalance: number;
-  activeToken: TokenType;
+  activeToken: any;
   onSendMore?: () => void;
   onBack?: () => void;
   onRetry?: () => void;

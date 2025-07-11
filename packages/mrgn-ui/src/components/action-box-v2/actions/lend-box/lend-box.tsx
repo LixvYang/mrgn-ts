@@ -23,10 +23,16 @@ import {
   AccountSummary,
   computeAccountSummary,
   DEFAULT_ACCOUNT_SUMMARY,
-} from "@mrgnlabs/marginfi-v2-ui-state";
+  getEmodePairs,
+} from "@mrgnlabs/mrgn-state";
 
-import { AssetTag, MarginfiAccountWrapper, MarginfiClient } from "@mrgnlabs/marginfi-client-v2";
-import { ValidatorStakeGroup } from "@mrgnlabs/marginfi-v2-ui-state";
+import {
+  ActionEmodeImpact,
+  EmodeImpact,
+  MarginfiAccountWrapper,
+  MarginfiClient,
+  vendor,
+} from "@mrgnlabs/marginfi-client-v2";
 import {
   ActionMessageType,
   checkLendActionAvailable,
@@ -53,9 +59,9 @@ import { ActionSimulationStatus } from "../../components";
 import { Collateral, ActionInput, Preview, StakeAccountSwitcher } from "./components";
 import { SimulationStatus } from "../../utils";
 import { handleLendMixinSimulation, useLendSimulation } from "./hooks";
-import { HidePoolStats } from "../../contexts/actionbox/actionbox.context";
+import { HidePoolStats, useActionBoxContext } from "../../contexts/actionbox/actionbox.context";
 import { useActionContext } from "../../contexts";
-import { replenishPoolIx } from "@mrgnlabs/marginfi-client-v2/dist/vendor";
+// import { replenishPoolIx } from "@mrgnlabs/marginfi-client-v2/dist/vendor";
 import { SequencerTransactionRequest } from "@mixin.dev/mixin-node-sdk";
 import { MixinMultipleTracesModal } from "../../components/mixin-multiple-traces-modal";
 import { toastManager } from "@mrgnlabs/mrgn-toasts";
@@ -80,15 +86,11 @@ export type LendBoxProps = {
   showTokenSelection?: boolean;
   selectionGroups?: LendSelectionGroups[];
   hidePoolStats?: HidePoolStats;
-  stakeAccounts?: ValidatorStakeGroup[];
-
-  searchMode?: boolean;
-  shouldBeHidden?: boolean;
 
   onCloseDialog?: () => void;
   setShouldBeHidden?: (hidden: boolean) => void;
 
-  onComplete?: () => void;
+  onComplete?: (newAccountKey?: PublicKey) => void;
   captureEvent?: (event: string, properties?: Record<string, any>) => void;
   setDisplaySettings?: (displaySettings: boolean) => void;
 
@@ -120,11 +122,8 @@ export const LendBox = ({
   onComplete,
   captureEvent,
   hidePoolStats,
-  stakeAccounts,
   setDisplaySettings,
   onCloseDialog,
-  searchMode = false,
-  shouldBeHidden = false,
   setShouldBeHidden,
   initialAmount,
   isMixinLend = false,
@@ -180,41 +179,6 @@ export const LendBox = ({
   ]);
 
   const isMobile = useIsMobile();
-  const hasRefreshed = React.useRef(false);
-  const _prevSelectedBank = usePrevious(selectedBank);
-  const _prevShouldBeHidden = usePrevious(shouldBeHidden);
-
-  /**
-   * Handles visibility and state refresh logic when `searchMode` is enabled.
-   * - If no bank is selected, hide the component.
-   * - If a bank is selected, show the component.
-   * - If `searchMode` is first enabled and a bank was already selected, refresh the state.
-   */
-  React.useEffect(() => {
-    if (!shouldBeHidden) return;
-
-    if (!selectedBank) {
-      setShouldBeHidden?.(true);
-    } else {
-      setShouldBeHidden?.(false);
-    }
-
-    // Refresh state when searchMode is enabled and a bank was initially selected
-    if (!hasRefreshed.current && _prevSelectedBank === undefined && selectedBank) {
-      refreshState();
-      hasRefreshed.current = true;
-    }
-  }, [shouldBeHidden, selectedBank, _prevSelectedBank, setShouldBeHidden, refreshState]);
-
-  /**
-   * Resets `hasRefreshed` when `searchMode` changes from `false` → `true`.
-   * This ensures `refreshState()` can run again when toggling `searchMode` on.
-   */
-  React.useEffect(() => {
-    if (_prevShouldBeHidden === false && shouldBeHidden === true) {
-      hasRefreshed.current = false;
-    }
-  }, [shouldBeHidden, _prevShouldBeHidden]);
 
   const [isTransactionExecuting, setIsTransactionExecuting] = React.useState(false);
   const [simulationStatus, setSimulationStatus] = React.useState<{
@@ -232,11 +196,37 @@ export const LendBox = ({
 
   const { transactionSettings, priorityFees } = useActionContext() || { transactionSettings: null, priorityFees: null };
 
+  const contextProps = useActionBoxContext();
+  const stakeAccounts = contextProps?.stakeAccounts;
+  const stakePoolMetadataMap = contextProps?.stakePoolMetadataMap;
+  const stakePoolMetadata = stakePoolMetadataMap?.get(selectedBank?.address.toBase58() ?? "");
+
   const accountSummary = React.useMemo(() => {
-    return (
-      accountSummaryArg ?? (selectedAccount ? computeAccountSummary(selectedAccount, banks) : DEFAULT_ACCOUNT_SUMMARY)
-    );
-  }, [accountSummaryArg, selectedAccount, banks]);
+    return accountSummaryArg ?? (selectedAccount ? computeAccountSummary(selectedAccount) : DEFAULT_ACCOUNT_SUMMARY);
+  }, [accountSummaryArg, selectedAccount]);
+
+  const actionEmodeImpact: ActionEmodeImpact | undefined = React.useMemo(() => {
+    if (selectedBank && selectedAccount) {
+      const rawBanks = banks.map((bank) => bank.info.rawBank);
+      const emodePairs = getEmodePairs(rawBanks);
+      const emodeImpacts = selectedAccount.computeEmodeImpacts(emodePairs);
+      const emodeImpact: ActionEmodeImpact | undefined = emodeImpacts[selectedBank.address.toBase58()];
+      return emodeImpact;
+    }
+    return undefined;
+  }, [banks, selectedBank, selectedAccount]);
+
+  const emodeImpact = React.useMemo(() => {
+    let impact: EmodeImpact | undefined;
+
+    if (lendMode === ActionType.Deposit) {
+      impact = actionEmodeImpact?.supplyImpact;
+    } else if (lendMode === ActionType.Borrow) {
+      impact = actionEmodeImpact?.borrowImpact;
+    }
+
+    return impact;
+  }, [actionEmodeImpact?.borrowImpact, actionEmodeImpact?.supplyImpact, lendMode]);
 
   const { amount, debouncedAmount, walletAmount, maxAmount } = useActionAmounts({
     amountRaw,
@@ -246,6 +236,7 @@ export const LendBox = ({
     selectedStakeAccount: selectedStakeAccount || undefined,
     isMixin: isMixinLend,
   });
+
   const { actionSummary, refreshSimulation } = useLendSimulation({
     debouncedAmount: debouncedAmount ?? 0,
     selectedAccount,
@@ -254,7 +245,14 @@ export const LendBox = ({
     lendMode,
     actionTxns,
     simulationResult,
-    selectedStakeAccount: selectedStakeAccount?.address || undefined,
+    stakeOpts: stakePoolMetadata
+      ? {
+          stakeAccount: selectedStakeAccount?.address,
+          stakePoolMetadata,
+          stakeAmount: selectedStakeAccount?.balance,
+          walletAmount: walletAmount,
+        }
+      : undefined,
     setSimulationResult,
     setActionTxns,
     setErrorMessage,
@@ -329,8 +327,19 @@ export const LendBox = ({
       marginfiAccount: selectedAccount,
       nativeSolBalance,
       lendMode,
+      selectedStakeAccount,
     });
-  }, [amount, connected, showCloseBalance, selectedBank, banks, selectedAccount, nativeSolBalance, lendMode]);
+  }, [
+    amount,
+    connected,
+    showCloseBalance,
+    selectedBank,
+    banks,
+    selectedAccount,
+    nativeSolBalance,
+    lendMode,
+    selectedStakeAccount,
+  ]);
 
   const buttonLabel = React.useMemo(() => (showCloseBalance ? "Close" : lendMode), [showCloseBalance, lendMode]);
 
@@ -456,8 +465,8 @@ export const LendBox = ({
       txOpts: {},
       callbacks: {
         captureEvent: captureEvent,
-        onComplete: (txnSig: string) => {
-          onComplete?.();
+        onComplete: (txnSig: string, newAccountKey?: PublicKey) => {
+          onComplete?.(newAccountKey);
 
           // Log the activity
           const activityDetails: Record<string, any> = {
@@ -513,8 +522,9 @@ export const LendBox = ({
   // if requestedBank is set
   React.useEffect(() => {
     if (requestedBank && stakeAccounts) {
+      const stakePoolMetadata = stakePoolMetadataMap?.get(requestedBank.address.toBase58());
       const stakeAccount = stakeAccounts.find((stakeAccount) =>
-        stakeAccount.validator.equals(requestedBank.meta.stakePool?.validatorVoteAccount || PublicKey.default)
+        stakeAccount.validator.equals(stakePoolMetadata?.validatorVoteAccount || PublicKey.default)
       );
       if (stakeAccount) {
         setSelectedStakeAccount({
@@ -523,7 +533,23 @@ export const LendBox = ({
         });
       }
     }
-  }, [requestedBank, stakeAccounts, setSelectedStakeAccount]);
+  }, [requestedBank, stakeAccounts, setSelectedStakeAccount, stakePoolMetadataMap]);
+
+  // set selected stake account when selected bank changes
+  React.useEffect(() => {
+    if (selectedBank && stakeAccounts) {
+      const stakePoolMetadata = stakePoolMetadataMap?.get(selectedBank.address.toBase58());
+      const stakeAccount = stakeAccounts.find((stakeAccount) =>
+        stakeAccount.validator.equals(stakePoolMetadata?.validatorVoteAccount || PublicKey.default)
+      );
+      if (stakeAccount) {
+        setSelectedStakeAccount({
+          address: stakeAccount.accounts[0].pubkey,
+          balance: stakeAccount.accounts[0].amount,
+        });
+      }
+    }
+  }, [selectedBank, stakeAccounts, setSelectedStakeAccount, stakePoolMetadataMap]);
 
   React.useEffect(() => {
     if (marginfiClient) {
@@ -533,7 +559,7 @@ export const LendBox = ({
 
   React.useEffect(() => {
     const handleKeyPress = async (event: KeyboardEvent) => {
-      if (isMobile || event.key !== "Enter" || isLoading || !connected || searchMode) {
+      if (isMobile || event.key !== "Enter" || isLoading || !connected) {
         return;
       }
 
@@ -548,16 +574,7 @@ export const LendBox = ({
 
     document.addEventListener("keypress", handleKeyPress);
     return () => document.removeEventListener("keypress", handleKeyPress);
-  }, [
-    isLoading,
-    connected,
-    additionalActionMessages,
-    actionMessages,
-    showCloseBalance,
-    handleLendingAction,
-    isMobile,
-    searchMode,
-  ]);
+  }, [isLoading, connected, additionalActionMessages, actionMessages, showCloseBalance, handleLendingAction, isMobile]);
 
   return (
     <ActionBoxContentWrapper>
@@ -575,39 +592,28 @@ export const LendBox = ({
           isDialog={isDialog}
           showTokenSelection={showTokenSelection}
           selectionGroups={selectionGroups}
+          selectedStakeAccount={selectedStakeAccount?.address}
+          stakePoolMetadata={stakePoolMetadata}
+          onStakeAccountChange={setSelectedStakeAccount}
           setAmountRaw={setAmountRaw}
           setSelectedBank={setSelectedBank}
-          searchMode={searchMode}
-          onCloseDialog={() => {
-            searchMode && onCloseDialog?.();
-          }}
+          // searchMode={searchMode}
+          // onCloseDialog={() => {
+          //   searchMode && onCloseDialog?.();
+          // }}
           isMixin={isMixinLend}
         />
       </div>
-      {lendMode === ActionType.Deposit &&
-        selectedBank &&
-        selectedBank.info.rawBank.config.assetTag === 2 &&
-        stakeAccounts &&
-        stakeAccounts.length > 1 && (
-          <StakeAccountSwitcher
-            selectedBank={selectedBank}
-            selectedStakeAccount={selectedStakeAccount?.address}
-            stakeAccounts={stakeAccounts}
-            onStakeAccountChange={(account) => {
-              setSelectedStakeAccount(account);
-              setAmountRaw("0");
-            }}
-          />
-        )}
 
       {selectedBank && lendMode === ActionType.Withdraw && (
         <SVSPMEV
           className="hidden md:block mb-4"
           bank={selectedBank}
+          stakePool={stakePoolMetadata}
           onClaim={async () => {
-            if (!marginfiClient || !selectedBank.meta.stakePool?.validatorVoteAccount) return;
+            if (!marginfiClient || !stakePoolMetadata?.validatorVoteAccount) return;
 
-            const ix = await replenishPoolIx(selectedBank.meta.stakePool?.validatorVoteAccount);
+            const ix = await vendor.replenishPoolIx(stakePoolMetadata.validatorVoteAccount);
             const tx = addTransactionMetadata(new Transaction().add(ix), {
               type: TransactionType.INITIALIZE_STAKED_POOL,
             });
@@ -650,7 +656,7 @@ export const LendBox = ({
       )}
       {showAvailableCollateral && (
         <div className="mb-6">
-          <Collateral selectedAccount={selectedAccount} actionSummary={actionSummary} />
+          <Collateral selectedAccount={selectedAccount} actionSummary={actionSummary} emodeImpact={emodeImpact} />
         </div>
       )}
       <div className="mb-3">

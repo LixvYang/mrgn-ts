@@ -17,7 +17,7 @@ import {
   percentFormatterMod,
 } from "@mrgnlabs/mrgn-common";
 import { replenishPoolIx } from "@mrgnlabs/marginfi-client-v2/dist/vendor";
-import { ActiveBankInfo, ActionType, ExtendedBankInfo } from "@mrgnlabs/marginfi-v2-ui-state";
+import { ActiveBankInfo, ActionType, ExtendedBankInfo } from "@mrgnlabs/mrgn-state";
 import { AssetTag, EmodeTag } from "@mrgnlabs/marginfi-client-v2";
 import { capture, cn, composeExplorerUrl, executeActionWrapper, getAssetWeightData } from "@mrgnlabs/mrgn-utils";
 import { ActionBox, SVSPMEV, useWallet } from "@mrgnlabs/mrgn-ui";

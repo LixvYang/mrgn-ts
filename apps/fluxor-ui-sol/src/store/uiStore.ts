@@ -16,7 +16,7 @@ import {
   JupiterOptions,
 } from "@mrgnlabs/mrgn-utils";
 import { MarginfiAccountWrapper, PriorityFees } from "@mrgnlabs/marginfi-client-v2";
-import { ActionType } from "@mrgnlabs/marginfi-v2-ui-state";
+import { ActionType } from "@mrgnlabs/mrgn-state";
 
 import { defaultJupiterOptions } from "~/components";
 

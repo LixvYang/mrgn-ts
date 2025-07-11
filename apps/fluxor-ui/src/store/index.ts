@@ -3,8 +3,7 @@ import { AppState, createAppStore } from "./useAppStore";
 import { TokenStore, createTokenStore } from "./useTokenStore";
 import { createUiStore } from "./uiStore";
 import { UiState } from "./uiStore";
-import { createPersistentMrgnlendStore } from "@mrgnlabs/marginfi-v2-ui-state";
-import { MrgnlendState } from "@mrgnlabs/marginfi-v2-ui-state";
+import { createPersistentMrgnlendStore, MrgnlendState } from "@mrgnlabs/marginfi-v2-ui-state";
 import { createUserProfileStore, UserProfileState } from "./userProfileStore";
 
 const useAppStore: UseBoundStore<StoreApi<AppState>> = createAppStore();

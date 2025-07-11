@@ -7,7 +7,7 @@ import { IconExternalLink } from "@tabler/icons-react";
 import { EmodePair, EmodeTag } from "@mrgnlabs/marginfi-client-v2";
 import { percentFormatterMod } from "@mrgnlabs/mrgn-common";
 import { ExtendedBankInfo } from "@mrgnlabs/marginfi-v2-ui-state";
-import { cn, getAssetWeightData } from "@mrgnlabs/mrgn-utils";
+import { cn, getAssetWeightData, getAssetWeightDataLegacy } from "@mrgnlabs/mrgn-utils";
 
 import { EmodeDiff } from "./emode-diff";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
@@ -140,7 +140,7 @@ export const EmodePopover = ({
               </TableHeader>
               <TableBody>
                 {collateralBanks?.map((collateralBankItem) => {
-                  const { assetWeight: collateralAssetWeight } = getAssetWeightData(
+                  const { assetWeight: collateralAssetWeight } = getAssetWeightDataLegacy(
                     collateralBankItem.collateralBank,
                     true
                   );

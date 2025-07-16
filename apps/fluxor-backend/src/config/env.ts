@@ -5,7 +5,6 @@ const envSchema = z.object({
   HOST: z.string().default("0.0.0.0"),
   DATABASE_URL: z.string(),
   REDIS_URL: z.string(),
-  DATABASE_POOL_MIN: z.coerce.number().default(0),
   DATABASE_POOL_MAX: z.coerce.number().default(10),
   FLUXOR_RPC_URL: z.string().optional(),
   MIXIN_BOT_CLIENT_ID: z.string().optional(),

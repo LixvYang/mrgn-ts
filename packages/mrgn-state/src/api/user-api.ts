@@ -10,11 +10,12 @@ import {
   PythPushFeedIdMap,
   toBankDto,
 } from "@mrgnlabs/marginfi-client-v2";
-import { BankMetadataMap, WalletToken } from "@mrgnlabs/mrgn-common";
+import { BankMetadataMap, NATIVE_MINT, WalletToken } from "@mrgnlabs/mrgn-common";
 import { PublicKey } from "@solana/web3.js";
 import { getConfig } from "../config/app.config";
 import { BankRawDatas } from "./bank-api";
 import { RawMintData, TokenAccount, TokenAccountDto } from "../types";
+import { getMixinVars } from "../config";
 
 export const fetchMarginfiAccountAddresses = async (authority: PublicKey): Promise<PublicKey[]> => {
   const group = getConfig().mrgnConfig.groupPk;
@@ -86,6 +87,48 @@ export const fetchUserBalances = async (
   tokens: RawMintData[],
   userAddress?: PublicKey
 ): Promise<{ nativeSolBalance: number; ataList: TokenAccount[] }> => {
+  if (getConfig().isMixin) {
+    const { balanceAddressMap } = getMixinVars();
+    // 如果有 Mixin 余额，直接使用 Mixin 余额
+    if (balanceAddressMap) {
+      const tokenAccountMap = new Map();
+      let nativeSolBalance = 0;
+
+      for (const token of tokens) {
+        const mixinBalance = balanceAddressMap[token.mint.toBase58()];
+
+        if (mixinBalance) {
+          if (token.mint.equals(NATIVE_MINT)) {
+            nativeSolBalance = Number(mixinBalance.total_amount);
+            tokenAccountMap.set(token.mint.toBase58(), {
+              created: true,
+              mint: token.mint,
+              balance: 0,
+            });
+            continue;
+          }
+
+          tokenAccountMap.set(token.mint.toBase58(), {
+            created: true,
+            mint: token.mint,
+            balance: Number(mixinBalance.total_amount) ?? 0,
+          });
+        } else {
+          tokenAccountMap.set(token.mint.toBase58(), {
+            created: false,
+            mint: token.mint,
+            balance: 0,
+          });
+        }
+      }
+
+      return {
+        nativeSolBalance,
+        ataList: Array.from(tokenAccountMap.values()) as TokenAccount[],
+      };
+    }
+  }
+
   if (!userAddress) {
     return {
       nativeSolBalance: 0,
@@ -96,6 +139,7 @@ export const fetchUserBalances = async (
       })),
     };
   }
+
   const response = await fetch("/api/userData/balanceData", {
     method: "POST",
     headers: {

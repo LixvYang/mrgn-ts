@@ -1,3 +1,4 @@
+import { getMixinVars } from "../config";
 import { PortfolioDataPoint } from "../types";
 
 /**
@@ -8,6 +9,10 @@ import { PortfolioDataPoint } from "../types";
 export const fetchPortfolioData = async (selectedAccount: string | null): Promise<PortfolioDataPoint[]> => {
   if (!selectedAccount) {
     throw new Error("No account selected");
+  }
+
+  if (getMixinVars().isMixin) {
+    return [];
   }
 
   const response = await fetch(`/api/user/portfolio?account=${selectedAccount}`);

@@ -59,6 +59,7 @@ export function useExtendedBanks() {
 
       let oraclePrice = oracleData.oracleMap.get(bank.address.toBase58());
       let tokenAccount = userBalances.ataList.find((ata) => ata.mint.toBase58() === bank.mint.toBase58());
+
       if (!tokenAccount) {
         console.error("User data not found for bank", bank.address.toBase58());
         tokenAccount = {

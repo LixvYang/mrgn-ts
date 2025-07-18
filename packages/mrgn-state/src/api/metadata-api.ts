@@ -1,9 +1,11 @@
 import {
   BankMetadata,
+  BankMetadataMap,
   loadBankMetadatas,
   loadStakedBankMetadatas,
   loadTokenMetadatas,
   TokenMetadata,
+  TokenMetadataMap,
 } from "@mrgnlabs/mrgn-common";
 import { stagingStaticBankMetadata, stagingStaticTokenMetadata } from "../consts";
 import { getConfig } from "../config";
@@ -25,8 +27,22 @@ export async function fetchMarginfiLuts() {
   return lutAccounts;
 }
 
+
 export async function fetchMetaData() {
   const marginfiConfig = getConfig().mrgnConfig;
+  const isMixin = getConfig().isMixin;
+
+  if (isMixin) {
+    const bankMetadataJson = (await import("../consts/mainnet-fluxor-meta.json")) as {
+      bankMetadata: BankMetadataMap;
+      tokenMetadata: TokenMetadataMap;
+    };
+    return {
+      bankMetadataMap: bankMetadataJson.bankMetadata,
+      tokenMetadataMap: bankMetadataJson.tokenMetadata,
+      bankAddresses: Object.keys(bankMetadataJson.bankMetadata),
+    };
+  }
   let bankMetadataMap: { [address: string]: BankMetadata };
   let tokenMetadataMap: { [symbol: string]: TokenMetadata };
 

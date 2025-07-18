@@ -6,6 +6,7 @@ export interface AppConfig {
   mrgnConfig: MarginfiConfig;
   connection: Connection;
   program: MarginfiProgram;
+  isMixin?: boolean;
 }
 
 let _config: AppConfig | null = null;
@@ -14,6 +15,7 @@ export interface AppConfigProps {
   mrgnConfig: MarginfiConfig;
   rpcUrl: string;
   confirmOpts?: ConfirmOptions;
+  isMixin?: boolean;
 }
 
 export function initializeConfig(cfg: AppConfigProps) {
@@ -46,6 +48,7 @@ export function initializeConfig(cfg: AppConfigProps) {
       mrgnConfig: cfg.mrgnConfig,
       connection,
       program,
+      isMixin: cfg.isMixin,
     };
   }
 }

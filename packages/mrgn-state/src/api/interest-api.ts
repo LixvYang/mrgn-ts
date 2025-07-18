@@ -1,3 +1,4 @@
+import { getMixinVars } from "../config";
 import { InterestEarnedDataPoint, StatsData } from "../types";
 
 /**
@@ -8,6 +9,10 @@ import { InterestEarnedDataPoint, StatsData } from "../types";
 export const fetchInterestData = async (accountAddress: string | null): Promise<InterestEarnedDataPoint[]> => {
   if (!accountAddress) {
     throw new Error("No account selected");
+  }
+
+  if (getMixinVars().isMixin) {
+    return [];
   }
 
   const response = await fetch(`/api/user/interest-earned?account=${accountAddress}`);

@@ -1,10 +1,14 @@
+"use client";
+
 import * as React from "react";
 import * as SliderPrimitive from "@radix-ui/react-slider";
-import Lottie from "lottie-react";
+import dynamic from "next/dynamic";
 
 import { cn, blendHexColors } from "@mrgnlabs/mrgn-utils";
 import fireAnimation from "./fire-lottie.json";
 import fireEmodeAnimation from "./fire-emode-lottie.json";
+
+const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
 interface SliderProps extends React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root> {
   emode?: boolean;

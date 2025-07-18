@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { PublicKey } from "@solana/web3.js";
+import { Wallet } from "@mrgnlabs/mrgn-common";
 
 interface WalletContextState {
   walletAddress: PublicKey | undefined;
+  wallet: Wallet;
 }
 
 const WalletContext = createContext<WalletContextState | undefined>(undefined);
@@ -15,17 +17,38 @@ const WalletContext = createContext<WalletContextState | undefined>(undefined);
 export function WalletStateProvider({
   children,
   walletAddress: externalWalletAddress,
+  wallet: externalWallet,
 }: {
   children: React.ReactNode;
   walletAddress?: PublicKey;
+  wallet?: Wallet;
 }) {
   const [walletAddress, setWalletAddress] = useState<PublicKey | undefined>(externalWalletAddress);
+  const [wallet, setWallet] = useState<Wallet | undefined>(externalWallet);
   // Sync external wallet address changes
   useEffect(() => {
     setWalletAddress(externalWalletAddress);
-  }, [externalWalletAddress]);
+    setWallet(externalWallet);
+  }, [externalWalletAddress, externalWallet]);
 
-  return <WalletContext.Provider value={{ walletAddress }}>{children}</WalletContext.Provider>;
+  // useEffect(() => {
+  //   if (!walletAddress) return;
+  //   const id = window.setInterval(() => {
+  //     console.log("walletAddress", walletAddress);
+  //   }, 1 * 1000);
+  //   return () => window.clearInterval(id);
+  // }, [walletAddress]);
+
+  return (
+    <WalletContext.Provider
+      value={{
+        walletAddress,
+        wallet: wallet ?? ({ publicKey: PublicKey.default } as Wallet),
+      }}
+    >
+      {children}
+    </WalletContext.Provider>
+  );
 }
 
 /**
@@ -38,4 +61,12 @@ export function useWalletAddress(): PublicKey | undefined {
     throw new Error("useWalletAddress must be used within a WalletStateProvider");
   }
   return context.walletAddress;
+}
+
+export function useWalletState(): WalletContextState {
+  const context = useContext(WalletContext);
+  if (context === undefined) {
+    throw new Error("useWalletState must be used within a WalletStateProvider");
+  }
+  return context;
 }

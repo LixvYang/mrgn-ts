@@ -23,6 +23,7 @@ export function useWrappedMarginfiAccount(wallet?: Wallet) {
   const isReady = !isLoading && !isError && !!account && !!marginfiClient;
 
   const wrappedAccount = React.useMemo(() => {
+    console.log("[useWrappedMarginfiAccount] ", { account, marginfiClient, isError });
     if (!account || !marginfiClient || isError) {
       return null;
     }

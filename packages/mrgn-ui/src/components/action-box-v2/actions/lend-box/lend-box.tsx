@@ -4,8 +4,16 @@ import { v4 as uuidv4 } from "uuid";
 import Link from "next/link";
 
 import { WalletContextState } from "@solana/wallet-adapter-react";
-import { LAMPORTS_PER_SOL, PublicKey, Transaction } from "@solana/web3.js";
-import { addTransactionMetadata, dynamicNumeralFormatter, TransactionType } from "@mrgnlabs/mrgn-common";
+import { Connection, LAMPORTS_PER_SOL, PublicKey, Transaction } from "@solana/web3.js";
+import {
+  addTransactionMetadata,
+  ComputerInfoResponse,
+  ComputerSystemCallRequest,
+  ComputerUserResponse,
+  dynamicNumeralFormatter,
+  TransactionType,
+  UserAssetBalance,
+} from "@mrgnlabs/mrgn-common";
 
 import {
   ExtendedBankInfo,
@@ -14,6 +22,7 @@ import {
   computeAccountSummary,
   DEFAULT_ACCOUNT_SUMMARY,
   getEmodePairs,
+  getMixinVars,
 } from "@mrgnlabs/mrgn-state";
 
 import {
@@ -34,6 +43,8 @@ import {
   composeExplorerUrl,
   executeActionWrapper,
   logActivity,
+  ExecuteMixinLendingActionProps,
+  executeMixinLendingAction,
 } from "@mrgnlabs/mrgn-utils";
 
 import { ActionBoxContentWrapper, ActionButton, ActionSettingsButton } from "~/components/action-box-v2/components";
@@ -46,9 +57,13 @@ import { useLendBoxStore } from "./store";
 import { ActionSimulationStatus } from "../../components";
 import { Collateral, ActionInput, Preview, StakeAccountSwitcher } from "./components";
 import { SimulationStatus } from "../../utils";
-import { useLendSimulation } from "./hooks";
+import { handleLendMixinSimulation, useLendSimulation } from "./hooks";
 import { HidePoolStats, useActionBoxContext } from "../../contexts/actionbox/actionbox.context";
 import { useActionContext } from "../../contexts";
+import { SequencerTransactionRequest } from "@mixin.dev/mixin-node-sdk";
+import { toastManager } from "@mrgnlabs/mrgn-toasts";
+import { initComputerClient } from "@mrgnlabs/fluxor-state";
+import { MixinMultipleTracesModal } from "../../components/mixin-multiple-traces-modal";
 
 // error handling
 export type LendBoxProps = {
@@ -76,6 +91,14 @@ export type LendBoxProps = {
   onComplete?: (newAccountKey?: PublicKey) => void;
   captureEvent?: (event: string, properties?: Record<string, any>) => void;
   setDisplaySettings?: (displaySettings: boolean) => void;
+
+  getUserMix?: () => string;
+  computerInfo?: ComputerInfoResponse;
+  connection?: Connection;
+  computerAccount?: ComputerUserResponse;
+  getComputerRecipient?: () => string;
+  balanceAddressMap?: Record<string, UserAssetBalance>;
+  fetchTransaction?: (transactionId: string) => Promise<SequencerTransactionRequest>;
 };
 
 export const LendBox = ({
@@ -100,6 +123,13 @@ export const LendBox = ({
   onCloseDialog,
   setShouldBeHidden,
   initialAmount,
+  getUserMix,
+  computerInfo,
+  connection,
+  computerAccount,
+  getComputerRecipient,
+  balanceAddressMap,
+  fetchTransaction,
 }: LendBoxProps) => {
   const [
     amountRaw,
@@ -226,6 +256,8 @@ export const LendBox = ({
 
   const [lstDialogCallback, setLSTDialogCallback] = React.useState<(() => void) | null>(null);
   const [additionalActionMessages, setAdditionalActionMessages] = React.useState<ActionMessageType[]>([]);
+  const [computerSystemCallRequest, setComputerSystemCallRequest] = React.useState<ComputerSystemCallRequest[]>([]);
+  const [shouldShowMixinPayModal, setShouldShowMixinPayModal] = React.useState(false);
 
   // Cleanup the store when the wallet disconnects
   React.useEffect(() => {
@@ -316,8 +348,105 @@ export const LendBox = ({
     }
   }, [prevSelectedBank, prevAmount, selectedBank, amount, setErrorMessage]);
 
-  const handleLendingAction = React.useCallback(() => {
+  const handleLendingAction = React.useCallback(async () => {
     if (!selectedBank || !amount || !transactionSettings || !marginfiClient) return;
+    console.log("🔄 getMixinVars(): ", getMixinVars());
+
+    if (getMixinVars().isMixin) {
+      if (!getMixinVars().register) {
+        const toastController = toastManager.showCustomToast(
+          <div className="flex flex-col items-start gap-2">
+            <p className="text-sm text-muted-foreground">
+              You need to{" "}
+              <Link href="/portfolio" className="text-primary">
+                register
+              </Link>{" "}
+              with Mixin Computer to use this feature.
+            </p>
+          </div>
+        );
+        return;
+      }
+
+      // mixin here
+      // 这里需要构造 actionTxns
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      const result = await handleLendMixinSimulation({
+        amount: amount,
+        selectedAccount,
+        // accountSummary,
+        selectedBank,
+        lendMode,
+        // actionTxns,
+        // simulationResult,
+        selectedStakeAccount: selectedStakeAccount?.address || undefined,
+        // setSimulationResult,
+        // setActionTxns,
+        // setErrorMessage,
+        // setIsLoading: setSimulationStatus,
+        marginfiClient: marginfiClient,
+        getUserMix: getUserMix,
+        computerInfo: computerInfo,
+        connection: connection,
+        computerAccount: computerAccount,
+        getComputerRecipient: getComputerRecipient,
+        balanceAddressMap: balanceAddressMap,
+        processOpts: {
+          broadcastType: "RPC",
+          ...priorityFees,
+        },
+        setIsLoading: setSimulationStatus,
+      });
+      // const result: ComputerSystemCallRequest[] = [
+      //   {
+      //     trace: "4bdcc504-3023-3c04-8ded-4f76ad359846",
+      //     value: "https://mixin.one/schemes/4bdcc504-3023-3c04-8ded-4f76ad359846",
+      //   },
+      // ];
+      console.log("result", result);
+      setComputerSystemCallRequest(result);
+      setShouldShowMixinPayModal(true);
+
+      const props: ExecuteMixinLendingActionProps = {
+        actionTxns,
+        attemptUuid: uuidv4(),
+        marginfiClient,
+        processOpts: { ...priorityFees, broadcastType: transactionSettings.broadcastType },
+        txOpts: {},
+        callbacks: {
+          captureEvent: captureEvent,
+          onComplete: (txnSig: string) => {
+            onComplete?.();
+
+            // Log the activity
+            const activityDetails: Record<string, any> = {
+              amount: amount,
+              symbol: selectedBank.meta.tokenSymbol,
+              mint: selectedBank.info.rawBank.mint.toBase58(),
+            };
+
+            logActivity(lendMode, txnSig, activityDetails, selectedAccount?.address).catch((error) => {
+              console.error("Failed to log activity:", error);
+            });
+          },
+        },
+        infoProps: {
+          amount: dynamicNumeralFormatter(amount),
+          token: selectedBank.meta.tokenSymbol,
+        },
+        nativeSolBalance: nativeSolBalance,
+        actionType: lendMode,
+        traceId: result[result.length - 1].trace,
+        getComputerSystemCallStatus: async (traceId: string) => {
+          return await initComputerClient().fetchCall(traceId);
+        },
+      };
+
+      executeMixinLendingAction(props);
+
+      setAmountRaw("");
+      return;
+    }
 
     const props: ExecuteLendingActionProps = {
       actionTxns,
@@ -353,6 +482,7 @@ export const LendBox = ({
     executeLendingAction(props);
 
     setAmountRaw("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     actionTxns,
     amount,
@@ -520,8 +650,9 @@ export const LendBox = ({
         <ActionButton
           isLoading={isLoading}
           isEnabled={
-            !additionalActionMessages.concat(actionMessages).filter((value) => value.isEnabled === false).length &&
-            actionTxns?.transactions.length > 0
+            // !additionalActionMessages.concat(actionMessages).filter((value) => value.isEnabled === false).length &&
+            // actionTxns?.transactions.length > 0
+            !additionalActionMessages.concat(actionMessages).filter((value) => value.isEnabled === false).length
           }
           connected={connected}
           handleAction={() => {
@@ -559,6 +690,18 @@ export const LendBox = ({
         }}
         banks={banks}
       />
+
+      {computerSystemCallRequest.length > 0 && shouldShowMixinPayModal && (
+        <MixinMultipleTracesModal
+          open={shouldShowMixinPayModal}
+          onOpenChange={() => {
+            setShouldShowMixinPayModal(false);
+            setComputerSystemCallRequest([]);
+          }}
+          requests={computerSystemCallRequest}
+          fetchTransaction={fetchTransaction}
+        />
+      )}
     </ActionBoxContentWrapper>
   );
 };

@@ -12,9 +12,11 @@ import { useRawBanks, useMetadata, useOracleData, useMintData } from ".";
 import { TokenAccount } from "../../types";
 import { useWalletAddress } from "../../context/wallet-state.context";
 import { useSelectedAccount } from "../../context/selected-account.context";
+import { getConfig, getMixinVars } from "../../config";
 
 export function useMarginfiAccountAddresses() {
   const authority = useWalletAddress();
+  // console.log("🔄 useMarginfiAccountAddresses authority: ", authority && authority?.toBase58());
 
   return useQuery<PublicKey[], Error>({
     queryKey: ["marginfiAccountAddresses", authority?.toBase58() ?? null],
@@ -35,7 +37,12 @@ export type UseMarginfiAccountOpts = {
 };
 
 export function useMarginfiAccount(opts?: UseMarginfiAccountOpts) {
-  const authority = useWalletAddress();
+  let authority = useWalletAddress();
+  if (getConfig().isMixin) {
+    authority = getMixinVars().publicKey;
+  }
+
+  // console.log("🔄 useMarginfiAccount authority: ", authority && authority?.toBase58());
 
   const { data: rawBanks, isSuccess: isSuccessRawBanks, isError: isErrorRawBanks } = useRawBanks();
   const { data: metadata, isSuccess: isSuccessMetadata, isError: isErrorMetadata } = useMetadata();
@@ -96,7 +103,8 @@ export function useUserBalances() {
       return await fetchUserBalances(mintData, authority);
     },
     enabled: isSuccesMintData && !isErrorMintData,
-    staleTime: 2 * 60_000, // 2 minutes
+    refetchInterval: 0.5 * 1000, // 0.5 second
+    // staleTime: 2 * 60_000, // 2 minutes
     // refetchInterval: 60_000, // Temporarily disabled for performance
     retry: (failureCount, error) => {
       // Don't retry if we have dependency errors

@@ -29,6 +29,7 @@ import {
   MakeLendingPositionProps,
 } from "../types";
 import { FEE_MARGIN } from "./firebase.utils";
+import { getConfig } from "../config";
 
 export function makeExtendedBankMetadata(
   bank: Bank,
@@ -268,6 +269,9 @@ export function makeExtendedBankInfo(
   if (position) {
     const debtAmount = ceil(position.amount, bankInfo.mintDecimals);
     maxRepay = Math.min(debtAmount, walletBalance);
+    if (getConfig().isMixin) {
+      maxRepay = debtAmount;
+    }
   }
 
   const userInfo = {

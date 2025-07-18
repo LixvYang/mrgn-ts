@@ -71,7 +71,15 @@ export function useLendSimulation({
       };
       callbacks.setErrorMessage(_actionMessage);
     } else {
-      callbacks.setErrorMessage(actionMessage);
+      if (actionMessage.code && actionMessage.code === 119) {
+        return;
+      } else {
+        // const _actionMessage: ActionMessageType = {
+        //   isEnabled: true,
+        //   description: "Insufficient balance",
+        // };
+        callbacks.setErrorMessage(actionMessage);
+      }
     }
     callbacks.setSimulationResult(null);
     callbacks.setActionTxns({ transactions: [] });

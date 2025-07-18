@@ -9,6 +9,7 @@ export * from "./modules";
 export * from "./spl";
 export * from "./priority";
 export { NodeWallet };
+export * from "./computer.types";
 
 // constants
 export * from "./constants";

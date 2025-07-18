@@ -27,18 +27,12 @@ import {
 } from "@mrgnlabs/mrgn-utils";
 
 import { IMAGE_CDN_URL } from "~/config/constants";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, TooltipPortal } from "~/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/components/ui/tooltip";
 import { IconPyth, IconSwitchboard } from "~/components/ui/icons";
 import { PublicKey } from "@solana/web3.js";
-import { Badge } from "~/components/ui/badge";
-import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "~/components/ui/table";
-import { Table } from "~/components/ui/table";
-import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { EmodePopover } from "~/components/common/emode/components/emode-popover";
-import { IconEmode } from "~/components/ui/icons";
-import { BankChartDialog } from "~/components/common/bank/components/bank-chart-dialog";
-import { Button } from "~/components/ui/button";
 import { Skeleton } from "~/components/ui/skeleton";
+import { EmissionsPopover } from "./EmissionsPopover";
 
 export const getAssetCell = (asset: AssetData) => {
   return (
@@ -229,8 +223,8 @@ export const getRateCell = ({
                 <Image
                   src={`${IMAGE_CDN_URL}/MNDEFzGvMt87ueuHvVU9VcTqsAP5b3fTGPsHuuPA5ey.png`}
                   alt="info"
-                  height={18}
-                  width={18}
+                  height={15}
+                  width={15}
                 />
               </TooltipTrigger>
               <TooltipContent>
@@ -239,8 +233,8 @@ export const getRateCell = ({
                     <Image
                       src={`${IMAGE_CDN_URL}/MNDEFzGvMt87ueuHvVU9VcTqsAP5b3fTGPsHuuPA5ey.png`}
                       alt="info"
-                      height={18}
-                      width={18}
+                      height={15}
+                      width={15}
                     />
                     MNDE rewards
                   </h4>
@@ -259,8 +253,15 @@ export const getRateCell = ({
           </TooltipProvider>
         </div>
       )}
-
-      <div className="flex items-center gap-0.5">{percentFormatter.format(rateAPY)}</div>
+      <div className="flex flex-col gap-0.5 items-end">
+        {isInLendingMode && symbol === "JitoSOL" ? (
+          <EmissionsPopover rateAPY={rateAPY} />
+        ) : !isInLendingMode && symbol === "SOL" ? (
+          <EmissionsPopover rateAPY={rateAPY} />
+        ) : (
+          <p>{percentFormatter.format(rateAPY)}</p>
+        )}
+      </div>
     </div>
   );
 };

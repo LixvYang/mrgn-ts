@@ -15,9 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: "Bank address is required" });
     }
 
-    // 构建原始请求的 URL，保持所有查询参数
     const originalUrl = new URL(`${process.env.NEXT_PUBLIC_BASE_URL}/api/banks/get`);
-    // 将所有查询参数添加到新 URL
     Object.entries(req.query).forEach(([key, value]) => {
       if (typeof value === "string") {
         originalUrl.searchParams.append(key, value);
@@ -26,12 +24,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     });
 
-    // 转发请求到 app.marginfi.com
     const response = await fetch(originalUrl.toString(), {
       headers: {
-        // 转发必要的请求头
         Accept: "application/json",
-        "User-Agent": req.headers["user-agent"] || "fluxor-ui",
+        "User-Agent": req.headers["user-agent"] || "fluxor-ui/1.0.0",
       },
     });
 
@@ -41,8 +37,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const data = await response.json();
 
-    // 保持相同的缓存策略
-    res.setHeader("Cache-Control", "s-maxage=3600, stale-while-revalidate=300");
+    // cache for 24 hours
+    res.setHeader("Cache-Control", "s-maxage=86400, stale-while-revalidate=300");
     return res.status(STATUS_OK).json(data);
   } catch (error: any) {
     console.error("Error in bank historic data endpoint:", error);

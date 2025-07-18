@@ -11,14 +11,15 @@ import {
   IconWorld,
   IconHelpCircle,
   IconPlus,
+  IconHelp,
 } from "@tabler/icons-react";
 import { cn } from "@mrgnlabs/mrgn-utils";
 
-import { useUiStore } from "~/store";
-import { useFirebaseAccount } from "~/hooks/useFirebaseAccount";
+// import { useUiStore } from "~/store";
 import { useOs } from "~/hooks/use-os";
 
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
+import { useUiStore } from "~/store";
 
 export interface NavLinkInfo {
   href: string;
@@ -35,18 +36,18 @@ export const mobileLinks: NavLinkInfo[] = [
     label: "lend",
     Icon: IconBuildingBank,
   },
-  {
-    href: "/stake",
-    alt: "stake icon",
-    label: "stake",
-    Icon: IconBox,
-  },
-  {
-    href: "/looper",
-    alt: "looper icon",
-    label: "looper",
-    Icon: IconCurlyLoop,
-  },
+  // {
+  //   href: "/stake",
+  //   alt: "stake icon",
+  //   label: "stake",
+  //   Icon: IconBox,
+  // },
+  // {
+  //   href: "/looper",
+  //   alt: "looper icon",
+  //   label: "looper",
+  //   Icon: IconCurlyLoop,
+  // },
   {
     href: "/portfolio",
     alt: "portfolio icon",
@@ -56,14 +57,21 @@ export const mobileLinks: NavLinkInfo[] = [
 ];
 
 const additionalLinks: NavLinkInfo[] = [
+  // {
+  //   href: "/ecosystem",
+  //   alt: "world icon",
+  //   label: "ecosystem",
+  //   Icon: IconWorld,
+  // },
+  // {
+  //   href: "https://support.marginfi.com",
+  //   alt: "help icon",
+  //   label: "support",
+  //   target: "_blank",
+  //   Icon: IconHelpCircle,
+  // },
   {
-    href: "/ecosystem",
-    alt: "world icon",
-    label: "ecosystem",
-    Icon: IconWorld,
-  },
-  {
-    href: "https://support.marginfi.com",
+    href: "https://mixin.one/codes/6530b1e8-3e81-42ab-ab65-96cbf709b771",
     alt: "help icon",
     label: "support",
     target: "_blank",
@@ -72,8 +80,6 @@ const additionalLinks: NavLinkInfo[] = [
 ];
 
 const MobileNavbar = () => {
-  useFirebaseAccount();
-
   const router = useRouter();
   const [isMenuModalOpen, setIsMenuModalOpen] = useUiStore((state) => [
     state.isMenuDrawerOpen,
@@ -96,7 +102,7 @@ const MobileNavbar = () => {
             return (
               <Link
                 key={linkInfo.label}
-                onClick={() => linkInfo.label === "more" && setIsMenuModalOpen(true)}
+                // onClick={() => linkInfo.label === "more" && setIsMenuModalOpen(true)}
                 href={linkInfo.href}
                 className={cn(
                   "w-1/4 py-2.5 flex flex-col gap-1 items-center border-t border-border",

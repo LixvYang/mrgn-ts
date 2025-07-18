@@ -7,6 +7,7 @@ import { PageHeading } from "~/components/common/PageHeading";
 import { Loader } from "~/components/ui/loader";
 import { WalletToken } from "@mrgnlabs/mrgn-common";
 import { useExtendedBanks, useMarginfiClient, useRefreshUserData, useWalletTokens } from "@mrgnlabs/mrgn-state";
+import { useComputerStore } from "@mrgnlabs/fluxor-state";
 
 export default function DepositSwapPage() {
   const { data: walletTokens } = useWalletTokens();
@@ -19,11 +20,18 @@ export default function DepositSwapPage() {
     [extendedBanks]
   );
 
-  const { connected } = useWallet();
+  // const { connected } = useWallet();
+  const { connected } = useComputerStore();
 
   return (
     <>
-      {!extendedBankInfosWithoutStakedAssets && <Loader label="Loading deposit swap..." className="mt-16" />}
+      <PageHeading heading="Deposit Swap" body={<p>Swap any token and deposit in your chosen collateral.</p>} />
+      <div className="flex flex-col items-center justify-center p-8 mt-8 rounded-lg">
+        <h3 className="text-2xl font-semibold mb-4">🚧 Coming Soon</h3>
+        <p className="text-center">We&apos;re working hard to bring this feature to you. Stay tuned!</p>
+      </div>
+
+      {/* {!extendedBankInfosWithoutStakedAssets && <Loader label="Loading deposit swap..." className="mt-16" />}
 
       {extendedBankInfosWithoutStakedAssets && (
         <div className="w-full max-w-7xl mx-auto mb-20 px-5">
@@ -54,7 +62,7 @@ export default function DepositSwapPage() {
             }}
           />
         </div>
-      )}
+      )} */}
     </>
   );
 }

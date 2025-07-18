@@ -69,6 +69,18 @@ let config = withBundleAnalyzer({
     remotePatterns: [
       {
         protocol: "https",
+        hostname: "api.qrserver.com",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "images.mixin.one",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
         hostname: "storage.googleapis.com",
         port: "",
         pathname: "/mrgn-public/**/*",

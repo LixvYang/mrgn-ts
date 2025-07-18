@@ -33,6 +33,7 @@ import { LendingModes } from "@mrgnlabs/mrgn-utils";
 import { useWallet } from "~/components";
 import { determineBankCategories } from "~/components/desktop/AssetList/utils/tableHelperUtils";
 import React from "react";
+import { useComputerStore } from "@mrgnlabs/fluxor-state";
 
 // Create token filter sets for faster lookups
 const STABLECOIN_SET = new Set(STABLECOINS);
@@ -53,7 +54,8 @@ export function useAssetData(): AssetListData {
     state.lendingMode,
   ]);
 
-  const { walletContextState, connected } = useWallet();
+  const { walletContextState } = useWallet();
+  const { connected } = useComputerStore();
 
   // Data hooks
   const { data: userBalances } = useUserBalances();

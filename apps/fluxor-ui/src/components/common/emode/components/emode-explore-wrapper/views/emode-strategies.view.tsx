@@ -10,13 +10,16 @@ import { capture } from "~/analytics";
 import { EmodeStrategyType } from "..";
 import { useRefreshUserData } from "@mrgnlabs/mrgn-state";
 import { PublicKey } from "@solana/web3.js";
+import { useComputerStore } from "@mrgnlabs/fluxor-state";
 
 interface StrategiesViewProps {
   emodeStrategies: EmodeStrategyType[];
 }
 
 export const StrategiesView = ({ emodeStrategies }: StrategiesViewProps) => {
-  const { walletContextState, connected, walletAddress } = useWallet();
+  // const { walletContextState, connected, walletAddress } = useWallet();
+  const { walletContextState } = useWallet();
+  const { connected } = useComputerStore();
 
   const refreshUserData = useRefreshUserData();
 

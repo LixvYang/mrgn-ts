@@ -60,15 +60,6 @@ export default function HomePage() {
     ] as (AnnouncementBankItem | AnnouncementCustomItem)[];
   }, [extendedBanks]);
 
-  const {
-    getUserMix,
-    connection,
-    info: computerInfo,
-    account: computerAccount,
-    getComputerRecipient,
-    balanceAddressMap,
-  } = useComputerStore();
-
   return (
     <>
       <Desktop>

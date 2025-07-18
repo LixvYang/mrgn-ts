@@ -11,9 +11,12 @@ import { ExtendedBankInfo, useExtendedBanks, useRefreshUserData, useUserBalances
 import { useUiStore } from "~/store";
 import { BankListWrapper } from "~/components/action-box-v2/components";
 import { LendBoxBankList } from "~/components/action-box-v2/actions";
+import { useComputerStore } from "@mrgnlabs/fluxor-state";
 
 export const GlobalActionBoxPortal = () => {
-  const { connected, walletContextState } = useWallet();
+  // const { connected, walletContextState } = useWallet();
+  const { walletContextState } = useWallet();
+  const { connected } = useComputerStore();
   const [selectedBank, setSelectedBank] = React.useState<ExtendedBankInfo | null>(null);
 
   const refreshUserData = useRefreshUserData();

@@ -13,6 +13,7 @@ import "swiper/css";
 import "swiper/css/autoplay";
 import { useRefreshUserData } from "@mrgnlabs/mrgn-state";
 import { PublicKey } from "@solana/web3.js";
+import { useComputerStore } from "@mrgnlabs/fluxor-state";
 
 export type AnnouncementCustomItem = {
   text: string;
@@ -71,7 +72,8 @@ const Pagination = ({ itemsLength }: PaginationProps) => {
 };
 
 export const Announcements = ({ items }: AnnouncementsProps) => {
-  const { connected, walletAddress } = useWallet();
+  // const { connected, walletAddress } = useWallet();
+  const { connected } = useComputerStore();
   const refreshUserData = useRefreshUserData();
   const [requestedAction, setRequestedAction] = React.useState<ActionType>();
   const [requestedBank, setRequestedBank] = React.useState<ExtendedBankInfo | null>(null);

@@ -62,6 +62,12 @@ const formatDate = (dateStr: string) => {
 const InterestChart = ({ selectedAccount, dataType, variant = "default" }: InterestChartProps) => {
   // Use the new hook
   const { data: chartData, bankSymbols, error, isLoading } = useInterestChart(selectedAccount, dataType);
+  console.log("interest chat", {
+    chartData,
+    bankSymbols,
+    error,
+    isLoading,
+  });
 
   const chartColors = React.useMemo(() => generateChartColors(bankSymbols, variant), [bankSymbols, variant]);
 
@@ -77,7 +83,8 @@ const InterestChart = ({ selectedAccount, dataType, variant = "default" }: Inter
           color: chartColors[symbol],
         };
       } else {
-        const labelType = variant === "total" ? "Interest" : dataType === "earned" ? "Interest Earned" : "Interest Paid";
+        const labelType =
+          variant === "total" ? "Interest" : dataType === "earned" ? "Interest Earned" : "Interest Paid";
         config[symbol] = {
           label: `${symbol} ${labelType}`,
           color: chartColors[symbol],

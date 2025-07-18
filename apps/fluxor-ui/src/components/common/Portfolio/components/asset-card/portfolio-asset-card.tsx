@@ -53,6 +53,7 @@ import {
   useUserStakeAccounts,
   useWrappedMarginfiAccount,
 } from "@mrgnlabs/mrgn-state";
+import { useComputerStore } from "@mrgnlabs/fluxor-state";
 
 interface PortfolioAssetCardProps {
   bank: ActiveBankInfo;
@@ -531,7 +532,8 @@ const PortfolioAction = ({
   requestedAction: ActionType;
   buttonVariant?: "default" | "outline" | "outline-dark" | "secondary";
 }) => {
-  const { walletContextState, connected } = useWallet();
+  const { walletContextState } = useWallet();
+  const { connected } = useComputerStore();
 
   const refreshUserData = useRefreshUserData();
   const { data: stakeAccounts } = useUserStakeAccounts();

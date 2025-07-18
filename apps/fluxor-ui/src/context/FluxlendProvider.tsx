@@ -51,6 +51,7 @@ export const FluxlendProvider: React.FC<{
     info: computerInfo,
     account: computerAccount,
     getComputerRecipient,
+    getMixinClient,
   } = useComputerStore();
   const { connection } = useConnection();
 
@@ -255,6 +256,7 @@ export const FluxlendProvider: React.FC<{
         computerAccount={computerAccount}
         getComputerRecipient={getComputerRecipient}
         balanceAddressMap={balanceAddressMap}
+        fetchTransaction={getMixinClient()?.utxo.fetchTransaction}
       >
         {children}
 

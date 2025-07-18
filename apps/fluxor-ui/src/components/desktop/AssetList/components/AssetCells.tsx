@@ -253,7 +253,9 @@ export const getRateCell = ({
           </TooltipProvider>
         </div>
       )}
-      <div className="flex flex-col gap-0.5 items-end">
+
+      <div className="flex justify-end">{percentFormatter.format(rateAPY)}</div>
+      {/* <div className="flex flex-col gap-0.5 items-end">
         {isInLendingMode && symbol === "JitoSOL" ? (
           <EmissionsPopover rateAPY={rateAPY} />
         ) : !isInLendingMode && symbol === "SOL" ? (
@@ -261,7 +263,7 @@ export const getRateCell = ({
         ) : (
           <p>{percentFormatter.format(rateAPY)}</p>
         )}
-      </div>
+      </div> */}
     </div>
   );
 };

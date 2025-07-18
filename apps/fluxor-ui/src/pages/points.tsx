@@ -7,9 +7,12 @@ import { PointsOverview, PointsConnectWallet } from "~/components/common/Points"
 import { Loader } from "~/components/ui/loader";
 import { PointsTable } from "~/components/desktop/Points";
 import { useUserProfileStore } from "~/store";
+import { useComputerStore } from "@mrgnlabs/fluxor-state";
 
 export default function PointsPage() {
-  const { connected } = useWallet();
+  // const { connected } = useWallet();
+  const { connected } = useComputerStore();
+
   const [userPointsData] = useUserProfileStore((state) => [state.userPointsData]);
 
   return (

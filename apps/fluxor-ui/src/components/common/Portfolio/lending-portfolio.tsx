@@ -48,6 +48,8 @@ import {
 import { PublicKey } from "@solana/web3.js";
 import { Skeleton } from "~/components/ui/skeleton";
 import { useComputerStore } from "@mrgnlabs/fluxor-state";
+import MixinWallet from "../MixinWallet/components";
+import { MixinRegister } from "../MixinWallet";
 
 const initialRewardsState: RewardsType = {
   state: "NOT_FETCHED",
@@ -60,7 +62,7 @@ export const LendingPortfolio = () => {
   // const { wallet } = useWallet();
   const { wallet } = useWalletState();
 
-  const { connected } = useComputerStore();
+  const { connected, register } = useComputerStore();
 
   const { extendedBanks: sortedBanks, isLoading: isLoadingExtendedBanks } = useExtendedBanks();
   const accountSummary = useAccountSummary();
@@ -343,7 +345,12 @@ export const LendingPortfolio = () => {
   }, [filterEmode]);
 
   if (!connected) {
-    return <WalletButton />;
+    return <MixinWallet />;
+    // return <WalletButton />;
+  }
+
+  if (connected && !register) {
+    return <MixinRegister />;
   }
 
   return (
@@ -455,7 +462,7 @@ export const LendingPortfolio = () => {
                   className="text-xl md:text-2xl font-medium flex flex-row items-center gap-1.5"
                   style={{ color: healthColor }}
                 >
-                  {/* {accountSummary.healthSimFailed && (
+                  {accountSummary.healthSimFailed && (
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger className="inline-flex items-center gap-1">
@@ -469,7 +476,7 @@ export const LendingPortfolio = () => {
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
-                  )} */}
+                  )}
                   {numeralFormatter(accountSummary.healthFactor * 100)}%
                 </dd>
               )}

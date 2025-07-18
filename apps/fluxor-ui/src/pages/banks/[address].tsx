@@ -35,10 +35,13 @@ import {
   useRefreshUserData,
 } from "@mrgnlabs/mrgn-state";
 import { Loader } from "~/components/ui/loader";
+import { useComputerStore } from "@mrgnlabs/fluxor-state";
 
 export default function BankPage() {
   const router = useRouter();
-  const { connected, walletContextState, walletAddress } = useWallet();
+  // const { connected, walletContextState, walletAddress } = useWallet();
+  const { walletContextState } = useWallet();
+  const { connected } = useComputerStore();
   const [isAddressCopied, setIsAddressCopied] = React.useState(false);
 
   const { address } = React.useMemo(() => router.query, [router]);

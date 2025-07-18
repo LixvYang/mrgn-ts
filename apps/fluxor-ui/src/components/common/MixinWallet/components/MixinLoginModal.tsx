@@ -1,44 +1,62 @@
-/* eslint-disable @next/next/no-img-element */
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useState } from "react";
-import { base64RawURLEncode, getChallenge, getED25519KeyPair } from "@mixin.dev/mixin-node-sdk";
-import ReconnectingWebSocket from "reconnecting-websocket";
-import pako from "pako";
-import { v4 } from "uuid";
-import { useComputerStore } from "@mrgnlabs/fluxor-state";
-import { Button } from "~/components/ui/button";
-import { IconX } from "@tabler/icons-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "~/components/ui/dialog";
-import Image from "next/image";
+/* eslint-disable react-hooks/rules-of-hooks */
+"use client";
 
-export function MixinLoginModal(props: { isOpen: boolean; onClose: () => void }) {
-  const { user, getMixinClient, setKeystore, getMe, updateBalances, computerAssets } = useComputerStore((s) => ({
-    user: s.user,
+import React, { useEffect, useState } from "react";
+import { QrCode } from "@mrgnlabs/mrgn-ui";
+import {
+  AuthorizationResponse,
+  base64RawURLEncode,
+  getChallenge,
+  getED25519KeyPair,
+  type OAuthKeystore,
+} from "@mixin.dev/mixin-node-sdk";
+import { useAuthorization } from "@mrgnlabs/fluxor-state";
+import { useComputerStore } from "@mrgnlabs/fluxor-state";
+import { Dialog, DialogContent } from "~/components/ui/dialog";
+import { Button } from "~/components/ui/button";
+
+interface MixinLoginModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConnected?: () => void;
+}
+
+export function MixinLoginModal({ isOpen, onClose, onConnected }: MixinLoginModalProps) {
+  const [loginCode, setLoginCode] = useState("");
+  const [error, setError] = useState<string>();
+
+  const {
+    getMixinClient,
+    setKeystore,
+    getMe,
+    updateBalances,
+    mixinBalancesAddressMap,
+    solWalletAddress,
+    computerAssets,
+  } = useComputerStore((s) => ({
     getMixinClient: s.getMixinClient,
     setKeystore: s.setKeystore,
     getMe: s.getMe,
     updateBalances: s.updateBalances,
+    mixinBalancesAddressMap: s.balanceAddressMap,
+    solWalletAddress: s.publicKey,
     computerAssets: s.computerAssets,
   }));
 
-  const [loginCode, setLoginCode] = useState("");
-  const [error, setError] = useState<string>();
-  const [isConnecting, setIsConnecting] = useState(true);
-
   const clientId = process.env.NEXT_PUBLIC_MIXIN_BOT_ID as string;
-  const scope = "PROFILE:READ ASSETS:READ SNAPSHOTS:READ";
-  const { verifier, challenge } = getChallenge();
 
-  const handleLogin = async (code: string) => {
+  const handleLogin = async (code: string, codeVerifier: string) => {
+    const client = getMixinClient();
+    if (!client) return;
     const { seed, publicKey } = getED25519KeyPair();
 
     try {
-      let client = getMixinClient();
       const { scope, authorization_id } = await client.oauth.getToken({
         client_id: clientId,
-        code,
+        code: code,
         ed25519: base64RawURLEncode(publicKey),
-        code_verifier: verifier,
+        code_verifier: codeVerifier,
       });
 
       if (!scope || scope.indexOf("ASSETS:READ") < 0 || scope.indexOf("SNAPSHOTS:READ") < 0) {
@@ -46,108 +64,45 @@ export function MixinLoginModal(props: { isOpen: boolean; onClose: () => void })
         return;
       }
 
-      client = setKeystore({
+      const keystore: OAuthKeystore = {
         app_id: clientId,
         scope,
         authorization_id,
         session_private_key: seed.toString("hex"),
-      });
+      };
+      setKeystore(keystore);
       await getMe();
       await updateBalances(computerAssets);
-      props.onClose();
-    } catch (e: any) {
+
+      onClose();
+      if (onConnected) {
+        onConnected();
+      }
+    } catch (e) {
       console.error("Login failed:", e);
       setError(e instanceof Error ? e.message : "登录失败");
     }
   };
 
   useEffect(() => {
-    let ws: ReconnectingWebSocket | null = null;
+    let ws: any;
 
-    if (props.isOpen) {
-      setIsConnecting(true);
-      const endpoint = "wss://blaze.mixin.one";
-      ws = new ReconnectingWebSocket(endpoint, "Mixin-OAuth-1", {
-        maxReconnectionDelay: 5000,
-        minReconnectionDelay: 1000,
-        reconnectionDelayGrowFactor: 1.2,
-        connectionTimeout: 8000,
-        maxRetries: Infinity,
-        debug: false,
-      });
+    if (isOpen) {
+      const scope = "PROFILE:READ ASSETS:READ SNAPSHOTS:READ";
+      const { verifier, challenge } = getChallenge();
 
-      const send = (msg: any) => {
-        try {
-          if (ws && ws.readyState === ws.OPEN) {
-            ws.send(pako.gzip(JSON.stringify(msg)));
-          }
-        } catch (e) {
-          if (!(e instanceof DOMException)) {
-            console.error("WebSocket send error:", e);
-            setError("连接出错，请重试");
-          }
+      ws = useAuthorization(clientId, scope, challenge, (a: AuthorizationResponse) => {
+        if (a && !loginCode) {
+          setLoginCode(`mixin://codes/${a.code_id}`);
         }
-      };
 
-      const sendRefreshCode = (authorization: any) => {
-        send({
-          id: v4().toUpperCase(),
-          action: "REFRESH_OAUTH_CODE",
-          params: {
-            client_id: clientId,
-            scope,
-            code_challenge: challenge,
-            authorization_id: authorization ? authorization.authorization_id : "",
-          },
-        });
-      };
+        if (a.authorization_code && a.authorization_code.length > 16) {
+          handleLogin(a.authorization_code, verifier);
+          return true;
+        }
 
-      ws.onopen = () => {
-        console.log("WebSocket connected");
-        setIsConnecting(false);
-        sendRefreshCode("");
-      };
-
-      ws.onerror = (error) => {
-        console.error("WebSocket error:", error);
-        setError("连接出错，请重试");
-        setIsConnecting(false);
-      };
-
-      ws.onclose = () => {
-        console.log("WebSocket closed");
-        setIsConnecting(false);
-      };
-
-      ws.onmessage = (event) => {
-        const fileReader = new FileReader();
-        fileReader.onload = function () {
-          try {
-            const msg = this.result ? pako.ungzip(new Uint8Array(this.result as ArrayBuffer), { to: "string" }) : "{}";
-            const authorization = JSON.parse(msg);
-            console.log("Received authorization:", authorization);
-
-            if (authorization.data) {
-              if (!loginCode) {
-                setLoginCode(`mixin://codes/${authorization.data.code_id}`);
-              }
-
-              if (authorization.data.authorization_code && authorization.data.authorization_code.length > 16) {
-                handleLogin(authorization.data.authorization_code);
-                return;
-              }
-
-              setTimeout(() => {
-                sendRefreshCode(authorization.data);
-              }, 1000);
-            }
-          } catch (e) {
-            console.error("Message processing error:", e);
-            setError("处理消息出错，请重试");
-          }
-        };
-        fileReader.readAsArrayBuffer(event.data);
-      };
+        return false;
+      });
     }
 
     return () => {
@@ -156,55 +111,45 @@ export function MixinLoginModal(props: { isOpen: boolean; onClose: () => void })
       }
       setLoginCode("");
       setError(undefined);
-      setIsConnecting(false);
     };
-  }, [props.isOpen]);
-
-  useEffect(() => {
-    if (!user) return;
-    setLoginCode("");
-  }, [user]);
+  }, [isOpen]);
 
   return (
-    <Dialog open={props.isOpen} onOpenChange={props.onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader className="relative">
-          <DialogTitle className="text-center text-xl font-medium">登录 Mixin</DialogTitle>
-          <Button variant="ghost" className="absolute right-0 top-0 rounded-full p-2" onClick={props.onClose}>
-            <IconX size={20} />
-          </Button>
-        </DialogHeader>
-        <div className="flex flex-col items-center justify-center space-y-4 py-4">
-          {error ? (
-            <div className="text-red-500 text-center">
-              {error}
-              <Button variant="outline" className="ml-4" onClick={() => window.location.reload()}>
-                重试
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[378px] bg-gray-600 border-colors-border">
+        <div className="w-[300px] h-[300px] mx-auto">
+          {loginCode ? (
+            <>
+              <QrCode value={loginCode} className="w-full h-full p-4 rounded-lg" />
+              <Button
+                variant="default"
+                size="lg"
+                className="mt-4 w-full"
+                onClick={() => window.open(loginCode, "_blank", "noopener,noreferrer")}
+              >
+                <svg
+                  className="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                  />
+                </svg>
+                Connect Wallet
               </Button>
-            </div>
-          ) : loginCode ? (
-            <div className="text-center space-y-4">
-              <p className="text-sm text-muted-foreground">请使用 Mixin Messenger 扫描二维码登录</p>
-              <div className="flex justify-center">
-                <Image
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(loginCode)}`}
-                  alt="Login QR Code"
-                  className="w-48 h-48"
-                  width={200}
-                  height={200}
-                />
-                {/* <QrCode value={loginCode} /> */}
-              </div>
-              <p className="text-sm text-muted-foreground">或点击下方链接</p>
-              <Button variant="outline" className="w-full" onClick={() => window.open(loginCode, "_blank")}>
-                在 Mixin Messenger 中打开
-              </Button>
-            </div>
+            </>
           ) : (
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">{isConnecting ? "正在连接..." : "正在生成登录二维码..."}</p>
-            </div>
+            <div className="w-full h-full bg-gray-100 dark:bg-gray-800 animate-pulse rounded-lg" />
           )}
+        </div>
+        <div className="text-center mt-4 text-nav-light-text dark:text-nav-dark-text">
+          {error ? <div className="text-red-500">{error}</div> : "请使用 Mixin 扫码登录"}
         </div>
       </DialogContent>
     </Dialog>

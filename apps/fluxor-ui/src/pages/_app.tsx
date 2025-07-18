@@ -143,8 +143,8 @@ export default function MrgnApp({ Component, pageProps }: AppProps) {
                               <MobileNavbar />
                             </Mobile>
 
-                            <Analytics />
-                            <Tutorial />
+                            {/* <Analytics /> */}
+                            {/* <Tutorial /> */}
 
                             <ToastProvider />
                             {globalActionBoxProps.isOpen && <GlobalActionBoxPortal />}

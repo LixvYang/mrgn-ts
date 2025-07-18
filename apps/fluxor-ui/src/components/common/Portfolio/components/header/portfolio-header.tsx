@@ -6,7 +6,7 @@ export const PortfolioHeader = () => {
       heading="Portfolio"
       body={
         <div className="space-y-6">
-          <p>Manage your marginfi positions.</p>
+          <p>Manage your fluxor positions.</p>
         </div>
       }
     />

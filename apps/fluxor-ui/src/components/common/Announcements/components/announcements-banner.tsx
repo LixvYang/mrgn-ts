@@ -138,7 +138,7 @@ export const Announcements = ({ items }: AnnouncementsProps) => {
                           />
                           <p className="text-xs md:text-sm">
                             <strong className="font-medium mr-1.5">{item.bank.meta.tokenSymbol}</strong>
-                            {item.text || "now available on marginfi"}
+                            {item.text || "now available on fluxor"}
                           </p>
                           <IconArrowRight size={20} className="ml-auto text-muted-foreground" />
                         </div>

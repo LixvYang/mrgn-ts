@@ -118,3 +118,20 @@ Here's an example:
 - The price oracle's 95% confidence band is +/- $1, i.e. $24-26. The top limit of this confidence band is $26, so the confidence band-adjusted market USD price is $26.
 - Let's say the SOL LTV on marginfi is 80%. We multiply the confidence band-adjusted market USD price by <Math>1/LTV</Math>. In this case, <Math>1/0.80 = 1.25</Math>.
 - **After all adjustments, SOL is priced at $32.50 as liability**.
+
+## Borrow Incentives Explained {{ tag: '', label: '' }}
+
+To deepen lending liquidity for as asset, issuers often partner with marginfi to incentivize their marginfi listings with borrow-side rewards. Below, we'll walk through **how APYs are determined** and how **borrow-side incentives work**.
+
+<Note>
+We will use a jitoSOL/SOL rewards example, where users are awarded incentives based on the amount of SOL they have borrowed against jitoSOL in their borrow positions.
+</Note>
+
+In this scenario, borrow incentives are allocated according to the amount of SOL borrowed against jitoSOL. Reward amounts will scale as the total amount of SOL debt taken against jitoSOL collateral increases.
+
+### Qualifying Criteria
+* A position must contain jitoSOL collateral and SOL debt
+* We simply use the smaller of your JitoSOL deposit or SOL borrow as your participation amount
+
+## Distribution Mechanism
+The user can expect to receive their rewards as an airdrop directly to their wallets at the end of each week during the given incentives campaign. There is nothing you need to do (no claiming process), just hold your qualifying JitoSOL and SOL positions to automatically earn your share.

@@ -344,7 +344,7 @@ export const WalletAuthAccounts = ({
                         </Button>
 
                         <div className="flex items-center ml-auto">
-                          <div
+                          {/* <div
                             className="cursor-pointer flex py-2 px-1.5 items-center justify-center transition-colors rounded-md hover:bg-background-gray-light"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -361,7 +361,7 @@ export const WalletAuthAccounts = ({
                                 <TooltipContent>Edit account name</TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
-                          </div>
+                          </div> */}
                           <div
                             className="cursor-pointer flex py-2 px-1.5 items-center justify-center transition-colors rounded-md hover:bg-background-gray-light"
                             onClick={(e) => {
@@ -395,7 +395,7 @@ export const WalletAuthAccounts = ({
                     );
                   })}
               </div>
-              {showAddAccountButton && (
+              {/* {showAddAccountButton && (
                 <Button
                   variant="outline"
                   className="w-full"
@@ -409,7 +409,7 @@ export const WalletAuthAccounts = ({
                   <IconUserPlus size={16} className="mr-2" />
                   Add account
                 </Button>
-              )}
+              )} */}
             </div>
           )}
 

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React from "react";
 import { v4 as uuidv4 } from "uuid";
 
@@ -7,6 +8,7 @@ import {
   AccountSummary,
   computeAccountSummary,
   DEFAULT_ACCOUNT_SUMMARY,
+  getMixinVars,
 } from "@mrgnlabs/mrgn-state";
 import { MarginfiAccountWrapper, MarginfiClient } from "@mrgnlabs/marginfi-client-v2";
 import {
@@ -15,8 +17,17 @@ import {
   ExecuteRepayActionProps,
   ExecuteRepayAction,
   logActivity,
+  ExecuteMixinRepayActionProps,
+  executeMixinRepayAction,
+  // SequencerTransactionRequest,
 } from "@mrgnlabs/mrgn-utils";
-import { dynamicNumeralFormatter } from "@mrgnlabs/mrgn-common";
+import {
+  ComputerInfoResponse,
+  ComputerSystemCallRequest,
+  ComputerUserResponse,
+  dynamicNumeralFormatter,
+  UserAssetBalance,
+} from "@mrgnlabs/mrgn-common";
 
 import { CircularProgress } from "~/components/ui/circular-progress";
 import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/ui/tooltip";
@@ -36,8 +47,14 @@ import {
 } from "~/components/action-box-v2/components";
 
 import { ActionInput, Preview, PreviewProps } from "./components";
-import { useRepaySimulation } from "./hooks";
+import { handleRepayMixinSimulation, useRepaySimulation } from "./hooks";
 import { useRepayBoxStore } from "./store";
+import { Connection } from "@solana/web3.js";
+import { SequencerTransactionRequest } from "@mixin.dev/mixin-node-sdk";
+import { toastManager } from "@mrgnlabs/mrgn-toasts";
+import Link from "next/link";
+import { computerClient } from "@mrgnlabs/fluxor-state";
+import { MixinMultipleTracesModal } from "../../components/mixin-multiple-traces-modal";
 
 type AdditionalSettings = {
   showAvailableCollateral?: boolean;
@@ -62,6 +79,14 @@ export type RepayBoxProps = {
   onComplete?: () => void;
   captureEvent?: (event: string, properties?: Record<string, any>) => void;
   setDisplaySettings?: (displaySettings: boolean) => void;
+
+  getUserMix?: () => string;
+  computerInfo?: ComputerInfoResponse;
+  connection?: Connection;
+  computerAccount?: ComputerUserResponse;
+  getComputerRecipient?: () => string;
+  balanceAddressMap?: Record<string, UserAssetBalance>;
+  fetchTransaction?: (transactionId: string) => Promise<SequencerTransactionRequest>;
 };
 
 export const RepayBox = ({
@@ -79,6 +104,13 @@ export const RepayBox = ({
   onComplete,
   captureEvent,
   setDisplaySettings,
+  getUserMix,
+  computerInfo,
+  connection,
+  computerAccount,
+  getComputerRecipient,
+  balanceAddressMap,
+  fetchTransaction,
 }: RepayBoxProps) => {
   const [
     amountRaw,
@@ -198,6 +230,8 @@ export const RepayBox = ({
   });
 
   const [additionalActionMessages, setAdditionalActionMessages] = React.useState<ActionMessageType[]>([]);
+  const [computerSystemCallRequest, setComputerSystemCallRequest] = React.useState<ComputerSystemCallRequest[]>([]);
+  const [shouldShowMixinPayModal, setShouldShowMixinPayModal] = React.useState(false);
 
   React.useEffect(() => {
     if (debouncedAmount === 0 && simulationResult) {
@@ -268,6 +302,104 @@ export const RepayBox = ({
       !selectedBank ||
       !selectedSecondaryBank
     ) {
+      return;
+    }
+
+    if (getMixinVars().isMixin) {
+      if (!getMixinVars().register) {
+        const toastController = toastManager.showCustomToast(
+          <div className="flex flex-col items-start gap-2">
+            <p className="text-sm text-muted-foreground">
+              You need to{" "}
+              <Link href="/portfolio" className="text-primary">
+                register
+              </Link>{" "}
+              with Mixin Computer to use this feature.
+            </p>
+          </div>
+        );
+        return;
+      }
+
+      const systemCallRequest = await handleRepayMixinSimulation({
+        amount: amount,
+        selectedAccount,
+        selectedBank,
+        selectedSecondaryBank,
+        marginfiClient,
+        getUserMix,
+        computerInfo,
+        connection,
+        computerAccount,
+        getComputerRecipient,
+        balanceAddressMap,
+        actionTxns,
+        simulationResult,
+        isRefreshTxn,
+        platformFeeBps,
+        jupiterOptions,
+        setSimulationResult,
+        setActionTxns,
+        setErrorMessage,
+        setRepayAmount,
+        setIsLoading: setSimulationStatus,
+        setMaxAmountCollateral,
+        setMaxOverflowHit,
+        processOptsArgs: {
+          broadcastType: "RPC",
+          ...priorityFees,
+        },
+      });
+      if (systemCallRequest.length > 0) {
+        setComputerSystemCallRequest(systemCallRequest);
+        setShouldShowMixinPayModal(true);
+
+        const params: ExecuteMixinRepayActionProps = {
+          actionTxns,
+          attemptUuid: uuidv4(),
+          marginfiClient,
+          processOpts: { ...priorityFees, broadcastType: transactionSettings.broadcastType },
+          txOpts: {},
+          callbacks: {
+            captureEvent: captureEvent,
+            onComplete: (txnSig: string) => {
+              onComplete?.();
+              // Log the activity
+              const activityDetails: Record<string, any> = {
+                amount: actionMode === ActionType.RepayCollat ? repayAmount : amount,
+                symbol: selectedBank.meta.tokenSymbol,
+                mint: selectedBank.info.rawBank.mint.toBase58(),
+              };
+
+              if (actionMode === ActionType.RepayCollat) {
+                activityDetails.secondaryAmount = amount;
+                activityDetails.secondarySymbol = selectedSecondaryBank.meta.tokenSymbol;
+                activityDetails.secondaryMint = selectedSecondaryBank.info.rawBank.mint.toBase58();
+              }
+
+              logActivity(actionMode, txnSig, activityDetails, selectedAccount?.address).catch((error) => {
+                console.error("Failed to log activity:", error);
+              });
+            },
+          },
+          actionType: actionMode,
+          infoProps: {
+            repayAmount: dynamicNumeralFormatter(repayAmount),
+            repayToken: selectedSecondaryBank.meta.tokenSymbol,
+            amount: dynamicNumeralFormatter(amount),
+            token: selectedBank.meta.tokenSymbol,
+          },
+          traceId: systemCallRequest[systemCallRequest.length - 1].trace,
+          getComputerSystemCallStatus: async (traceId: string) => {
+            return await computerClient.fetchCall(traceId);
+          },
+        };
+
+        executeMixinRepayAction(params);
+
+        setAmountRaw("");
+      }
+
       return;
     }
 
@@ -396,8 +528,9 @@ export const RepayBox = ({
         <ActionButton
           isLoading={simulationStatus.isLoading}
           isEnabled={
-            !additionalActionMessages.concat(actionMessages).filter((value) => value.isEnabled === false).length &&
-            actionTxns?.transactions.length > 0
+              // !additionalActionMessages.concat(actionMessages).filter((value) => value.isEnabled === false).length &&
+            // actionTxns?.transactions.length > 0
+            !additionalActionMessages.concat(actionMessages).filter((value) => value.isEnabled === false).length
           }
           connected={connected}
           handleAction={() => {
@@ -425,6 +558,18 @@ export const RepayBox = ({
           borrowAmount={repayAmount}
           isLoading={simulationStatus.isLoading}
           overrideStats={additionalSettings?.overrideStats}
+        />
+      )}
+
+      {computerSystemCallRequest.length > 0 && shouldShowMixinPayModal && (
+        <MixinMultipleTracesModal
+          open={shouldShowMixinPayModal}
+          onOpenChange={() => {
+            setShouldShowMixinPayModal(false);
+            setComputerSystemCallRequest([]);
+          }}
+          requests={computerSystemCallRequest}
+          fetchTransaction={fetchTransaction}
         />
       )}
     </ActionBoxContentWrapper>

@@ -55,7 +55,7 @@ const PaymentContent = ({
             transition={{ delay: 0.4, duration: 0.5 }}
             className="text-xl font-semibold"
           >
-            支付完成
+            Payment completed
           </motion.h3>
           <motion.p
             initial={{ opacity: 0 }}
@@ -63,7 +63,7 @@ const PaymentContent = ({
             transition={{ delay: 0.6, duration: 0.5 }}
             className="text-sm text-mfi-action-box-accent-foreground"
           >
-            页面即将关闭...
+            The page will be closed...
           </motion.p>
         </motion.div>
       ) : (
@@ -94,7 +94,7 @@ const PaymentContent = ({
               className="flex items-center gap-2 text-sm text-mfi-action-box-accent-foreground"
             >
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>正在等待支付结果...</span>
+              <span>Waiting for payment result...</span>
             </motion.div>
           </div>
 
@@ -111,7 +111,7 @@ const PaymentContent = ({
                 transition={{ delay: 0.3, duration: 0.5 }}
                 className="text-lg font-semibold text-center md:text-left"
               >
-                使用 Mixin 支付
+                Use Mixin to pay
               </motion.h3>
               <motion.p
                 initial={{ opacity: 0 }}
@@ -119,7 +119,7 @@ const PaymentContent = ({
                 transition={{ delay: 0.4, duration: 0.5 }}
                 className="text-sm text-mfi-action-box-accent-foreground text-center md:text-left"
               >
-                点击下方按钮跳转至 Mixin 进行支付
+                Click the button below to redirect to Mixin for payment
               </motion.p>
             </div>
             <motion.div
@@ -133,7 +133,7 @@ const PaymentContent = ({
                 variant="default"
                 size="lg"
               >
-                前往支付
+                Pay
               </Button>
             </motion.div>
           </motion.div>
@@ -221,7 +221,7 @@ const MixinMultipleTracesModal = ({
           )}
         >
           <DialogHeader className="relative mb-6">
-            <DialogTitle className="text-center text-xl font-semibold">Mixin 支付</DialogTitle>
+            <DialogTitle className="text-center text-xl font-semibold">Mixin Pay</DialogTitle>
           </DialogHeader>
           <PaymentContent paymentUrl={requests[index].value} isMobile={isMobile} isCompleted={isCompleted} />
         </DialogContent>
@@ -237,7 +237,7 @@ const MixinMultipleTracesModal = ({
       >
         <div className="flex flex-col h-full">
           <SheetHeader className="relative border-b p-4">
-            <SheetTitle className="text-center text-xl font-semibold">Mixin 支付</SheetTitle>
+            <SheetTitle className="text-center text-xl font-semibold">Mixin Pay</SheetTitle>
             <Button variant="ghost" size="icon" className="absolute right-2 top-2" onClick={handleClose}>
               <X className="h-4 w-4" />
             </Button>

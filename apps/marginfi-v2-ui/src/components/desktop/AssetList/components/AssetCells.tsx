@@ -253,6 +253,7 @@ export const getRateCell = ({
           </TooltipProvider>
         </div>
       )}
+      
       <div className="flex flex-col gap-0.5 items-end">
         {isInLendingMode && symbol === "JitoSOL" ? (
           <EmissionsPopover rateAPY={rateAPY} />

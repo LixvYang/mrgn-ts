@@ -11,9 +11,9 @@ export const fetchPortfolioData = async (selectedAccount: string | null): Promis
     throw new Error("No account selected");
   }
 
-  if (getMixinVars().isMixin) {
-    return [];
-  }
+  // if (getMixinVars().isMixin) {
+  //   return [];
+  // }
 
   const response = await fetch(`/api/user/portfolio?account=${selectedAccount}`);
   if (!response.ok) {

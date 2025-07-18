@@ -508,6 +508,115 @@ export async function ExecuteRepayAction(props: ExecuteRepayActionProps) {
     props.callbacks.captureEvent(`user_${props.actionType}`, { uuid: props.attemptUuid, ...props.infoProps });
 }
 
+
+export interface ExecuteMixinRepayActionProps extends ExecuteRepayActionProps {
+  traceId: string;
+  getComputerSystemCallStatus: (traceId: string) => Promise<ComputerSystemCallResponse>;
+}
+
+export async function executeMixinRepayAction(props: ExecuteMixinRepayActionProps) {
+  const steps = getMixinSteps(props.actionTxns, {
+    amount: props.infoProps.amount,
+    token: props.infoProps.token,
+  });
+
+  props.callbacks.captureEvent &&
+    props.callbacks.captureEvent("user_repay_initiate", { uuid: props.attemptUuid, ...props.infoProps });
+
+  // 展示 toast
+  if (props.nativeSolBalance && props.nativeSolBalance < FEE_MARGIN) {
+    toastManager.showErrorToast(STATIC_SIMULATION_ERRORS.INSUFICIENT_LAMPORTS);
+    return;
+  }
+
+  const toast = toastManager.createMultiStepToast(`${props.actionType}`, steps);
+  toast.start();
+
+  try {
+    if (props.getComputerSystemCallStatus) {
+      const MAX_RETRIES = 120;
+      let retryCount = 0;
+
+      const pollStatus = async (): Promise<string> => {
+        try {
+          const call = await props.getComputerSystemCallStatus(props.traceId);
+
+          // 如果查询成功且状态为done,则返回结果
+          if (call?.state === "done") {
+            toast.success(composeExplorerUrl(props.traceId), "");
+            props.callbacks.onComplete && props.callbacks.onComplete(props.traceId);
+            return props.traceId;
+          }
+
+          // 如果状态为failed,显示错误但继续查询
+          if (call?.state === "failed") {
+            toast.setFailed("Transaction failed, retrying...");
+          }
+
+          // 超过最大重试次数才停止
+          if (retryCount >= MAX_RETRIES) {
+            throw new Error("Status check timeout after 5 minutes");
+          }
+
+          retryCount++;
+
+          // 无论是什么状态,都继续查询
+          return new Promise((resolve, reject) => {
+            setTimeout(() => {
+              pollStatus().then(resolve).catch(reject);
+            }, 5000);
+          });
+        } catch (error) {
+          console.log("Poll status error:", error);
+
+          // 超过最大重试次数才停止
+          if (retryCount >= MAX_RETRIES) {
+            throw new Error("Status check timeout after 5 minutes");
+          }
+
+          retryCount++;
+
+          // 发生错误时也继续查询
+          return new Promise((resolve, reject) => {
+            setTimeout(() => {
+              pollStatus().then(resolve).catch(reject);
+            }, 5000);
+          });
+        }
+      };
+
+      return await pollStatus();
+    }
+  } catch (error) {
+    console.log("error", error);
+    if (!(error instanceof ProcessTransactionError || error instanceof SolanaJSONRPCError)) {
+      captureSentryException(error, JSON.stringify(error), { action: props.actionType });
+    }
+
+    if (error instanceof ProcessTransactionError) {
+      const message = extractErrorString(error);
+
+      if (error.failedTxs && props.actionTxns) {
+        const updatedFailedTxns = {
+          ...props.actionTxns,
+          transactions: error.failedTxs,
+        };
+        toast.setFailed(message, async () => {
+          // TODO: retry
+          // await executeActionWrapper({ ...props, txns: updatedFailedTxns, existingToast: toast });
+        });
+      } else {
+        toast.setFailed(message);
+      }
+    } else if (error instanceof SolanaJSONRPCError) {
+      toast.setFailed(error.message);
+    } else {
+      const message = extractErrorString(error);
+      toast.setFailed(message ?? JSON.stringify(error));
+    }
+  }
+}
+
 export interface ExecuteTradeActionProps extends ExecuteActionProps {
   infoProps: {
     depositAmount: string;

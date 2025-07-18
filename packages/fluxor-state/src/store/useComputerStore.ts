@@ -70,7 +70,7 @@ const initComputerState = {
   computerAssetAddressMap: {},
 };
 
-const client = initComputerClient();
+const computerClient = initComputerClient();
 
 type ComputerStorePersist = (
   config: StateCreator<ComputerState>,
@@ -108,7 +108,7 @@ const createComputerStore = () => {
                 uuidMembers: [user.user_id],
                 threshold: 1,
               });
-              const account = await client.fetchUser(mix);
+              const account = await computerClient.fetchUser(mix);
               if (account)
                 set({
                   user,
@@ -199,14 +199,14 @@ const createComputerStore = () => {
           },
 
           getComputerInfo: async () => {
-            const info = await client.fetchInfo();
+            const info = await computerClient.fetchInfo();
             if (info) set({ info });
           },
 
           getComputerAccount: async () => {
             const { user, getUserMix } = get();
             if (!user) return;
-            const account = await client.fetchUser(getUserMix());
+            const account = await computerClient.fetchUser(getUserMix());
             if (account)
               set({
                 account,
@@ -267,7 +267,7 @@ const createComputerStore = () => {
           // Actions
           getComputerAssets: async () => {
             console.log("🚀 getComputerAssets");
-            const assets = await client.fetchAssets();
+            const assets = await computerClient.fetchAssets();
             assets.push({
               asset_id: "64692c23-8971-4cf4-84a7-4dd1271dd887",
               address: "So11111111111111111111111111111111111111112",
@@ -320,5 +320,5 @@ const createComputerStore = () => {
   );
 };
 
-export { createComputerStore };
+export { computerClient, createComputerStore };
 export type { ComputerState };

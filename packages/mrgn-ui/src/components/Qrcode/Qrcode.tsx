@@ -61,7 +61,8 @@ function QrCode(props: QrCodeProps) {
     const code = new QRCodeStyling(op);
     qrCodeContainer.current.innerHTML = "";
     code.append(qrCodeContainer.current);
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.value]); // 添加依赖数组，只在 value 变化时重新生成
 
   return (
     <div className={cn("relative w-full h-full flex items-center justify-center", props.className)}>

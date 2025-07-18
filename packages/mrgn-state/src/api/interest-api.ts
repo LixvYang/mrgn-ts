@@ -11,9 +11,9 @@ export const fetchInterestData = async (accountAddress: string | null): Promise<
     throw new Error("No account selected");
   }
 
-  if (getMixinVars().isMixin) {
-    return [];
-  }
+  // if (getMixinVars().isMixin) {
+  //   return [];
+  // }
 
   const response = await fetch(`/api/user/interest-earned?account=${accountAddress}`);
   if (!response.ok) {

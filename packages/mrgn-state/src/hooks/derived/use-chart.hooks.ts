@@ -37,7 +37,7 @@ export function useInterestChart(
 
     const keys = Object.keys(chartData[0]).filter((k) => k !== "timestamp");
 
-    const keysToKeep = keys.filter((key) => chartData.some((entry) => Math.abs(entry[key] as number) >= 0.0001));
+    const keysToKeep = keys.filter((key) => chartData.some((entry) => Math.abs(entry[key] as number) >= 0));
 
     const filteredData = chartData.map((entry) => {
       const filtered: InterestChartDataPoint = { timestamp: entry.timestamp };

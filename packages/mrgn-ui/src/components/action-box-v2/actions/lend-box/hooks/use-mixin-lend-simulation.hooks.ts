@@ -12,6 +12,7 @@ import {
 import {
   attachInvoiceEntry,
   attachStorageEntry,
+  buildComputerExtra,
   checkSystemCallSize,
   formatUnits,
   getInvoiceString,
@@ -59,7 +60,7 @@ import {
   MARGINFI_ACCOUNT_WITHDRAW_RENT_SIZES,
   MARGINFI_ACCOUNT_DEPOSIT_RENT_SIZES,
 } from "@mrgnlabs/mrgn-common";
-import { buildComputerExtra, buildSystemCallInvoiceExtra, add, handleInvoiceSchema } from "@mrgnlabs/fluxor-state";
+import { buildSystemCallInvoiceExtra, add, handleInvoiceSchema, computerClient } from "@mrgnlabs/fluxor-state";
 import BigNumber from "bignumber.js";
 import { initComputerClient } from "@mrgnlabs/fluxor-state";
 
@@ -258,8 +259,6 @@ async function handleLendMixinSimulation({
     }
 
     // 2. 获取 nonce
-    const client = initComputerClient();
-
     // 3. 处理交易指令
     for (const txn of versionedTransactions) {
       const txBuf = Buffer.from(txn.serialize());
@@ -291,15 +290,13 @@ async function handleLendMixinSimulation({
     // 4. 构建最终交易
     const invoice = newMixinInvoice(getComputerRecipient());
     if (!invoice) throw new Error("invalid invoice recipient!");
-    const referenceExtra = Buffer.from(
-      buildComputerExtra(computerInfo.members.app_id, OperationTypeUserDeposit, userIdToBytes(computerAccount.id))
-    );
+    const referenceExtra = Buffer.from(buildComputerExtra(OperationTypeUserDeposit, userIdToBytes(computerAccount.id)));
 
     let resultTrace = "";
     if (versionedTransactions.length === 1) {
       if (txAction === TransactionType.DEPOSIT) {
         // 2. deposit
-        const nonce2 = await client.getNonce(getUserMix());
+        const nonce2 = await computerClient.getNonce(getUserMix());
         const depositAddressLookupsRes = await Promise.all(
           (versionedTransactions[0] as VersionedTransaction).message.addressTableLookups.map((a) =>
             connection.getAddressLookupTable(a.accountKey)
@@ -338,7 +335,6 @@ async function handleLendMixinSimulation({
         const depositTrace = uniqueConversationID(depositTxBuf.toString("hex"), "system call");
 
         const depositExtra = buildComputerExtra(
-          computerInfo.members.app_id,
           OperationTypeSystemCall,
           buildSystemCallInvoiceExtra(computerAccount.id, depositTrace, false)
         );
@@ -383,7 +379,7 @@ async function handleLendMixinSimulation({
           addressLookupTableAccounts: borrowAddressLookups,
         }).instructions;
 
-        const nonce2 = await client.getNonce(getUserMix());
+        const nonce2 = await computerClient.getNonce(getUserMix());
         const nonce2Ins = SystemProgram.nonceAdvance({
           noncePubkey: new PublicKey(nonce2.nonce_address),
           authorizedPubkey: new PublicKey(computerInfo.payer),
@@ -411,10 +407,9 @@ async function handleLendMixinSimulation({
           }, 0).toString(),
           SOL_DECIMAL
         ).toString();
-        const fee = await client.getFeeOnXin(solAmount);
+        const fee = await computerClient.getFeeOnXin(solAmount);
 
         const borrowExtra = buildComputerExtra(
-          computerInfo.members.app_id,
           OperationTypeSystemCall,
           buildSystemCallInvoiceExtra(computerAccount.id, borrowTrace, false, fee.fee_id)
         );
@@ -436,7 +431,7 @@ async function handleLendMixinSimulation({
         });
       } else if (txAction === TransactionType.WITHDRAW) {
         // 2. withdraw
-        const nonce2 = await client.getNonce(getUserMix());
+        const nonce2 = await computerClient.getNonce(getUserMix());
         const withdrawAddressLookupsRes = await Promise.all(
           (versionedTransactions[0] as VersionedTransaction).message.addressTableLookups.map((a) =>
             connection.getAddressLookupTable(a.accountKey)
@@ -478,10 +473,9 @@ async function handleLendMixinSimulation({
           }, 0).toString(),
           SOL_DECIMAL
         ).toString();
-        const fee = await client.getFeeOnXin(solAmount);
+        const fee = await computerClient.getFeeOnXin(solAmount);
 
         const withdrawExtra = buildComputerExtra(
-          computerInfo.members.app_id,
           OperationTypeSystemCall,
           buildSystemCallInvoiceExtra(computerAccount.id, withdrawTrace, false, fee.fee_id)
         );
@@ -516,7 +510,7 @@ async function handleLendMixinSimulation({
       const createAccountInx = TransactionMessage.decompile(versionedTransactions[0].message, {
         addressLookupTableAccounts: initAccountAddressLookups,
       }).instructions;
-      const nonce1 = await client.getNonce(getUserMix());
+      const nonce1 = await computerClient.getNonce(getUserMix());
       const nonce1Ins = SystemProgram.nonceAdvance({
         noncePubkey: new PublicKey(nonce1.nonce_address),
         authorizedPubkey: new PublicKey(computerInfo.payer),
@@ -541,9 +535,8 @@ async function handleLendMixinSimulation({
         }, 0).toString(),
         SOL_DECIMAL
       ).toString();
-      const fee = await client.getFeeOnXin(solAmount);
+      const fee = await computerClient.getFeeOnXin(solAmount);
       const initAccountExtra = buildComputerExtra(
-        computerInfo.members.app_id,
         OperationTypeSystemCall,
         buildSystemCallInvoiceExtra(computerAccount.id, createAccountTrace, false, fee.fee_id)
       );
@@ -560,7 +553,7 @@ async function handleLendMixinSimulation({
       });
 
       // 2. deposit
-      const nonce2 = await client.getNonce(getUserMix());
+      const nonce2 = await computerClient.getNonce(getUserMix());
       const depositAddressLookupsRes = await Promise.all(
         (versionedTransactions[1] as VersionedTransaction).message.addressTableLookups.map((a) =>
           connection.getAddressLookupTable(a.accountKey)
@@ -599,7 +592,6 @@ async function handleLendMixinSimulation({
       const depositTrace = uniqueConversationID(depositTxBuf.toString("hex"), "system call");
 
       const depositExtra = buildComputerExtra(
-        computerInfo.members.app_id,
         OperationTypeSystemCall,
         buildSystemCallInvoiceExtra(computerAccount.id, depositTrace, false)
       );

@@ -9,11 +9,14 @@ import { ActionBox } from "~/components/action-box-v2";
 
 import { ScreenWrapper, WalletSeperator } from "~/components/wallet-v2/components/sign-up/components";
 import { useWallet } from "~/components/wallet-v2";
+import { useComputerStore } from "@mrgnlabs/fluxor-state";
 
 interface DepositTokenProps extends OnrampScreenProps {}
 
 export const DepositToken = ({ mrgnState, successProps, onNext, onClose }: DepositTokenProps) => {
-  const { walletContextState, connected } = useWallet();
+  // const { walletContextState, connected } = useWallet();
+  const { walletContextState } = useWallet();
+  const { connected } = useComputerStore();
 
   const extendedBankInfos = React.useMemo(() => {
     return mrgnState?.extendedBankInfos || [];

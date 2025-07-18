@@ -12,7 +12,6 @@ import {
 import {
   attachInvoiceEntry,
   attachStorageEntry,
-  buildComputerExtra,
   checkSystemCallSize,
   formatUnits,
   getInvoiceString,
@@ -60,7 +59,7 @@ import {
   MARGINFI_ACCOUNT_WITHDRAW_RENT_SIZES,
   MARGINFI_ACCOUNT_DEPOSIT_RENT_SIZES,
 } from "@mrgnlabs/mrgn-common";
-import { buildSystemCallInvoiceExtra, add, handleInvoiceSchema, computerClient } from "@mrgnlabs/fluxor-state";
+import { buildSystemCallInvoiceExtra, add, handleInvoiceSchema, computerClient, buildComputerExtra } from "@mrgnlabs/fluxor-state";
 import BigNumber from "bignumber.js";
 import { initComputerClient } from "@mrgnlabs/fluxor-state";
 
@@ -290,7 +289,9 @@ async function handleLendMixinSimulation({
     // 4. 构建最终交易
     const invoice = newMixinInvoice(getComputerRecipient());
     if (!invoice) throw new Error("invalid invoice recipient!");
-    const referenceExtra = Buffer.from(buildComputerExtra(OperationTypeUserDeposit, userIdToBytes(computerAccount.id)));
+    const referenceExtra = Buffer.from(
+      buildComputerExtra(computerInfo.members.app_id, OperationTypeUserDeposit, userIdToBytes(computerAccount.id))
+    );
 
     let resultTrace = "";
     if (versionedTransactions.length === 1) {
@@ -335,6 +336,7 @@ async function handleLendMixinSimulation({
         const depositTrace = uniqueConversationID(depositTxBuf.toString("hex"), "system call");
 
         const depositExtra = buildComputerExtra(
+          computerInfo.members.app_id,
           OperationTypeSystemCall,
           buildSystemCallInvoiceExtra(computerAccount.id, depositTrace, false)
         );
@@ -410,6 +412,7 @@ async function handleLendMixinSimulation({
         const fee = await computerClient.getFeeOnXin(solAmount);
 
         const borrowExtra = buildComputerExtra(
+          computerInfo.members.app_id,
           OperationTypeSystemCall,
           buildSystemCallInvoiceExtra(computerAccount.id, borrowTrace, false, fee.fee_id)
         );
@@ -476,6 +479,7 @@ async function handleLendMixinSimulation({
         const fee = await computerClient.getFeeOnXin(solAmount);
 
         const withdrawExtra = buildComputerExtra(
+          computerInfo.members.app_id,
           OperationTypeSystemCall,
           buildSystemCallInvoiceExtra(computerAccount.id, withdrawTrace, false, fee.fee_id)
         );
@@ -537,6 +541,7 @@ async function handleLendMixinSimulation({
       ).toString();
       const fee = await computerClient.getFeeOnXin(solAmount);
       const initAccountExtra = buildComputerExtra(
+        computerInfo.members.app_id,
         OperationTypeSystemCall,
         buildSystemCallInvoiceExtra(computerAccount.id, createAccountTrace, false, fee.fee_id)
       );
@@ -592,6 +597,7 @@ async function handleLendMixinSimulation({
       const depositTrace = uniqueConversationID(depositTxBuf.toString("hex"), "system call");
 
       const depositExtra = buildComputerExtra(
+        computerInfo.members.app_id,
         OperationTypeSystemCall,
         buildSystemCallInvoiceExtra(computerAccount.id, depositTrace, false)
       );

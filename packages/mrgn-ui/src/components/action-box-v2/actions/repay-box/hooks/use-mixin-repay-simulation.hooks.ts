@@ -16,7 +16,6 @@ import {
 import {
   attachInvoiceEntry,
   attachStorageEntry,
-  buildComputerExtra,
   checkSystemCallSize,
   formatUnits,
   getInvoiceString,
@@ -85,6 +84,7 @@ import { generateActionTxns } from "../../lend-box/utils";
 import { calculateRepayTransactions, CalculateRepayTransactionsProps } from "../utils";
 import {
   add,
+  buildComputerExtra,
   buildSystemCallInvoiceExtra,
   computerClient,
   handleInvoiceSchema,
@@ -308,7 +308,9 @@ async function handleRepayMixinSimulation({
     // 4. 构建最终交易
     const invoice = newMixinInvoice(getComputerRecipient());
     if (!invoice) throw new Error("invalid invoice recipient!");
-    const referenceExtra = Buffer.from(buildComputerExtra(OperationTypeUserDeposit, userIdToBytes(computerAccount.id)));
+    const referenceExtra = Buffer.from(
+      buildComputerExtra(computerInfo.members.app_id, OperationTypeUserDeposit, userIdToBytes(computerAccount.id))
+    );
 
     let resultTrace = "";
     if (versionedTransactions.length >= 1 && actionType === ActionType.Repay) {
@@ -352,6 +354,7 @@ async function handleRepayMixinSimulation({
       const repayTrace = uniqueConversationID(repayTxBuf.toString("hex"), "system call");
 
       const repayExtra = buildComputerExtra(
+        computerInfo.members.app_id,
         OperationTypeSystemCall,
         buildSystemCallInvoiceExtra(computerAccount.id, repayTrace, false)
       );
@@ -436,6 +439,7 @@ async function handleRepayMixinSimulation({
         ).toString();
         const fee = await computerClient.getFeeOnXin(solAmount);
         const initAccountExtra = buildComputerExtra(
+          computerInfo.members.app_id,
           OperationTypeSystemCall,
           buildSystemCallInvoiceExtra(computerAccount.id, createAccountTrace, false, fee.fee_id)
         );
@@ -486,6 +490,7 @@ async function handleRepayMixinSimulation({
         }
         const repayCollatTrace = uniqueConversationID(repayCollatTxBuf.toString("hex"), "system call");
         const repayCollatExtra = buildComputerExtra(
+          computerInfo.members.app_id,
           OperationTypeSystemCall,
           buildSystemCallInvoiceExtra(computerAccount.id, repayCollatTrace, false)
         );
@@ -549,6 +554,7 @@ async function handleRepayMixinSimulation({
         const repayCollatTrace = uniqueConversationID(repayCollatTxBuf.toString("hex"), "system call");
 
         const repayCollatExtra = buildComputerExtra(
+          computerInfo.members.app_id,
           OperationTypeSystemCall,
           buildSystemCallInvoiceExtra(computerAccount.id, repayCollatTrace, false)
         );

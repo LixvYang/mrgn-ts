@@ -122,16 +122,22 @@ export const FluxlendProvider: React.FC<{
     }
   }, [connected, register, storePublicKey]); // 只监听关键状态变化
 
-  // 单独处理 balanceAddressMap 的更新
   React.useEffect(() => {
-    if (connected && register) {
+    if (connected) {
       resetMixinBalanceAddressMap(balanceAddressMap);
-    } else if (connected && !register) {
-      resetMixinBalanceAddressMap(balanceAddressMap);
-    } else {
-      resetMixinBalanceAddressMap({});
     }
-  }, [balanceAddressMap]);
+    const id = window.setInterval(() => {
+      const store = useComputerStore.getState();
+      if (store.connected) {
+        resetMixinBalanceAddressMap(store.balanceAddressMap);
+      } else if (store.connected && !store.register) {
+        resetMixinBalanceAddressMap(store.balanceAddressMap);
+      } else {
+        resetMixinBalanceAddressMap({});
+      }
+    }, 1 * 1000);
+    return () => window.clearInterval(id);
+  }, []);
 
   const { extendedBanks } = useExtendedBanks();
   const { stakePoolMetadataMap } = useNativeStakeData();
@@ -203,6 +209,12 @@ export const FluxlendProvider: React.FC<{
     }
   }, [connected, computerAssets.length]); // 依赖连接状态和资产数量
 
+  const refreshMixinBalances = async () => {
+    console.log("🔄 FluxlendProvider refreshMixinBalances");
+    await updateBalances(computerAssets);
+    resetMixinBalanceAddressMap(balanceAddressMap);
+  };
+
   // 初始化 Mixin 变量
   // React.useEffect(() => {
   //   if (Object.keys(balanceAddressMap).length > 0) {
@@ -257,6 +269,7 @@ export const FluxlendProvider: React.FC<{
         getComputerRecipient={getComputerRecipient}
         balanceAddressMap={balanceAddressMap}
         fetchTransaction={getMixinClient()?.utxo.fetchTransaction}
+        refreshMixinBalances={refreshMixinBalances}
       >
         {children}
 

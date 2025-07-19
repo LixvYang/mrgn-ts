@@ -11,6 +11,11 @@ export default function Document() {
         />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         <meta name="darkreader" content="NO-DARKREADER-PLUGIN" /> */}
+        <Script
+          defer
+          src="https://cloud.umami.is/script.js"
+          data-website-id="2cf2a363-bcc7-42cd-8abd-c027342e909c"
+        ></Script>
         <meta name="theme-color" content="#090a0a" />
         {/* <link rel="icon" href="/favicon.ico" sizes="32x32" />
         <link rel="icon" href="/mrgn_logo_rounded.svg" type="image/svg+xml" />

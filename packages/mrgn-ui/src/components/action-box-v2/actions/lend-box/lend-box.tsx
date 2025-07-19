@@ -99,6 +99,7 @@ export type LendBoxProps = {
   getComputerRecipient?: () => string;
   balanceAddressMap?: Record<string, UserAssetBalance>;
   fetchTransaction?: (transactionId: string) => Promise<SequencerTransactionRequest>;
+  refreshMixinBalances?: () => Promise<void>;
 };
 
 export const LendBox = ({
@@ -130,6 +131,7 @@ export const LendBox = ({
   getComputerRecipient,
   balanceAddressMap,
   fetchTransaction,
+  refreshMixinBalances,
 }: LendBoxProps) => {
   const [
     amountRaw,
@@ -480,6 +482,7 @@ export const LendBox = ({
     };
 
     executeLendingAction(props);
+    refreshMixinBalances?.();
 
     setAmountRaw("");
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -31,6 +31,7 @@ type ActionBoxContextType = {
   getComputerRecipient?: () => string;
   balanceAddressMap?: Record<string, UserAssetBalance>;
   fetchTransaction?: (transactionId: string) => Promise<SequencerTransactionRequest>;
+  refreshMixinBalances?: () => Promise<void>;
 };
 
 const ActionBoxContext = React.createContext<ActionBoxContextType | null>(null);

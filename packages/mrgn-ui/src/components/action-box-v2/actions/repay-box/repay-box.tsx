@@ -87,6 +87,7 @@ export type RepayBoxProps = {
   getComputerRecipient?: () => string;
   balanceAddressMap?: Record<string, UserAssetBalance>;
   fetchTransaction?: (transactionId: string) => Promise<SequencerTransactionRequest>;
+  refreshMixinBalances?: () => Promise<void>;
 };
 
 export const RepayBox = ({
@@ -111,6 +112,7 @@ export const RepayBox = ({
   getComputerRecipient,
   balanceAddressMap,
   fetchTransaction,
+  refreshMixinBalances,
 }: RepayBoxProps) => {
   const [
     amountRaw,
@@ -398,6 +400,7 @@ export const RepayBox = ({
         executeMixinRepayAction(params);
 
         setAmountRaw("");
+        refreshMixinBalances?.();
       }
 
       return;
@@ -528,7 +531,7 @@ export const RepayBox = ({
         <ActionButton
           isLoading={simulationStatus.isLoading}
           isEnabled={
-              // !additionalActionMessages.concat(actionMessages).filter((value) => value.isEnabled === false).length &&
+            // !additionalActionMessages.concat(actionMessages).filter((value) => value.isEnabled === false).length &&
             // actionTxns?.transactions.length > 0
             !additionalActionMessages.concat(actionMessages).filter((value) => value.isEnabled === false).length
           }

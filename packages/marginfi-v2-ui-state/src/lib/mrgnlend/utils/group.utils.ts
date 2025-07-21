@@ -3,14 +3,266 @@ import BigNumber from "bignumber.js";
 
 import {
   Bank,
+  BankConfig,
   BankRaw,
+  EmodeEntry,
+  EmodeFlags,
+  AssetTag,
+  EmodeTag,
   MarginfiGroup,
   MarginfiProgram,
   MintData,
+  OperationalState,
   OraclePrice,
   PythPushFeedIdMap,
+  RiskTier,
+  OracleSetup,
+  InterestRateConfig,
 } from "@mrgnlabs/marginfi-client-v2";
 import { BankMetadataMap, chunkedGetRawMultipleAccountInfoOrdered } from "@mrgnlabs/mrgn-common";
+import BN from "bn.js";
+import { EmodeSettings } from "@mrgnlabs/marginfi-client-v2/dist/models/emode-settings";
+
+async function fetchGroupDataFromFluxorApi(
+  program: MarginfiProgram,
+  groupAddress: PublicKey,
+  commitment?: Commitment,
+  bankAddresses?: PublicKey[],
+  bankMetadataMap?: BankMetadataMap
+): Promise<{
+  marginfiGroup: MarginfiGroup;
+  banks: Map<string, Bank>;
+  priceInfos: Map<string, OraclePrice>;
+  tokenDatas: Map<string, MintData>;
+  feedIdMap: PythPushFeedIdMap;
+}> {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_FLUXOR_API_URL}/group/${groupAddress.toBase58()}`);
+  const data: GroupInfo = await response.json();
+
+  const marginfiGroup: MarginfiGroup = new MarginfiGroup(
+    new PublicKey(data.marginfiGroup.admin),
+    new PublicKey(data.marginfiGroup.address)
+  );
+  const banks: Map<string, Bank> = new Map(
+    Object.entries(data.banks).map(([key, bank]: [string, BankR]) => {
+      const interestRateConfig: InterestRateConfig = {
+        insuranceFeeFixedApr: new BigNumber(bank.config.interestRateConfig.insuranceFeeFixedApr),
+        maxInterestRate: new BigNumber(bank.config.interestRateConfig.maxInterestRate),
+        insuranceIrFee: new BigNumber(bank.config.interestRateConfig.insuranceIrFee),
+        optimalUtilizationRate: new BigNumber(bank.config.interestRateConfig.optimalUtilizationRate),
+        plateauInterestRate: new BigNumber(bank.config.interestRateConfig.plateauInterestRate),
+        protocolFixedFeeApr: new BigNumber(bank.config.interestRateConfig.protocolFixedFeeApr),
+        protocolIrFee: new BigNumber(bank.config.interestRateConfig.protocolIrFee),
+        protocolOriginationFee: new BigNumber(bank.config.interestRateConfig.protocolOriginationFee),
+      };
+      return [
+        key,
+        new Bank(
+          new PublicKey(bank.address),
+          new PublicKey(bank.mint),
+          bank.mintDecimals,
+          new PublicKey(bank.group),
+          new BigNumber(bank.assetShareValue),
+          new BigNumber(bank.liabilityShareValue),
+          new PublicKey(bank.liquidityVault),
+          bank.liquidityVaultBump,
+          bank.liquidityVaultAuthorityBump,
+          new PublicKey(bank.insuranceVault),
+          bank.insuranceVaultBump,
+          bank.insuranceVaultAuthorityBump,
+          new BigNumber(bank.collectedInsuranceFeesOutstanding),
+          new PublicKey(bank.feeVault),
+          bank.feeVaultBump,
+          bank.feeVaultAuthorityBump,
+          new BigNumber(bank.collectedGroupFeesOutstanding),
+          new BN(bank.lastUpdate),
+          new BankConfig(
+            new BigNumber(bank.config.assetWeightInit),
+            new BigNumber(bank.config.assetWeightMaint),
+            new BigNumber(bank.config.liabilityWeightInit),
+            new BigNumber(bank.config.liabilityWeightMaint),
+            new BigNumber(bank.config.depositLimit),
+            new BigNumber(bank.config.borrowLimit),
+            bank.config.riskTier as RiskTier,
+            new BigNumber(bank.config.totalAssetValueInitLimit),
+            bank.config.assetTag as AssetTag,
+            bank.config.oracleSetup as OracleSetup,
+            bank.config.oracleKeys.map((key) => new PublicKey(key)),
+            bank.config.oracleMaxAge,
+            interestRateConfig,
+            bank.config.operationalState
+          ),
+          new BigNumber(bank.totalAssetShares),
+          new BigNumber(bank.totalLiabilityShares),
+          bank.emissionsActiveBorrowing,
+          bank.emissionsActiveLending,
+          bank.emissionsRate,
+          new PublicKey(bank.emissionsMint),
+          new BigNumber(bank.emissionsRemaining),
+          new PublicKey(bank.oracleKey),
+          new EmodeSettings(
+            bank.emode.emodeTag as EmodeTag,
+            bank.emode.timestamp,
+            bank.emode.flags as EmodeFlags[],
+            bank.emode.emodeEntries as EmodeEntry[]
+          ),
+          bank.tokenSymbol
+        ),
+      ];
+    })
+  );
+
+  const convertedPriceInfos = new Map(
+    Object.entries(data.priceInfos).map(([key, priceInfo]: [string, any]) => {
+      return [
+        key,
+        {
+          priceRealtime: {
+            price: new BigNumber(priceInfo.priceRealtime.price),
+            confidence: new BigNumber(priceInfo.priceRealtime.confidence),
+            lowestPrice: new BigNumber(priceInfo.priceRealtime.lowestPrice),
+            highestPrice: new BigNumber(priceInfo.priceRealtime.highestPrice),
+          },
+          priceWeighted: {
+            price: new BigNumber(priceInfo.priceWeighted.price),
+            confidence: new BigNumber(priceInfo.priceWeighted.confidence),
+            lowestPrice: new BigNumber(priceInfo.priceWeighted.lowestPrice),
+            highestPrice: new BigNumber(priceInfo.priceWeighted.highestPrice),
+          },
+          timestamp: priceInfo.timestamp ? new BigNumber(priceInfo.timestamp) : null,
+        } as OraclePrice,
+      ];
+    })
+  );
+
+  const convertedTokenDatas = new Map(
+    Object.entries(data.tokenDatas).map(([key, tokenData]: [string, any]) => {
+      return [
+        key,
+        {
+          mint: new PublicKey(tokenData.mint),
+          tokenProgram: new PublicKey(tokenData.tokenProgram),
+          feeBps: tokenData.feeBps,
+          emissionTokenProgram: tokenData.emissionTokenProgram ? new PublicKey(tokenData.emissionTokenProgram) : null,
+        } as MintData,
+      ];
+    })
+  );
+
+  const convertedFeedIdMap = new Map(
+    Object.entries(data.feedIdMap).map(([key, value]: [string, unknown]) => {
+      return [key, new PublicKey(value as string)];
+    })
+  );
+
+  return {
+    marginfiGroup: marginfiGroup,
+    banks: banks,
+    priceInfos: convertedPriceInfos,
+    tokenDatas: convertedTokenDatas,
+    feedIdMap: convertedFeedIdMap,
+  };
+}
+
+export interface GroupInfo {
+  marginfiGroup: MarginfiGroupR;
+  banks: { [key: string]: BankR };
+  priceInfos: { [key: string]: PriceInfoR };
+  tokenDatas: { [key: string]: TokenDataR };
+  feedIdMap: Record<string, string>;
+}
+
+export interface BankR {
+  address: string;
+  tokenSymbol: string;
+  group: string;
+  mint: string;
+  mintDecimals: number;
+  assetShareValue: string;
+  liabilityShareValue: string;
+  liquidityVault: string;
+  liquidityVaultBump: number;
+  liquidityVaultAuthorityBump: number;
+  insuranceVault: string;
+  insuranceVaultBump: number;
+  insuranceVaultAuthorityBump: number;
+  collectedInsuranceFeesOutstanding: string;
+  feeVault: string;
+  feeVaultBump: number;
+  feeVaultAuthorityBump: number;
+  collectedGroupFeesOutstanding: string;
+  lastUpdate: number;
+  config: Config;
+  totalAssetShares: string;
+  totalLiabilityShares: string;
+  emissionsActiveBorrowing: boolean;
+  emissionsActiveLending: boolean;
+  emissionsRate: number;
+  emissionsMint: string;
+  emissionsRemaining: string;
+  oracleKey: string;
+  emode: Emode;
+}
+
+export interface Config {
+  assetWeightInit: string;
+  assetWeightMaint: string;
+  liabilityWeightInit: string;
+  liabilityWeightMaint: string;
+  depositLimit: string;
+  borrowLimit: string;
+  riskTier: RiskTier;
+  operationalState: OperationalState;
+  totalAssetValueInitLimit: string;
+  assetTag: number;
+  oracleSetup: string;
+  oracleKeys: string[];
+  oracleMaxAge: number;
+  interestRateConfig: InterestRateConfig;
+}
+
+export interface InterestRateConfigR {
+  insuranceFeeFixedApr: string;
+  maxInterestRate: string;
+  insuranceIrFee: string;
+  optimalUtilizationRate: string;
+  plateauInterestRate: string;
+  protocolFixedFeeApr: string;
+  protocolIrFee: string;
+  protocolOriginationFee: string;
+}
+
+export interface Emode {
+  emodeTag: number;
+  timestamp: number;
+  flags: any[];
+  emodeEntries: any[];
+}
+
+export interface MarginfiGroupR {
+  admin: string;
+  address: string;
+}
+
+export interface PriceInfoR {
+  priceRealtime: Price;
+  priceWeighted: Price;
+  timestamp: string;
+}
+
+export interface Price {
+  price: string;
+  confidence: string;
+  lowestPrice: string;
+  highestPrice: string;
+}
+
+export interface TokenDataR {
+  mint: string;
+  tokenProgram: string;
+  feeBps: number;
+  emissionTokenProgram: null;
+}
 
 async function fetchGroupData(
   program: MarginfiProgram,
@@ -161,4 +413,4 @@ async function fetchGroupData(
   };
 }
 
-export { fetchGroupData };
+export { fetchGroupData, fetchGroupDataFromFluxorApi };

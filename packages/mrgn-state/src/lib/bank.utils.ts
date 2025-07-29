@@ -41,7 +41,7 @@ export function makeExtendedBankMetadata(
     tokenSymbol: tokenMetadata.symbol,
     tokenName: tokenMetadata.name,
     tokenLogoUri: overrideIcon
-      ? (tokenMetadata.icon ??
+      ? (tokenMetadata.logoURI ??
         "https://storage.googleapis.com/mrgn-public/mrgn-token-icons/${bank.mint.toBase58()}.png")
       : `https://storage.googleapis.com/mrgn-public/mrgn-token-icons/${bank.mint.toBase58()}.png`,
   };

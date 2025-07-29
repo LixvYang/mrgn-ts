@@ -257,10 +257,10 @@ export async function executeMixinLendingAction(props: ExecuteMixinLendingAction
     props.callbacks.captureEvent("user_lending_initiate", { uuid: props.attemptUuid, ...props.infoProps });
 
   // 展示 toast
-  if (props.nativeSolBalance && props.nativeSolBalance < FEE_MARGIN) {
-    toastManager.showErrorToast(STATIC_SIMULATION_ERRORS.INSUFICIENT_LAMPORTS);
-    return;
-  }
+  // if (props.nativeSolBalance && props.nativeSolBalance < FEE_MARGIN) {
+  //   toastManager.showErrorToast(STATIC_SIMULATION_ERRORS.INSUFICIENT_LAMPORTS);
+  //   return;
+  // }
 
   const toast = toastManager.createMultiStepToast(`${props.actionType}`, steps);
   toast.start();
@@ -507,7 +507,6 @@ export async function ExecuteRepayAction(props: ExecuteRepayActionProps) {
   props.callbacks.captureEvent &&
     props.callbacks.captureEvent(`user_${props.actionType}`, { uuid: props.attemptUuid, ...props.infoProps });
 }
-
 
 export interface ExecuteMixinRepayActionProps extends ExecuteRepayActionProps {
   traceId: string;

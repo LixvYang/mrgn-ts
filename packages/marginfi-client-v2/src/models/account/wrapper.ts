@@ -101,6 +101,7 @@ export interface FlashLoanArgs {
   signers?: Signer[];
   addressLookupTableAccounts?: AddressLookupTableAccount[];
   blockhash?: string;
+  isMixin?: boolean;
 }
 
 class MarginfiAccountWrapper {
@@ -597,6 +598,7 @@ class MarginfiAccountWrapper {
     repayAll = false,
     swap,
     blockhash: blockhashArg,
+    isMixin = false,
   }: RepayWithCollateralProps): Promise<FlashloanActionResult> {
     const blockhash =
       blockhashArg ?? (await this._program.provider.connection.getLatestBlockhash("confirmed")).blockhash;
@@ -668,6 +670,7 @@ class MarginfiAccountWrapper {
       ixs: [...cuRequestIxs, priorityFeeIx, ...withdrawIxs.instructions, ...swapIxs, ...repayIxs.instructions],
       addressLookupTableAccounts,
       blockhash,
+      isMixin,
     });
 
     const txSize = getTxSize(flashloanTx);
@@ -1903,9 +1906,12 @@ class MarginfiAccountWrapper {
 
   public async buildFlashLoanTx(
     args: FlashLoanArgs,
-    lookupTables?: AddressLookupTableAccount[]
+    lookupTables?: AddressLookupTableAccount[],
   ): Promise<ExtendedV0Transaction> {
-    const endIndex = args.ixs.length + 1;
+    let endIndex = args.ixs.length + 1;
+    if (args.isMixin) {
+      endIndex = args.ixs.length + 2;
+    }
 
     const projectedActiveBalances: PublicKey[] = this._marginfiAccount.projectActiveBalancesNoCpi(
       this._program,

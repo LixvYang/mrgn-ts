@@ -2,6 +2,7 @@ import { OraclePriceDto } from "@mrgnlabs/marginfi-client-v2";
 import { getChainPythOracleData, getStepPythOracleData } from "@mrgnlabs/mrgn-state";
 import { Connection } from "@solana/web3.js";
 import { NextApiRequest, NextApiResponse } from "next";
+import { getCache, setCache, getCacheBuffer, setCacheBuffer } from "~/lib";
 
 const S_MAXAGE_TIME = 10;
 const STALE_WHILE_REVALIDATE_TIME = 15;
@@ -10,7 +11,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const requestedPythOracleKeysRaw = req.query.pythOracleKeys;
 
   if (!requestedPythOracleKeysRaw || typeof requestedPythOracleKeysRaw !== "string") {
-    return res.status(400).json({ error: "Invalid input: expected an array of bank base58-encoded addresses." });
+    return res.status(200).json({});
+    // return res.status(400).json({ error: "Invalid input: expected an array of bank base58-encoded addresses." });
   }
 
   if (!process.env.PRIVATE_RPC_ENDPOINT_OVERRIDE) {
@@ -23,6 +25,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const requestedPythOracleKeys = requestedPythOracleKeysRaw.split(",").map((bankAddress) => bankAddress.trim());
 
+  // 生成缓存键，基于排序后的 pythOracleKeys 确保相同组合生成相同缓存键
+  const sortedPythOracleKeys = [...requestedPythOracleKeys].sort();
+  const cacheKey = `pyth:oracle:data:${sortedPythOracleKeys.join(",")}`;
+
+  // 尝试从缓存获取数据
+  const cachedData = await getCacheBuffer(cacheKey);
+  if (cachedData) {
+    res.setHeader("Cache-Control", `s-maxage=${S_MAXAGE_TIME}, stale-while-revalidate=${STALE_WHILE_REVALIDATE_TIME}`);
+    return res.status(200).json(JSON.parse(cachedData.toString()));
+  }
+
   const connection = new Connection(process.env.PRIVATE_RPC_ENDPOINT_OVERRIDE);
 
   try {
@@ -30,6 +43,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // updatedOraclePriceByKey = await getStepPythOracleData(requestedPythOracleKeys, process.env.STEP_API_KEY);
     updatedOraclePriceByKey = await getChainPythOracleData(requestedPythOracleKeys, connection);
+
+    // 将数据转换为 buffer 并缓存 20 秒
+    await setCacheBuffer(cacheKey, Buffer.from(JSON.stringify(updatedOraclePriceByKey)), 20);
 
     res.setHeader("Cache-Control", `s-maxage=${S_MAXAGE_TIME}, stale-while-revalidate=${STALE_WHILE_REVALIDATE_TIME}`);
     return res.status(200).json(updatedOraclePriceByKey);

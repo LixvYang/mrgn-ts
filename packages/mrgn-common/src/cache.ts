@@ -7,6 +7,7 @@ import { object, string, number, array, Infer, assert, optional } from "superstr
 interface TokenMetadata {
   address: string;
   icon?: string;
+  logoURI?: string;
   name: string;
   symbol: string;
   decimals: number;
@@ -30,6 +31,7 @@ function parseTokenMetadata(tokenMetadataRaw: TokenMetadataRaw): TokenMetadata {
   return {
     address: tokenMetadataRaw.address,
     icon: tokenMetadataRaw.logoURI,
+    logoURI: tokenMetadataRaw.logoURI,
     name: tokenMetadataRaw.name,
     symbol: tokenMetadataRaw.symbol,
     decimals: tokenMetadataRaw.decimals,

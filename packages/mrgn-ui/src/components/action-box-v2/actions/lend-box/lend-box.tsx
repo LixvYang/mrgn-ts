@@ -502,7 +502,9 @@ export const LendBox = ({
   ]);
 
   const hasErrorsWarnings = React.useMemo(() => {
-    return additionalActionMessages.concat(actionMessages).filter((value) => value.isEnabled === false).length > 0;
+    return (
+      additionalActionMessages.concat(actionMessages).filter((value) => value && value.isEnabled === false).length > 0
+    );
   }, [additionalActionMessages, actionMessages]);
 
   // store users stake accounts in state on load

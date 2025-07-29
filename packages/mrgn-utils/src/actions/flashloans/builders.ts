@@ -38,6 +38,7 @@ import {
   verifyTxSizeCollat,
   verifyTxSizeLooping,
 } from "./helpers";
+import { getMixinVars } from "@mrgnlabs/mrgn-state";
 
 // ------------------------------------------------------------------//
 // Builders //
@@ -423,6 +424,7 @@ export async function repayWithCollatBuilder({
       lookupTables: swapLUTs,
     },
     blockhash,
+    isMixin: getMixinVars().isMixin,
   });
 
   return { transactions, txOverflown, lastValidBlockHeight };

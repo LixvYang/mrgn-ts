@@ -5,6 +5,7 @@ import React from "react";
 import BigNumber from "bignumber.js";
 import { makeExtendedBankInfo } from "../../lib/bank.utils";
 import { MarginfiAccount } from "@mrgnlabs/marginfi-client-v2";
+import { getMixinVars } from "../../config";
 
 export function useExtendedBanks() {
   const { banks, banksMap, originalWeights, isLoading: isLoadingRawBanks, isError: isErrorRawBanks } = useBanks();
@@ -112,7 +113,7 @@ export function useExtendedBanks() {
           banks: banksMap,
           oraclePrices: oracleData.oracleMap,
         },
-        false,
+        getMixinVars().isMixin ? true : false,
         originalWeights?.[bank.address.toBase58()],
         emodeImpacts
       );

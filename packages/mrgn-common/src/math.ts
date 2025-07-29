@@ -7,9 +7,8 @@ function ceil(value: number, decimals: number): number {
 }
 
 function median(values: number[]): number {
-
   if (values.length === 0) {
-    throw new Error('Input array is empty');
+    throw new Error("Input array is empty");
   }
 
   // Sorting values, preventing original array
@@ -18,11 +17,12 @@ function median(values: number[]): number {
 
   const half = Math.floor(values.length / 2);
 
-  return (values.length % 2
-    ? values[half]
-    : (values[half - 1] + values[half]) / 2
-  );
-
+  return values.length % 2 ? values[half] : (values[half - 1] + values[half]) / 2;
 }
 
-export { ceil, floor, median };
+function medianString(values: string[]): number {
+  const numbers = values.map((value) => Number(value));
+  return median(numbers);
+}
+
+export { ceil, floor, median, medianString };

@@ -33,7 +33,7 @@ export async function fetchMetaData() {
   const isMixin = getConfig().isMixin;
 
   if (isMixin) {
-    const bankMetadataJson = (await import("../consts/mainnet-fluxor-meta.json")) as {
+    const bankMetadataJson = (await import("../consts/mainnet-fluxor-meta.test.json")) as {
       bankMetadata: BankMetadataMap;
       tokenMetadata: TokenMetadataMap;
     };

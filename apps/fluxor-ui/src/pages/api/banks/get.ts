@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { STATUS_INTERNAL_ERROR, STATUS_OK } from "@mrgnlabs/mrgn-state";
-
-export const MAX_DURATION = 60;
+import { getCache, setCache } from "~/lib";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
@@ -15,6 +14,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: "Bank address is required" });
     }
 
+    // 生成缓存键，包含银行地址和所有查询参数
+    const queryParams = new URLSearchParams();
+    Object.entries(req.query).forEach(([key, value]) => {
+      if (typeof value === "string") {
+        queryParams.append(key, value);
+      } else if (Array.isArray(value)) {
+        value.forEach((v) => queryParams.append(key, v));
+      }
+    });
+
+    const cacheKey = `bank:get:${bankAddress}:${queryParams.toString()}`;
+
+    // 尝试从缓存获取数据
+    const cachedData = await getCache(cacheKey);
+    if (cachedData) {
+      // 缓存命中，直接返回缓存数据
+      res.setHeader("Cache-Control", "s-maxage=86400, stale-while-revalidate=300");
+      return res.status(STATUS_OK).json(cachedData);
+    }
+
+    // 缓存未命中，调用远程 API
     const originalUrl = new URL(`${process.env.NEXT_PUBLIC_BASE_URL}/api/banks/get`);
     Object.entries(req.query).forEach(([key, value]) => {
       if (typeof value === "string") {
@@ -36,6 +56,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const data = await response.json();
+
+    // 将数据缓存 60 秒
+    await setCache(cacheKey, data, 60);
 
     // cache for 24 hours
     res.setHeader("Cache-Control", "s-maxage=86400, stale-while-revalidate=300");

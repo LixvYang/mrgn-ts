@@ -239,7 +239,7 @@ export const BankList = ({
 
         {/* LENDING */}
         {visibleSelectionGroups.includes(LendSelectionGroups.WALLET) && (
-          <CommandGroup heading="Available in your wallet">
+          <CommandGroup heading="钱包中的代币">
             {filteredBanksUserOwns
               .slice(0, searchQuery.length === 0 ? filteredBanksUserOwns.length : 3)
               .map((bank, index) => {
@@ -271,7 +271,7 @@ export const BankList = ({
                   </CommandItem>
                 );
               })}
-            {actionType === ActionType.Deposit && (
+            {/* {actionType === ActionType.Deposit && (
               <div className="space-y-2 text-center w-full pt-5 pb-4">
                 <p className="text-xs text-muted-foreground">Don&apos;t hold supported tokens?</p>
                 <Button
@@ -286,11 +286,11 @@ export const BankList = ({
                   <span>Try deposit swap</span>
                 </Button>
               </div>
-            )}
+            )} */}
           </CommandGroup>
         )}
         {visibleSelectionGroups.includes(LendSelectionGroups.SUPPLYING) && (
-          <CommandGroup heading="Currently supplying">
+          <CommandGroup heading="已存入">
             {filteredBanksActive.map((bank, index) => (
               <CommandItem
                 key={index}
@@ -323,7 +323,7 @@ export const BankList = ({
 
         {/* BORROWING */}
         {visibleSelectionGroups.includes(LendSelectionGroups.BORROWING) && (
-          <CommandGroup heading="Currently borrowing">
+          <CommandGroup heading="已借出">
             {filteredBanksActive.map((bank, index) => (
               <CommandItem
                 key={index}
@@ -354,7 +354,7 @@ export const BankList = ({
 
         {/* GLOBAL & ISOLATED */}
         {visibleSelectionGroups.includes(LendSelectionGroups.GLOBAL) && (
-          <CommandGroup heading="Global pools">
+          <CommandGroup heading="全局借贷">
             {globalBanks.map((bank, index) => {
               return (
                 <CommandItem
@@ -387,7 +387,7 @@ export const BankList = ({
           </CommandGroup>
         )}
         {visibleSelectionGroups.includes(LendSelectionGroups.ISOLATED) && (
-          <CommandGroup heading="Isolated pools">
+          <CommandGroup heading="隔离借贷">
             {isolatedBanks.map((bank, index) => {
               return (
                 <CommandItem
@@ -423,7 +423,7 @@ export const BankList = ({
         {visibleSelectionGroups.includes(LendSelectionGroups.STAKED) && (
           <>
             {stakedAssetBanks.length > 0 && (
-              <CommandGroup heading="Staked asset pools">
+              <CommandGroup heading="质押借贷">
                 {stakedAssetBanks.map((bank, index) => {
                   const stakePoolMetadata = stakePoolMetadataMap?.get(bank.address.toBase58());
                   return (
@@ -455,7 +455,7 @@ export const BankList = ({
                 })}
               </CommandGroup>
             )}
-            <CommandItem>
+            {/* <CommandItem>
               <div className="space-y-2 text-center w-full pt-3">
                 <p className="text-xs text-muted-foreground">Don&apos;t see your native stake available to deposit?</p>
                 <div className="flex flex-col gap-1 items-center justify-center">
@@ -482,7 +482,7 @@ export const BankList = ({
                   </Link>
                 </div>
               </div>
-            </CommandItem>
+            </CommandItem> */}
           </>
         )}
       </BankListCommand>

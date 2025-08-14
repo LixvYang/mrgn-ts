@@ -165,6 +165,7 @@ async function handleLendMixinSimulation({
       bank: selectedBank,
       lendMode,
       amount,
+      isMixin: true,
     });
 
     if (!actionTxns.finalAccount) {
@@ -370,6 +371,8 @@ async function handleVxLength(args: HandleVxLength1Args): Promise<{
     return handleVxLength1(args);
   } else if (args.versionedTransactions.length === 2) {
     return handleVxLength2(args);
+    // } else if (args.versionedTransactions.length === 3) {
+    //   return handleVxLength3(args);
   } else {
     throw new Error("Transaction size exceeds limit");
   }
@@ -855,56 +858,14 @@ async function handleVxLength2({
     updatedTransactions[0].type === TransactionType.CRANK &&
     updatedTransactions[1].type === TransactionType.BORROW
   ) {
-    // 1. CRANK
-    const crankAddressLookupsRes = await Promise.all(
-      (versionedTransactions[0] as VersionedTransaction).message.addressTableLookups.map((a) =>
-        connection.getAddressLookupTable(a.accountKey)
-      )
+    const { needCreateAta, userAta } = await checkMarginfiAccountNeedCreateAta(
+      marginfiClient,
+      selectedBank,
+      actionTxns.finalAccount,
+      connection
     );
-    const crankAddressLookups = crankAddressLookupsRes
-      .filter((r) => r.value)
-      .map((r) => r.value) as AddressLookupTableAccount[];
+    console.log("userAta(bast58): ", userAta.toBase58());
 
-    const crankInx = TransactionMessage.decompile(versionedTransactions[0].message, {
-      addressLookupTableAccounts: crankAddressLookups,
-    }).instructions;
-    const nonce1 = await computerClient.getNonce(getUserMix());
-    const nonce1Ins = SystemProgram.nonceAdvance({
-      noncePubkey: new PublicKey(nonce1.nonce_address),
-      authorizedPubkey: new PublicKey(computerInfo.payer),
-    });
-    const crankMessage = new TransactionMessage({
-      payerKey: new PublicKey(computerInfo.payer),
-      recentBlockhash: nonce1.nonce_hash,
-      instructions: [nonce1Ins, ...crankInx],
-    }).compileToV0Message(crankAddressLookups);
-
-    const crankTx = new VersionedTransaction(crankMessage);
-    if (updatedTransactions[0].signers) {
-      crankTx.sign(updatedTransactions[0].signers);
-    }
-
-    const crankTxBuf = Buffer.from(crankTx.serialize());
-    const crankTrace = uniqueConversationID(crankTxBuf.toString("hex"), "system call");
-    const fee = await computerClient.getFeeOnXin("0.0001"); // 0.0001 sol
-    const crankExtra = buildComputerExtra(
-      computerInfo.members.app_id,
-      OperationTypeSystemCall,
-      buildSystemCallInvoiceExtra(computerAccount.id, crankTrace, false, fee.fee_id)
-    );
-
-    attachStorageEntry(invoice, uniqueConversationID(crankTrace, "storage"), crankTxBuf);
-    attachInvoiceEntry(invoice, {
-      trace_id: crankTrace,
-      asset_id: XIN_ASSET_ID,
-      amount: add(computerInfo.params.operation.price, fee.xin_amount).toFixed(8, BigNumber.ROUND_CEIL),
-      extra: Buffer.from(crankExtra),
-      index_references: [0],
-      hash_references: [],
-    });
-    console.log("crankExtra: ", crankExtra);
-    console.log("crankTrace: ", crankTrace);
-    // resultTrace = crankTrace;
     // 2. BORROW
     const nonce2 = await computerClient.getNonce(getUserMix());
     const borrowAddressLookupsRes = await Promise.all(
@@ -937,6 +898,8 @@ async function handleVxLength2({
     console.log("borrowTx: ", borrowTx);
     // 5. 检查交易大小
     const borrowTxBuf = Buffer.from(borrowTx.serialize());
+
+    console.log("borrowTxBuf.toString(base64).length: ", borrowTxBuf.toString("base64").length);
     if (!checkSystemCallSize(borrowTxBuf)) {
       throw new Error("Transaction size exceeds limit");
     }
@@ -944,7 +907,7 @@ async function handleVxLength2({
 
     const borrowTrace = uniqueConversationID(borrowTxBuf.toString("hex"), "system call");
     let borrowExtra: string;
-    if (true) {
+    if (needCreateAta) {
       let solAmount = formatUnits(
         MARGINFI_ACCOUNT_BORROW_RENT_SIZES.reduce((prev, cur) => {
           const total = prev + rentMap[cur];
@@ -952,7 +915,7 @@ async function handleVxLength2({
         }, 0).toString(),
         SOL_DECIMAL
       ).toString();
-      const fee = await computerClient.getFeeOnXin(solAmount);
+      const fee = await computerClient.getFeeOnXin(solAmount + "0.0001");
       borrowExtra = buildComputerExtra(
         computerInfo.members.app_id,
         OperationTypeSystemCall,
@@ -964,22 +927,24 @@ async function handleVxLength2({
         asset_id: XIN_ASSET_ID,
         amount: add(computerInfo.params.operation.price, fee.xin_amount).toFixed(8, BigNumber.ROUND_CEIL),
         extra: Buffer.from(borrowExtra),
-        index_references: [2],
+        index_references: [0],
         hash_references: [],
       });
     } else {
+      const fee = await computerClient.getFeeOnXin("0.0001");
+
       borrowExtra = buildComputerExtra(
         computerInfo.members.app_id,
         OperationTypeSystemCall,
-        buildSystemCallInvoiceExtra(computerAccount.id, borrowTrace, false)
+        buildSystemCallInvoiceExtra(computerAccount.id, borrowTrace, false, fee.fee_id)
       );
       attachStorageEntry(invoice, uniqueConversationID(borrowTrace, "storage"), borrowTxBuf);
       attachInvoiceEntry(invoice, {
         trace_id: borrowTrace,
         asset_id: XIN_ASSET_ID,
-        amount: BigNumber(computerInfo.params.operation.price).toFixed(8, BigNumber.ROUND_CEIL),
+        amount: add(computerInfo.params.operation.price, fee.xin_amount).toFixed(8, BigNumber.ROUND_CEIL),
         extra: Buffer.from(borrowExtra),
-        index_references: [2],
+        index_references: [0],
         hash_references: [],
       });
     }
@@ -993,145 +958,97 @@ async function handleVxLength2({
     updatedTransactions[0].type === TransactionType.CRANK &&
     updatedTransactions[1].type === TransactionType.WITHDRAW
   ) {
-    // 1. CRANK
-    const crankAddressLookupsRes = await Promise.all(
-      (versionedTransactions[0] as VersionedTransaction).message.addressTableLookups.map((a) =>
+    // 2. withdraw
+    const { needCreateAta, userAta } = await checkMarginfiAccountNeedCreateAta(
+      marginfiClient,
+      selectedBank,
+      actionTxns.finalAccount,
+      connection
+    );
+
+    const nonce2 = await computerClient.getNonce(getUserMix());
+    const withdrawAddressLookupsRes = await Promise.all(
+      (versionedTransactions[1] as VersionedTransaction).message.addressTableLookups.map((a) =>
         connection.getAddressLookupTable(a.accountKey)
       )
     );
-    const crankAddressLookups = crankAddressLookupsRes
+    const withdrawAddressLookups = withdrawAddressLookupsRes
       .filter((r) => r.value)
       .map((r) => r.value) as AddressLookupTableAccount[];
 
-    const crankInx = TransactionMessage.decompile(versionedTransactions[0].message, {
-      addressLookupTableAccounts: crankAddressLookups,
+    const withdrawInx = TransactionMessage.decompile(versionedTransactions[1].message, {
+      addressLookupTableAccounts: withdrawAddressLookups,
     }).instructions;
-    const nonce1 = await computerClient.getNonce(getUserMix());
-    const nonce1Ins = SystemProgram.nonceAdvance({
-      noncePubkey: new PublicKey(nonce1.nonce_address),
+
+    const nonce2Ins = SystemProgram.nonceAdvance({
+      noncePubkey: new PublicKey(nonce2.nonce_address),
       authorizedPubkey: new PublicKey(computerInfo.payer),
     });
-    const crankMessage = new TransactionMessage({
+
+    const message1V0 = new TransactionMessage({
       payerKey: new PublicKey(computerInfo.payer),
-      recentBlockhash: nonce1.nonce_hash,
-      instructions: [nonce1Ins, ...crankInx],
-    }).compileToV0Message(crankAddressLookups);
+      recentBlockhash: nonce2.nonce_hash,
+      instructions: [nonce2Ins, ...withdrawInx],
+    }).compileToV0Message(withdrawAddressLookups);
 
-    const crankTx = new VersionedTransaction(crankMessage);
-    if (updatedTransactions[0].signers) {
-      crankTx.sign(updatedTransactions[0].signers);
+    const withdrawTx = new VersionedTransaction(message1V0);
+    if (updatedTransactions[1].signers) {
+      withdrawTx.sign(updatedTransactions[1].signers);
     }
+    console.log("withdrawTx: ", withdrawTx);
+    const withdrawTxBuf = Buffer.from(withdrawTx.serialize());
+    console.log("txBuf.toString(base64).length: ", withdrawTxBuf.toString("base64").length);
+    if (!checkSystemCallSize(withdrawTxBuf)) {
+      throw new Error("Transaction size exceeds limit");
+    }
+    const withdrawTrace = uniqueConversationID(withdrawTxBuf.toString("hex"), "system call");
+    let withdrawExtra: string;
+    if (needCreateAta) {
+      let solAmount = formatUnits(
+        MARGINFI_ACCOUNT_WITHDRAW_RENT_SIZES.reduce((prev, cur) => {
+          const total = prev + rentMap[cur];
+          return total;
+        }, 0).toString(),
+        SOL_DECIMAL
+      ).toString();
+      const fee = await computerClient.getFeeOnXin(solAmount + "0.0001");
 
-    const crankTxBuf = Buffer.from(crankTx.serialize());
-    const crankTrace = uniqueConversationID(crankTxBuf.toString("hex"), "system call");
-    const fee = await computerClient.getFeeOnXin("0.0001"); // 0.0001 sol
-    const crankExtra = buildComputerExtra(
-      computerInfo.members.app_id,
-      OperationTypeSystemCall,
-      buildSystemCallInvoiceExtra(computerAccount.id, crankTrace, false, fee.fee_id)
-    );
+      withdrawExtra = buildComputerExtra(
+        computerInfo.members.app_id,
+        OperationTypeSystemCall,
+        buildSystemCallInvoiceExtra(computerAccount.id, withdrawTrace, false, fee.fee_id)
+      );
 
-    attachStorageEntry(invoice, uniqueConversationID(crankTrace, "storage"), crankTxBuf);
-    attachInvoiceEntry(invoice, {
-      trace_id: crankTrace,
-      asset_id: XIN_ASSET_ID,
-      amount: add(computerInfo.params.operation.price, fee.xin_amount).toFixed(8, BigNumber.ROUND_CEIL),
-      extra: Buffer.from(crankExtra),
-      index_references: [0],
-      hash_references: [],
-    });
-    console.log("crankExtra: ", crankExtra);
-    console.log("crankTrace: ", crankTrace);
-    resultTrace = crankTrace;
+      attachStorageEntry(invoice, uniqueConversationID(withdrawTrace, "storage"), withdrawTxBuf);
+      attachInvoiceEntry(invoice, {
+        trace_id: withdrawTrace,
+        asset_id: XIN_ASSET_ID,
+        amount: add(computerInfo.params.operation.price, fee.xin_amount).toFixed(8, BigNumber.ROUND_CEIL),
+        extra: Buffer.from(withdrawExtra),
+        index_references: [0],
+        hash_references: [],
+      });
+    } else {
+      const fee = await computerClient.getFeeOnXin("0.0001");
 
-    // 2. withdraw
-    // const { needCreateAta, userAta } = await checkMarginfiAccountNeedCreateAta(
-    //   marginfiClient,
-    //   selectedBank,
-    //   actionTxns.finalAccount,
-    //   connection
-    // );
-
-    // const nonce2 = await computerClient.getNonce(getUserMix());
-    // const withdrawAddressLookupsRes = await Promise.all(
-    //   (versionedTransactions[1] as VersionedTransaction).message.addressTableLookups.map((a) =>
-    //     connection.getAddressLookupTable(a.accountKey)
-    //   )
-    // );
-    // const withdrawAddressLookups = withdrawAddressLookupsRes
-    //   .filter((r) => r.value)
-    //   .map((r) => r.value) as AddressLookupTableAccount[];
-
-    // const withdrawInx = TransactionMessage.decompile(versionedTransactions[1].message, {
-    //   addressLookupTableAccounts: withdrawAddressLookups,
-    // }).instructions;
-
-    // const nonce2Ins = SystemProgram.nonceAdvance({
-    //   noncePubkey: new PublicKey(nonce2.nonce_address),
-    //   authorizedPubkey: new PublicKey(computerInfo.payer),
-    // });
-
-    // const message1V0 = new TransactionMessage({
-    //   payerKey: new PublicKey(computerInfo.payer),
-    //   recentBlockhash: nonce2.nonce_hash,
-    //   instructions: [nonce2Ins, ...withdrawInx],
-    // }).compileToV0Message(withdrawAddressLookups);
-
-    // const withdrawTx = new VersionedTransaction(message1V0);
-    // if (updatedTransactions[1].signers) {
-    //   withdrawTx.sign(updatedTransactions[1].signers);
-    // }
-    // console.log("withdrawTx: ", withdrawTx);
-    // const withdrawTxBuf = Buffer.from(withdrawTx.serialize());
-    // if (!checkSystemCallSize(withdrawTxBuf)) {
-    //   throw new Error("Transaction size exceeds limit");
-    // }
-    // const withdrawTrace = uniqueConversationID(withdrawTxBuf.toString("hex"), "system call");
-    // let withdrawExtra: string;
-    // if (true) {
-    //   let solAmount = formatUnits(
-    //     MARGINFI_ACCOUNT_WITHDRAW_RENT_SIZES.reduce((prev, cur) => {
-    //       const total = prev + rentMap[cur];
-    //       return total;
-    //     }, 0).toString(),
-    //     SOL_DECIMAL
-    //   ).toString();
-    //   const fee = await computerClient.getFeeOnXin(solAmount);
-
-    //   withdrawExtra = buildComputerExtra(
-    //     computerInfo.members.app_id,
-    //     OperationTypeSystemCall,
-    //     buildSystemCallInvoiceExtra(computerAccount.id, withdrawTrace, false, fee.fee_id)
-    //   );
-
-    //   attachStorageEntry(invoice, uniqueConversationID(withdrawTrace, "storage"), withdrawTxBuf);
-    //   attachInvoiceEntry(invoice, {
-    //     trace_id: withdrawTrace,
-    //     asset_id: XIN_ASSET_ID,
-    //     amount: add(computerInfo.params.operation.price, fee.xin_amount).toFixed(8, BigNumber.ROUND_CEIL),
-    //     extra: Buffer.from(withdrawExtra),
-    //     index_references: [2],
-    //     hash_references: [],
-    //   });
-    // } else {
-    //   withdrawExtra = buildComputerExtra(
-    //     computerInfo.members.app_id,
-    //     OperationTypeSystemCall,
-    //     buildSystemCallInvoiceExtra(computerAccount.id, withdrawTrace, false)
-    //   );
-    //   attachStorageEntry(invoice, uniqueConversationID(withdrawTrace, "storage"), withdrawTxBuf);
-    //   attachInvoiceEntry(invoice, {
-    //     trace_id: withdrawTrace,
-    //     asset_id: XIN_ASSET_ID,
-    //     amount: BigNumber(computerInfo.params.operation.price).toFixed(8, BigNumber.ROUND_CEIL),
-    //     extra: Buffer.from(withdrawExtra),
-    //     index_references: [2],
-    //     hash_references: [],
-    //   });
-    // }
-    // console.log("withdrawExtra: ", withdrawExtra);
-    // console.log("withdrawTrace: ", withdrawTrace);
-    // resultTrace = withdrawTrace;
+      withdrawExtra = buildComputerExtra(
+        computerInfo.members.app_id,
+        OperationTypeSystemCall,
+        buildSystemCallInvoiceExtra(computerAccount.id, withdrawTrace, false, fee.fee_id)
+      );
+      attachStorageEntry(invoice, uniqueConversationID(withdrawTrace, "storage"), withdrawTxBuf);
+      attachInvoiceEntry(invoice, {
+        trace_id: withdrawTrace,
+        asset_id: XIN_ASSET_ID,
+        amount: add(computerInfo.params.operation.price, fee.xin_amount).toFixed(8, BigNumber.ROUND_CEIL),
+        extra: Buffer.from(withdrawExtra),
+        index_references: [0],
+        hash_references: [],
+      });
+    }
+    console.log("withdrawExtra: ", withdrawExtra);
+    console.log("withdrawTrace: ", withdrawTrace);
+    resultTrace = withdrawTrace;
     return { resultTrace, invoice };
   } else {
     throw new Error(`Unsupported transaction type: ${txAction}`);

@@ -17,13 +17,13 @@ interface ActionBoxNavigatorProps {
 }
 
 const toggleTitles: { [key in ActionType]?: string | React.ReactNode } = {
-  [ActionType.Borrow]: "Borrow",
-  [ActionType.Deposit]: "Lend",
-  [ActionType.Withdraw]: "Withdraw",
-  [ActionType.Repay]: "Repay",
-  [ActionType.RepayCollat]: "Collateral Repay",
-  [ActionType.MintLST]: "Stake",
-  [ActionType.InstantUnstakeLST]: "Instant Unstake",
+  [ActionType.Borrow]: "借出",
+  [ActionType.Deposit]: "存入",
+  [ActionType.Withdraw]: "提取",
+  [ActionType.Repay]: "还款",
+  [ActionType.RepayCollat]: "抵押品还款",
+  [ActionType.MintLST]: "质押",
+  [ActionType.InstantUnstakeLST]: "立即解质押",
   [ActionType.UnstakeLST]: (
     <span>
       Unstake <span className="text-[11px] text-muted-foreground">(1-2 days)</span>

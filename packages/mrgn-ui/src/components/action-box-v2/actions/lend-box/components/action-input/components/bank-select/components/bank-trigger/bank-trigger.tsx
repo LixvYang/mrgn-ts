@@ -33,7 +33,8 @@ export const BankTrigger = React.forwardRef<HTMLButtonElement, BankTriggerProps>
         {selectedBank && (
           <SelectedBankItem bank={selectedBank} lendingMode={lendingMode} rate={calculateRate(selectedBank)} />
         )}
-        {!selectedBank && <>Select token</>}
+        {/* {!selectedBank && <>Select token</>} */}
+        {!selectedBank && <>选择代币</>}
         <IconChevronDown className="shrink-0" size={20} />
       </Button>
     );

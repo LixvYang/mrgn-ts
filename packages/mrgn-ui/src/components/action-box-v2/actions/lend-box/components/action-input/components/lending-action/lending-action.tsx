@@ -72,12 +72,14 @@ export const LendingAction = ({
         }
 
         return {
-          label: "Wallet: ",
+          // label: "Wallet: ",
+          label: "钱包: ",
           amount: formatAmount(walletAmount, selectedBank?.meta.tokenSymbol),
         };
       case ActionType.Borrow:
         return {
-          label: "Max Borrow: ",
+          // label: "Max Borrow: ",
+          label: "最多可借: ",
           amount: formatAmount(selectedBank.userInfo.maxBorrow, selectedBank?.meta.tokenSymbol),
         };
 
@@ -87,7 +89,8 @@ export const LendingAction = ({
             selectedBank?.isActive ? selectedBank.position.amount : undefined,
             selectedBank?.meta.tokenSymbol
           ),
-          label: "Supplied: ",
+          // label: "Supplied: ",
+          label: "已存入: ",
         };
 
       case ActionType.Repay:
@@ -96,7 +99,8 @@ export const LendingAction = ({
             selectedBank?.isActive ? selectedBank.position.amount : undefined,
             selectedBank?.meta.tokenSymbol
           ),
-          label: "Borrowed: ",
+          // label: "Borrowed: ",
+          label: "已借出: ",
         };
 
       default:

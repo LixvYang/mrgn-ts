@@ -192,7 +192,7 @@ export const BankList = ({
         <CommandEmpty>No tokens found.</CommandEmpty>
 
         {combinedWalletTokensAndBanks.length > 0 && onSetSelectedBank && (
-          <CommandGroup heading="Available in your wallet">
+          <CommandGroup heading="钱包中的代币">
             {combinedWalletTokensAndBanks
               .slice(0, searchQuery.length === 0 ? combinedWalletTokensAndBanks.length : 3)
               .map((token, index) => {

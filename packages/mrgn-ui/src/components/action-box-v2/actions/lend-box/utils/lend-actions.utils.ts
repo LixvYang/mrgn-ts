@@ -11,6 +11,7 @@ export async function generateActionTxns(props: {
   bank: ExtendedBankInfo;
   lendMode: ActionType;
   amount: number;
+  isMixin?: boolean;
   stakeOpts?: {
     stakeAccount?: PublicKey;
     stakePoolMetadata: StakePoolMetadata;
@@ -91,6 +92,7 @@ export async function generateActionTxns(props: {
       const borrowTxObject = await account.makeBorrowTx(props.amount, props.bank.address, {
         createAtas: true,
         wrapAndUnwrapSol: true,
+        isMixin: props.isMixin,
       });
 
       return {
@@ -112,7 +114,8 @@ export async function generateActionTxns(props: {
         const withdrawTxObject = await account.makeWithdrawTx(
           props.amount,
           props.bank.address,
-          props.bank.isActive && isWholePosition(props.bank, props.amount)
+          props.bank.isActive && isWholePosition(props.bank, props.amount),
+          { isMixin: props.isMixin }
         );
 
         return {
@@ -138,7 +141,7 @@ export async function generateActionTxns(props: {
         props.amount,
         props.bank.address,
         props.bank.isActive && isWholePosition(props.bank, props.amount),
-        { wrapAndUnwrapSol: true, wSolBalanceUi }
+        { wrapAndUnwrapSol: true, wSolBalanceUi, isMixin: props.isMixin }
       );
       return {
         transactions: [repayTx],

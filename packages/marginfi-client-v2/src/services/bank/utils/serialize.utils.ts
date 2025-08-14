@@ -55,6 +55,7 @@ function serializeBankConfigOpt(bankConfigOpt: BankConfigOpt): BankConfigOptRaw 
     operationalState: bankConfigOpt.operationalState && serializeOperationalState(bankConfigOpt.operationalState),
     oracleMaxAge: bankConfigOpt.oracleMaxAge,
     permissionlessBadDebtSettlement: bankConfigOpt.permissionlessBadDebtSettlement,
+    oracleMaxConfidence: bankConfigOpt.oracleMaxConfidence,
     freezeSettings: null,
   };
 }
@@ -155,6 +156,9 @@ function toBankDto(bank: BankType): BankTypeDto {
     pythShardId: bank.pythShardId,
     emode: toEmodeSettingsDto(bank.emode),
     tokenSymbol: bank.tokenSymbol,
+    feesDestinationAccount: bank.feesDestinationAccount?.toBase58(),
+    lendingPositionCount: bank.lendingPositionCount?.toString(),
+    borrowingPositionCount: bank.borrowingPositionCount?.toString(),
   };
 }
 
@@ -190,6 +194,7 @@ function toBankConfigDto(bankConfig: BankConfigType): BankConfigDto {
     oracleKeys: bankConfig.oracleKeys.map((key) => key.toBase58()),
     oracleMaxAge: bankConfig.oracleMaxAge,
     interestRateConfig: toInterestRateConfigDto(bankConfig.interestRateConfig),
+    configFlags: bankConfig.configFlags,
   };
 }
 
@@ -240,6 +245,9 @@ export function bankRawToDto(bankRaw: BankRaw): BankRawDto {
     emissionsRate: bankRaw.emissionsRate.toString(),
     emissionsRemaining: bankRaw.emissionsRemaining,
     emissionsMint: bankRaw.emissionsMint.toBase58(),
+    feesDestinationAccount: bankRaw?.feesDestinationAccount?.toBase58(),
+    lendingPositionCount: bankRaw?.lendingPositionCount?.toString(),
+    borrowingPositionCount: bankRaw?.borrowingPositionCount?.toString(),
 
     emode: emodeSettingsRawToDto(bankRaw.emode),
   };
@@ -279,6 +287,8 @@ export function bankConfigRawToDto(bankConfigRaw: BankConfigRaw): BankConfigRawD
     oracleKeys: bankConfigRaw.oracleKeys.map((key) => key.toBase58()),
     oracleMaxAge: bankConfigRaw.oracleMaxAge,
     interestRateConfig: bankConfigRaw.interestRateConfig,
+    configFlags: bankConfigRaw.configFlags,
+    oracleMaxConfidence: bankConfigRaw.oracleMaxConfidence,
   };
 }
 

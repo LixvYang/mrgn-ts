@@ -14,9 +14,8 @@ import {
 
 import BigNumber from "bignumber.js";
 
-import instructions from "~/instructions";
-import { MarginfiProgram } from "~/types";
-import { makeWrapSolIxs, makeUnwrapSolIx } from "~/utils";
+import { MarginfiProgram } from "../../types";
+import { makeWrapSolIxs, makeUnwrapSolIx } from "../../utils";
 
 import { Bank } from "../bank";
 import { Balance } from "../balance";
@@ -53,11 +52,13 @@ import {
   computeFreeCollateralLegacy,
   EmodeImpactStatus,
   OracleSetup,
+  instructions,
 } from "../..";
 import BN from "bn.js";
 import { BorshInstructionCoder } from "@coral-xyz/anchor";
 import { HealthCache } from "../health-cache";
 import { PriceBias } from "../../services/price/types";
+import { MakeMixinIxOpts } from "./mixin";
 
 // ----------------------------------------------------------------------------
 // Client types
@@ -309,61 +310,17 @@ class MarginfiAccount implements MarginfiAccountType {
 
     const _volatilityFactor = opts?.volatilityFactor ?? 1;
 
-    // Track switchboard positions separately for variance adjustment
-    let switchboardCollateral = new BigNumber(0);
-    let switchboardLiability = new BigNumber(0);
-
-    this.activeBalances.forEach((b) => {
-      const isBorrowingBalance = b.liabilityShares.gt(0);
-      const bank = banks.get(b.bankPk.toBase58());
-
-      if (!bank) return;
-      if (
-        bank.config.oracleSetup === OracleSetup.SwitchboardPull ||
-        bank.config.oracleSetup === OracleSetup.SwitchboardV2
-      ) {
-        if (isBorrowingBalance) {
-          const liabilityValueInit = bank.computeLiabilityUsdValue(
-            priceInfo,
-            b.liabilityShares,
-            MarginRequirementType.Initial,
-            PriceBias.Highest
-          );
-          switchboardLiability = switchboardLiability.plus(liabilityValueInit);
-        } else {
-          const assetValueInit = bank.computeAssetUsdValue(
-            priceInfo,
-            b.assetShares,
-            MarginRequirementType.Initial,
-            PriceBias.Lowest
-          );
-          switchboardCollateral = switchboardCollateral.plus(assetValueInit);
-        }
-      }
-    });
-
-    // Calculate net switchboard position and apply 5% variance adjustment
-    const switchboardNetPosition = switchboardCollateral.minus(switchboardLiability);
-    const switchboardVarianceAdjustment = switchboardNetPosition.times(0.05); // 5% reduction
-
     const balance = this.getBalance(bankAddress);
 
-    const useCache = false;
-    // opts?.emodeImpactStatus === EmodeImpactStatus.InactiveEmode ||
-    // opts?.emodeImpactStatus === EmodeImpactStatus.ExtendEmode;
+    const useCache =
+      opts?.emodeImpactStatus === EmodeImpactStatus.InactiveEmode ||
+      opts?.emodeImpactStatus === EmodeImpactStatus.ExtendEmode;
 
     let freeCollateral = useCache
       ? this.computeFreeCollateral().times(_volatilityFactor)
       : this.computeFreeCollateralLegacy(banks, oraclePrices);
 
-    // Apply switchboard variance adjustment to free collateral only when using legacy computation
-    // This reduces borrowing power by the amount of switchboard variance risk
-    if (!useCache) {
-      freeCollateral = freeCollateral.minus(switchboardVarianceAdjustment);
-    }
-
     debug("Free collateral: %d", freeCollateral.toFixed(6));
-    debug("Switchboard variance adjustment: %d", switchboardVarianceAdjustment.toFixed(6));
 
     const untiedCollateralForBank = BigNumber.min(
       bank.computeAssetUsdValue(priceInfo, balance.assetShares, MarginRequirementType.Initial, PriceBias.Lowest),
@@ -1157,16 +1114,18 @@ class MarginfiAccount implements MarginfiAccountType {
     return { instructions: [ix], keys: [] };
   }
 
-  async makeAccountAuthorityTransferIx(
+  async makeAccountTransferToNewAccountIx(
     program: MarginfiProgram,
-    newAccountAuthority: PublicKey
+    newMarginfiAccount: PublicKey,
+    newAuthority: PublicKey
   ): Promise<InstructionsWrapper> {
-    const accountAuthorityTransferIx = await instructions.makeAccountAuthorityTransferIx(program, {
-      marginfiAccount: this.address,
-      newAuthority: newAccountAuthority,
+    const accountTransferToNewAccountIx = await instructions.makeAccountTransferToNewAccountIx(program, {
+      oldMarginfiAccount: this.address,
+      newMarginfiAccount,
+      newAuthority,
       feePayer: this.authority,
     });
-    return { instructions: [accountAuthorityTransferIx], keys: [] };
+    return { instructions: [accountTransferToNewAccountIx], keys: [] };
   }
 
   async makeCloseAccountIx(program: MarginfiProgram): Promise<InstructionsWrapper> {
@@ -1288,7 +1247,7 @@ enum MarginRequirementType {
   Equity = 2,
 }
 
-export interface MakeDepositIxOpts {
+export interface MakeDepositIxOpts extends MakeMixinIxOpts  {
   wrapAndUnwrapSol?: boolean;
   wSolBalanceUi?: number;
   overrideInferAccounts?: {
@@ -1298,7 +1257,7 @@ export interface MakeDepositIxOpts {
   };
 }
 
-export interface MakeRepayIxOpts {
+export interface MakeRepayIxOpts extends MakeMixinIxOpts {
   wrapAndUnwrapSol?: boolean;
   wSolBalanceUi?: number;
   overrideInferAccounts?: {
@@ -1308,7 +1267,7 @@ export interface MakeRepayIxOpts {
   };
 }
 
-export interface MakeWithdrawIxOpts {
+export interface MakeWithdrawIxOpts extends MakeMixinIxOpts {
   observationBanksOverride?: PublicKey[];
   wrapAndUnwrapSol?: boolean;
   createAtas?: boolean;
@@ -1318,7 +1277,7 @@ export interface MakeWithdrawIxOpts {
   };
 }
 
-export interface MakeBorrowIxOpts {
+export interface MakeBorrowIxOpts extends MakeMixinIxOpts {
   observationBanksOverride?: PublicKey[];
   wrapAndUnwrapSol?: boolean;
   createAtas?: boolean;

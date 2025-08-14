@@ -217,6 +217,7 @@ async function handleRepayMixinSimulation({
       jupiterOptions,
       repayAmount: amount,
       actionType,
+      isMixin: true,
     };
 
     const repayActionTxns = await fetchRepayActionTxns(props);

@@ -20,6 +20,7 @@ export interface CalculateRepayTransactionsProps {
   platformFeeBps: number;
   jupiterOptions: JupiterOptions;
   repayAmount: number;
+  isMixin?: boolean;
 }
 
 export async function calculateRepayTransactions(props: CalculateRepayTransactionsProps): Promise<{
@@ -30,7 +31,8 @@ export async function calculateRepayTransactions(props: CalculateRepayTransactio
     const repayTx = await props.marginfiAccount.makeRepayTx(
       props.repayAmount,
       props.selectedBank.address,
-      props.selectedBank.isActive && isWholePosition(props.selectedBank, props.repayAmount)
+      props.selectedBank.isActive && isWholePosition(props.selectedBank, props.repayAmount),
+      { isMixin: props.isMixin }
     );
 
     return {

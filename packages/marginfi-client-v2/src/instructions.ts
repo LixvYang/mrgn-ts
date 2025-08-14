@@ -220,54 +220,6 @@ function makelendingAccountWithdrawEmissionIx(
     .instruction();
 }
 
-function makeSetAccountFlagIx(
-  mfiProgram: MarginfiProgram,
-  accounts: {
-    // Required accounts
-    marginfiAccount: PublicKey;
-    // Optional accounts - to override inference
-    group?: PublicKey;
-    admin?: PublicKey;
-  },
-  args: {
-    flag: BN;
-  }
-) {
-  const { marginfiAccount, ...optionalAccounts } = accounts;
-
-  return mfiProgram.methods
-    .setAccountFlag(args.flag)
-    .accounts({
-      marginfiAccount,
-    })
-    .accountsPartial(optionalAccounts)
-    .instruction();
-}
-
-function makeUnsetAccountFlagIx(
-  mfiProgram: MarginfiProgram,
-  accounts: {
-    // Required accounts
-    marginfiAccount: PublicKey;
-    // Optional accounts - to override inference
-    group?: PublicKey;
-    admin?: PublicKey;
-  },
-  args: {
-    flag: BN;
-  }
-) {
-  const { marginfiAccount, ...optionalAccounts } = accounts;
-
-  return mfiProgram.methods
-    .unsetAccountFlag(args.flag)
-    .accounts({
-      marginfiAccount,
-    })
-    .accountsPartial(optionalAccounts)
-    .instruction();
-}
-
 function makePoolConfigureBankIx(
   mfiProgram: MarginfiProgram,
   accounts: {
@@ -338,11 +290,12 @@ function makeEndFlashLoanIx(
     .instruction();
 }
 
-async function makeAccountAuthorityTransferIx(
+async function makeAccountTransferToNewAccountIx(
   mfProgram: MarginfiProgram,
   accounts: {
     // Required accounts
-    marginfiAccount: PublicKey;
+    oldMarginfiAccount: PublicKey;
+    newMarginfiAccount: PublicKey;
     newAuthority: PublicKey;
     feePayer: PublicKey;
     // Optional accounts - to override inference
@@ -350,14 +303,15 @@ async function makeAccountAuthorityTransferIx(
     authority?: PublicKey;
   }
 ) {
-  const { marginfiAccount, newAuthority, feePayer, ...optionalAccounts } = accounts;
+  const { oldMarginfiAccount, newMarginfiAccount, newAuthority, feePayer, ...optionalAccounts } = accounts;
 
   return mfProgram.methods
-    .setNewAccountAuthority()
+    .transferToNewAccount()
     .accounts({
-      marginfiAccount,
+      oldMarginfiAccount,
+      newMarginfiAccount,
       newAuthority,
-      feePayer,
+      globalFeeWallet: feePayer,
     })
     .accountsPartial(optionalAccounts)
     .instruction();
@@ -588,13 +542,11 @@ const instructions = {
   makeInitMarginfiAccountIx,
   makeLendingAccountLiquidateIx,
   makelendingAccountWithdrawEmissionIx,
-  makeSetAccountFlagIx,
-  makeUnsetAccountFlagIx,
   makePoolAddBankIx,
   makePoolConfigureBankIx,
   makeBeginFlashLoanIx,
   makeEndFlashLoanIx,
-  makeAccountAuthorityTransferIx,
+  makeAccountTransferToNewAccountIx,
   makeGroupInitIx,
   makeCloseAccountIx,
   makePoolAddPermissionlessStakedBankIx,

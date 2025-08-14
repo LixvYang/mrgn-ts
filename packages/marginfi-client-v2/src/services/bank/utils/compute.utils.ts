@@ -2,10 +2,9 @@ import BigNumber from "bignumber.js";
 
 import { Amount, toBigNumber } from "@mrgnlabs/mrgn-common";
 
-import { MarginRequirementType, isWeightedPrice } from "~/models/account";
-import { OraclePrice, PriceBias, getPrice } from "~/services/price";
-
 import { BankType, BankConfigType } from "../types";
+import { MarginRequirementType, isWeightedPrice } from "../../../models/account";
+import { OraclePrice, PriceBias, getPrice } from "../../price";
 
 export function computeMaxLeverage(
   depositBank: BankType,
@@ -30,10 +29,11 @@ export function computeLoopingParams(
   depositBank: BankType,
   borrowBank: BankType,
   depositOracleInfo: OraclePrice,
-  borrowOracleInfo: OraclePrice
+  borrowOracleInfo: OraclePrice,
+  opts?: { assetWeightInit?: BigNumber; liabilityWeightInit?: BigNumber }
 ): { borrowAmount: BigNumber; totalDepositAmount: BigNumber } {
   const initialCollateral = toBigNumber(principal);
-  const { maxLeverage } = computeMaxLeverage(depositBank, borrowBank);
+  const { maxLeverage } = computeMaxLeverage(depositBank, borrowBank, opts);
 
   if (targetLeverage < 1) {
     throw Error(`Target leverage ${targetLeverage} needs to be greater than 1`);

@@ -1,17 +1,10 @@
 {
   "name": "@mrgnlabs/mrgn-common",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "private": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "license": "MIT",
-  "scripts": {
-    "clean": "rimraf dist node_modules",
-    "dev": "tsc --watch",
-    "lint": "TIMING=1 eslint \"**/*.ts*\"",
-    "build": "tsc -p tsconfig.json",
-    "test": "jest"
-  },
   "dependencies": {
     "@coral-xyz/anchor": "^0.30.1",
     "@mixin.dev/mixin-node-sdk": "^7.4.2",
@@ -26,12 +19,19 @@
     "superstruct": "^1.0.4"
   },
   "devDependencies": {
-    "@mrgnlabs/tsconfig": "workspace:*",
+    "@mrgnlabs/tsconfig": "0.0.1",
     "@types/numeral": "^2.0.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.2"
   },
   "publishConfig": {
     "access": "public"
+  },
+  "scripts": {
+    "clean": "rimraf dist node_modules",
+    "dev": "tsc --watch",
+    "lint": "TIMING=1 eslint \"**/*.ts*\"",
+    "build": "tsc -p tsconfig.json",
+    "test": "jest"
   }
 }

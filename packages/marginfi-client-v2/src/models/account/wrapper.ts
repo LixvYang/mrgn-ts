@@ -21,6 +21,8 @@ import {
   SYSVAR_CLOCK_ID,
   BankMetadataMap,
   TransactionType,
+  ExtendedTransactionProperties,
+  decompileV0Transaction,
 } from "@mrgnlabs/mrgn-common";
 import * as sb from "@switchboard-xyz/on-demand";
 import { Address, BorshCoder, Idl, translateAddress } from "@coral-xyz/anchor";
@@ -354,7 +356,8 @@ class MarginfiAccountWrapper {
     principal: Amount,
     targetLeverage: number,
     depositBankAddress: PublicKey,
-    borrowBankAddress: PublicKey
+    borrowBankAddress: PublicKey,
+    opts?: { assetWeightInit?: BigNumber; liabilityWeightInit?: BigNumber }
   ): { borrowAmount: BigNumber; totalDepositAmount: BigNumber } {
     const depositBank = this.client.banks.get(depositBankAddress.toBase58());
     if (!depositBank) throw Error(`Bank ${depositBankAddress.toBase58()} not found`);
@@ -366,7 +369,15 @@ class MarginfiAccountWrapper {
     const borrowPriceInfo = this.client.oraclePrices.get(borrowBankAddress.toBase58());
     if (!borrowPriceInfo) throw Error(`Price info for ${borrowBankAddress.toBase58()} not found`);
 
-    return computeLoopingParams(principal, targetLeverage, depositBank, borrowBank, depositPriceInfo, borrowPriceInfo);
+    return computeLoopingParams(
+      principal,
+      targetLeverage,
+      depositBank,
+      borrowBank,
+      depositPriceInfo,
+      borrowPriceInfo,
+      opts
+    );
   }
 
   makeComputeBudgetIx(): TransactionInstruction[] {
@@ -598,7 +609,6 @@ class MarginfiAccountWrapper {
     repayAll = false,
     swap,
     blockhash: blockhashArg,
-    isMixin = false,
   }: RepayWithCollateralProps): Promise<FlashloanActionResult> {
     const blockhash =
       blockhashArg ?? (await this._program.provider.connection.getLatestBlockhash("confirmed")).blockhash;
@@ -670,7 +680,6 @@ class MarginfiAccountWrapper {
       ixs: [...cuRequestIxs, priorityFeeIx, ...withdrawIxs.instructions, ...swapIxs, ...repayIxs.instructions],
       addressLookupTableAccounts,
       blockhash,
-      isMixin,
     });
 
     const txSize = getTxSize(flashloanTx);
@@ -1025,8 +1034,8 @@ class MarginfiAccountWrapper {
             authorizedPubkey: this.authority,
             splitStakePubkey: splitStakeAccount.publicKey,
             lamports: amountLamports,
-          },
-          rentExemptReserve
+          }
+          // rentExemptReserve
         ).instructions
       );
     } else {
@@ -1582,20 +1591,38 @@ class MarginfiAccountWrapper {
 
     const clientLookupTables = await getClientAddressLookupTableAccounts(this.client);
 
-    const withdrawTx = addTransactionMetadata(
-      new VersionedTransaction(
-        new TransactionMessage({
-          instructions: [...cuRequestIxs, ...withdrawIxs.instructions],
-          payerKey: this.authority,
-          recentBlockhash: blockhash,
-        }).compileToV0Message(clientLookupTables)
-      ),
-      {
-        signers: withdrawIxs.keys,
-        addressLookupTables: clientLookupTables,
-        type: TransactionType.WITHDRAW,
-      }
-    );
+    let withdrawTx: VersionedTransaction & ExtendedTransactionProperties;
+    if (withdrawOpts.isMixin) {
+      withdrawTx = addTransactionMetadata(
+        new VersionedTransaction(
+          new TransactionMessage({
+            instructions: [...cuRequestIxs, ...updateFeedIxs, ...withdrawIxs.instructions],
+            payerKey: this.authority,
+            recentBlockhash: blockhash,
+          }).compileToV0Message([...clientLookupTables, ...feedLuts])
+        ),
+        {
+          signers: withdrawIxs.keys,
+          addressLookupTables: [...clientLookupTables, ...feedLuts],
+          type: TransactionType.WITHDRAW,
+        }
+      );
+    } else {
+      withdrawTx = addTransactionMetadata(
+        new VersionedTransaction(
+          new TransactionMessage({
+            instructions: [...cuRequestIxs, ...withdrawIxs.instructions],
+            payerKey: this.authority,
+            recentBlockhash: blockhash,
+          }).compileToV0Message(clientLookupTables)
+        ),
+        {
+          signers: withdrawIxs.keys,
+          addressLookupTables: clientLookupTables,
+          type: TransactionType.WITHDRAW,
+        }
+      );
+    }
 
     const transactions = [...feedCrankTxs, withdrawTx];
 
@@ -1702,23 +1729,42 @@ class MarginfiAccountWrapper {
     }
 
     const clientLookupTables = await getClientAddressLookupTableAccounts(this.client);
-
-    const borrowTx = addTransactionMetadata(
-      new VersionedTransaction(
-        new TransactionMessage({
-          instructions: [...cuRequestIxs, ...borrowIxs.instructions],
-          payerKey: this.authority,
-          recentBlockhash: blockhash,
-        }).compileToV0Message(clientLookupTables)
-      ),
-      {
-        signers: borrowIxs.keys,
-        type: TransactionType.BORROW,
-        addressLookupTables: clientLookupTables,
-      }
-    );
+    let borrowTx: VersionedTransaction & ExtendedTransactionProperties;
+    console.log("borrowOpts: ", borrowOpts);
+    if (borrowOpts.isMixin) {
+      borrowTx = addTransactionMetadata(
+        new VersionedTransaction(
+          new TransactionMessage({
+            instructions: [...cuRequestIxs, ...updateFeedIxs, ...borrowIxs.instructions],
+            payerKey: this.authority,
+            recentBlockhash: blockhash,
+          }).compileToV0Message([...clientLookupTables, ...feedLuts])
+        ),
+        {
+          signers: borrowIxs.keys,
+          type: TransactionType.BORROW,
+          addressLookupTables: [...clientLookupTables, ...feedLuts],
+        }
+      );
+    } else {
+      borrowTx = addTransactionMetadata(
+        new VersionedTransaction(
+          new TransactionMessage({
+            instructions: [...cuRequestIxs, ...borrowIxs.instructions],
+            payerKey: this.authority,
+            recentBlockhash: blockhash,
+          }).compileToV0Message(clientLookupTables)
+        ),
+        {
+          signers: borrowIxs.keys,
+          type: TransactionType.BORROW,
+          addressLookupTables: clientLookupTables,
+        }
+      );
+    }
 
     const transactions = [...feedCrankTxs, borrowTx];
+    // return { transactions: [borrowTx], actionTxIndex: 0 };
     return { transactions, actionTxIndex: transactions.length - 1 };
   }
 
@@ -1906,12 +1952,9 @@ class MarginfiAccountWrapper {
 
   public async buildFlashLoanTx(
     args: FlashLoanArgs,
-    lookupTables?: AddressLookupTableAccount[],
+    lookupTables?: AddressLookupTableAccount[]
   ): Promise<ExtendedV0Transaction> {
-    let endIndex = args.ixs.length + 1;
-    if (args.isMixin) {
-      endIndex = args.ixs.length + 2;
-    }
+    const endIndex = args.isMixin ? args.ixs.length + 2 : args.ixs.length + 1;
 
     const projectedActiveBalances: PublicKey[] = this._marginfiAccount.projectActiveBalancesNoCpi(
       this._program,
@@ -1944,22 +1987,29 @@ class MarginfiAccountWrapper {
     return tx;
   }
 
-  public async makeTransferAccountAuthorityIx(newAccountAuthority: PublicKey): Promise<InstructionsWrapper> {
-    return this._marginfiAccount.makeAccountAuthorityTransferIx(this._program, newAccountAuthority);
+  public async makeAccountTransferToNewAccountIx(
+    newMarginfiAccount: PublicKey,
+    newAccountAuthority: PublicKey
+  ): Promise<InstructionsWrapper> {
+    return this._marginfiAccount.makeAccountTransferToNewAccountIx(
+      this._program,
+      newMarginfiAccount,
+      newAccountAuthority
+    );
   }
 
-  async transferAccountAuthority(
+  async makeAccountTransferToNewAccount(
+    newMarginfiAccount: PublicKey,
     newAccountAuthority: PublicKey,
     processOpts?: ProcessTransactionsClientOpts,
     txOpts?: TransactionOptions
   ): Promise<string> {
-    const debug = require("debug")(`mfi:margin-account:${this.address.toString()}:transfer-authority`);
-    debug("Transferring account %s to %s", this.address.toBase58(), newAccountAuthority.toBase58());
-    const ixs = await this.makeTransferAccountAuthorityIx(newAccountAuthority);
+    const ixs = await this.makeAccountTransferToNewAccountIx(newMarginfiAccount, newAccountAuthority);
     const tx = new Transaction().add(...ixs.instructions);
-    const solanaTx = addTransactionMetadata(tx, { type: TransactionType.TRANSFER_AUTH });
+    const solanaTx = addTransactionMetadata(tx, {
+      type: TransactionType.TRANSFER_AUTH,
+    });
     const sig = await this.client.processTransaction(solanaTx, processOpts, txOpts);
-    debug("Transfer successful %s", sig);
     return sig;
   }
 

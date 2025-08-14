@@ -25,7 +25,8 @@ export const BankListWrapper = ({
   setIsOpen,
   Trigger,
   Content,
-  label = "Select Token",
+  // label = "Select Token",
+  label = "选择代币",
 }: BankListWrapperProps) => {
   const { isIOS, isPWA } = useOs();
   const isMobile = useIsMobile();
@@ -46,7 +47,8 @@ export const BankListWrapper = ({
       >
         <DialogHeader className="sr-only">
           <DialogTitle>{label}</DialogTitle>
-          <DialogDescription>Select a token to add to your wallet</DialogDescription>
+          {/* <DialogDescription>Select a token to add to your wallet</DialogDescription> */}
+          <DialogDescription>选择一个代币添加到你的钱包</DialogDescription>
         </DialogHeader>
         <div className="h-[500px] relative overflow-auto">{Content}</div>
       </DialogContent>

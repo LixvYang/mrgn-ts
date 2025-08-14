@@ -191,7 +191,12 @@ const createComputerStore = () => {
             // 转换地址
             const convertedBs = bs.map((b) => ({
               ...b,
-              address: b.address === SYSTEM_PROGRAM_ID.toString() ? NATIVE_MINT.toBase58() : b.address,
+              address:
+                b.address === SYSTEM_PROGRAM_ID.toString()
+                  ? NATIVE_MINT.toString()
+                  : b.address === NATIVE_MINT.toString()
+                    ? SYSTEM_PROGRAM_ID.toString()
+                    : b.address,
             }));
             const am = Object.fromEntries(convertedBs.map((b) => [b.address, b])) as Record<string, UserAssetBalance>;
 

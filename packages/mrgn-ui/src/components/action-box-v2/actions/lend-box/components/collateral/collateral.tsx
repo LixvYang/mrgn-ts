@@ -71,7 +71,8 @@ export const Collateral = ({ selectedAccount, emodeImpact, actionSummary }: Coll
         <ActionProgressBar
           amount={availableCollateral.amount}
           ratio={availableCollateral.ratio}
-          label={"Available collateral"}
+          // label={"Available collateral"}
+          label={"可用抵押品"}
           TooltipValue={
             <div className="space-y-2">
               <p>Available collateral is the USD value of your collateral not actively backing a loan.</p>
@@ -80,7 +81,8 @@ export const Collateral = ({ selectedAccount, emodeImpact, actionSummary }: Coll
           }
         />
       ) : (
-        <ActionProgressBarSkeleton label="Available collateral" />
+        // <ActionProgressBarSkeleton label="Available collateral" />
+        <ActionProgressBarSkeleton label="可用抵押品" />
       )}
     </>
   );

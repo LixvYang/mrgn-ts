@@ -111,7 +111,8 @@ export function getPositionSizeStat(
 
 export function getAmountStat(currentAmount: number, symbol: string, simulatedAmount?: number): PreviewStat {
   return {
-    label: "Total",
+    // label: "Total",
+    label: "总计",
     value: () => (
       <>
         {dynamicNumeralFormatter(currentAmount)} {symbol}
@@ -129,7 +130,8 @@ export function getAmountUsdStat(
   simulatedAmount?: number
 ): PreviewStat {
   return {
-    label: "USD Value",
+    // label: "USD Value",
+    label: "美元价值",
     value: () => (
       <>
         {tokenPriceFormatter(currentAmount * price)}
@@ -146,7 +148,8 @@ export function getPriceImpactStat(priceImpactPct: number): PreviewStat {
   const color = priceImpactPct < 0.01 ? "SUCCESS" : priceImpactPct > 0.05 ? "DESTRUCTIVE" : "ALERT";
 
   return {
-    label: "Price impact",
+    // label: "Price impact",
+    label: "价格影响",
     color,
     value: () => <>{priceImpactLabel}</>,
   };
@@ -154,7 +157,8 @@ export function getPriceImpactStat(priceImpactPct: number): PreviewStat {
 
 export function getSlippageStat(slippageBps: number): PreviewStat {
   return {
-    label: "Slippage",
+    // label: "Slippage",
+    label: "滑点",
     color: slippageBps > 500 ? "DESTRUCTIVE" : slippageBps > 250 ? "ALERT" : "SUCCESS",
     value: () => <> {percentFormatter.format(slippageBps / 10000)}</>,
   };
@@ -167,7 +171,8 @@ export function getHealthStat(health: number, isLoading: boolean, simulationHeal
   const isSimulated = simulationHealth !== undefined;
 
   return {
-    label: "Health",
+    // label: "Health",
+    label: "健康度",
     color: healthColor,
     value: () => (
       <>
@@ -206,7 +211,8 @@ export function getLiquidationStat(bank: ActiveBankInfo, isLoading: boolean, sim
     usdFormatter.format(bank.position.liquidationPrice);
 
   return {
-    label: "Liquidation price",
+    // label: "Liquidation price",
+    label: "清算价格",
     color: healthColor,
     value: () => (
       <>
@@ -237,7 +243,8 @@ export function getPoolSizeStat(bankCap: number, bank: ExtendedBankInfo, isLendi
   const isBankFilled = (isLending ? bank.info.state.totalDeposits : bank.info.state.totalBorrows) >= bankCap * 0.99999;
 
   return {
-    label: "Pool size",
+    // label: "Pool size",
+    label: "借贷池流动性",
     value: () => (
       <TooltipProvider>
         <Tooltip>
@@ -296,7 +303,8 @@ export function getPoolSizeStat(bankCap: number, bank: ExtendedBankInfo, isLendi
 
 export function getBankTypeStat(bank: ExtendedBankInfo): PreviewStat {
   return {
-    label: "Type",
+    // label: "Type",
+    label: "类型",
     value: () => (
       <>
         {bank.info.state.isIsolated ? (
@@ -355,7 +363,8 @@ export function getOracleStat(bank: ExtendedBankInfo): PreviewStat {
   }
 
   return {
-    label: "Oracle",
+    // label: "Oracle",
+    label: "预言机",
     value: () => (
       <>
         {oracle}
@@ -367,7 +376,8 @@ export function getOracleStat(bank: ExtendedBankInfo): PreviewStat {
 
 export function getSupplyStat(supply: number, isLoading: boolean, simulationSupply?: number): PreviewStat {
   return {
-    label: "Supply",
+    // label: "Supply",
+    label: "供应量",
     value: () => (
       <>
         {supply && numeralFormatter(supply)}
@@ -386,28 +396,32 @@ export function getSupplyStat(supply: number, isLoading: boolean, simulationSupp
 
 export function getLstSupplyStat(supply: number): PreviewStat {
   return {
-    label: "Supply",
+    // label: "Supply",
+    label: "供应量",
     value: () => <>{supply && numeralFormatter(supply)}</>,
   };
 }
 
 export function getProjectedAPYStat(projectedApy: number): PreviewStat {
   return {
-    label: "Projected APY",
+    // label: "Projected APY",
+    label: "预测年化收益",
     value: () => <>{percentFormatterDyn.format(projectedApy)}</>,
   };
 }
 
 export function getCurrentPriceStat(currentPrice: number): PreviewStat {
   return {
-    label: "Current Price",
+    // label: "Current Price",
+    label: "当前价格",
     value: () => <>1 $LST = {currentPrice && numeralFormatter(currentPrice)} SOL</>,
   };
 }
 
 export function getCommissionStat(commission: number): PreviewStat {
   return {
-    label: "Commission",
+    // label: "Commission",
+    label: "佣金",
     value: () => <>{commission}%</>,
   };
 }

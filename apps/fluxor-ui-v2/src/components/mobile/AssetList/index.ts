@@ -1,1 +1,0 @@
-export { MobileAssetList } from "./AssetList";

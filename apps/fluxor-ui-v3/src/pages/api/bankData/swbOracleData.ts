@@ -13,6 +13,7 @@ const STALE_WHILE_REVALIDATE_TIME = 15;
 
 const FEED_ID_MIXIN_ASSET_MAP: Record<string, string> = {
   "3a763682892910586fed762422247c344565edbfe2788116391771d79e09dc4c": XINAssetID,
+  ad79d0898d2c490a3a368d99092899948add87ac3cc8ee8820bf5430665fdd70: XINAssetID,
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {

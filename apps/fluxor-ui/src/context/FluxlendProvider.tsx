@@ -27,10 +27,10 @@ import {
   useWrappedMarginfiAccount,
   WalletStateProvider,
 } from "@mrgnlabs/mrgn-state";
-import { useComputerStore } from "@mrgnlabs/fluxor-state";
+import { useComputerStore, useFluxorStore } from "@mrgnlabs/fluxor-state";
 import { PublicKey } from "@solana/web3.js";
 import { Wallet } from "@mrgnlabs/mrgn-common";
-import { MarginfiAccount, MarginfiAccountType, MarginfiAccountWrapper } from "@mrgnlabs/marginfi-client-v2";
+import { getConfig, MarginfiAccount, MarginfiAccountType, MarginfiAccountWrapper } from "@mrgnlabs/marginfi-client-v2";
 import { useConnection } from "@mrgnlabs/mrgn-utils";
 
 export const FluxlendProvider: React.FC<{
@@ -50,10 +50,18 @@ export const FluxlendProvider: React.FC<{
     getUserMix,
     info: computerInfo,
     account: computerAccount,
+    user: mixinUser,
     getComputerRecipient,
     getMixinClient,
   } = useComputerStore();
   const { connection } = useConnection();
+  const { getGlobalStatistics } = useFluxorStore();
+
+  React.useEffect(() => {
+    const data = getGlobalStatistics(getConfig().groupPk.toBase58());
+    console.log("getGlobalStatistics");
+    console.log(data);
+  }, []);
 
   const [walletAddress, setWalletAddress] = React.useState<PublicKey>(PublicKey.default);
   const [wallet, setWallet] = React.useState<Wallet>({
@@ -270,6 +278,7 @@ export const FluxlendProvider: React.FC<{
         balanceAddressMap={balanceAddressMap}
         fetchTransaction={getMixinClient()?.utxo.fetchTransaction}
         refreshMixinBalances={refreshMixinBalances}
+        mixinUser={mixinUser}
       >
         {children}
 

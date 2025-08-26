@@ -94,7 +94,7 @@ export const ActionBoxNavigator = ({
                 </ToggleGroup>
               </div>
 
-              {selectedAction === ActionType.Deposit && (
+              {/* {selectedAction === ActionType.Deposit && (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -117,7 +117,7 @@ export const ActionBoxNavigator = ({
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-              )}
+              )} */}
             </>
           </div>
         )}

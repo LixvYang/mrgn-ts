@@ -8,7 +8,7 @@ import type {
   ComputerSystemCallResponse,
   ComputerUserResponse,
 } from "@mrgnlabs/mrgn-common";
-import { HOST } from "./constants";
+import { getEnvConfig, HOST } from "./constants";
 
 axios.defaults.headers.post["Content-Type"] = "application/json";
 
@@ -23,7 +23,6 @@ export const initComputerClient = (responseCallback?: (e: any) => void) => {
   });
 
   ins.interceptors.response.use(undefined, async (e: any) => {
-    if (!e.response) return undefined;
     if (e.response.status === 404) return undefined;
     responseCallback?.(e);
     return Promise.reject(e);
@@ -44,5 +43,6 @@ export const initComputerClient = (responseCallback?: (e: any) => void) => {
     deployAssets: (assets: string[]) => ins.post("/deployed_assets", { assets }),
     getNonce: (mix: string): Promise<ComputerNonceResponse> => ins.post("/nonce_accounts", { mix }),
     getFeeOnXin: (amount: string): Promise<ComputerFeeResponse> => ins.post("/fee", { sol_amount: amount }),
+    getAtls: (): Promise<string[]> => ins.get("/address_lookup_tables"),
   };
 };

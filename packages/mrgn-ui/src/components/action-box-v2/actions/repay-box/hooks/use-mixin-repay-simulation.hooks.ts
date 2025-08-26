@@ -26,6 +26,7 @@ import {
   OperationTypeUserDeposit,
   uniqueConversationID,
   userIdToBytes,
+  UserResponse,
 } from "@mixin.dev/mixin-node-sdk";
 
 import { AccountSummary, ActionType, ExtendedBankInfo } from "@mrgnlabs/mrgn-state";
@@ -89,6 +90,7 @@ import {
   buildComputerExtra,
   buildSystemCallInvoiceExtra,
   computerClient,
+  fluxorClient,
   handleInvoiceSchema,
   initComputerClient,
 } from "@mrgnlabs/fluxor-state";
@@ -147,6 +149,7 @@ async function handleRepayMixinSimulation({
   computerAccount,
   getComputerRecipient,
   balanceAddressMap,
+  mixinUser,
   selectedStakeAccount,
   processOptsArgs,
   txOpts,
@@ -178,6 +181,7 @@ async function handleRepayMixinSimulation({
   computerAccount: ComputerUserResponse | undefined;
   getComputerRecipient: (() => string) | undefined;
   balanceAddressMap: Record<string, UserAssetBalance> | undefined;
+  mixinUser: UserResponse | undefined;
   selectedStakeAccount?: PublicKey;
   processOptsArgs?: ProcessTransactionsClientOpts;
   txOpts?: TransactionOptions;
@@ -320,6 +324,7 @@ async function handleRepayMixinSimulation({
       connection,
       updatedTransactions,
       balanceAddressMap,
+      mixinUser,
       selectedBank,
       selectedSecondaryBank,
       marginfiClient,
@@ -401,6 +406,7 @@ interface HandleVxArgs {
   connection: Connection;
   updatedTransactions: SolanaTransaction[];
   balanceAddressMap: Record<string, UserAssetBalance>;
+  mixinUser: UserResponse | undefined;
   selectedBank: ExtendedBankInfo;
   selectedSecondaryBank: ExtendedBankInfo;
   marginfiClient: MarginfiClient;
@@ -443,6 +449,7 @@ async function handleVxLength1({
   rentMap,
   invoice,
   amount,
+  mixinUser,
   // actionTxns,
 }: HandleVxArgs): Promise<{
   resultTrace: string;
@@ -521,7 +528,6 @@ async function handleVxLength1({
       index_references: [0, 1],
       hash_references: [],
     });
-    return { resultTrace, invoice };
   } else if (txAction === TransactionType.REPAY_COLLAT) {
     // repay collateral
     const nonce = await computerClient.getNonce(getUserMix());
@@ -589,6 +595,23 @@ async function handleVxLength1({
     });
   }
 
+  if (mixinUser) {
+    await fluxorClient.callComputer([
+      {
+        computerId: computerAccount.id,
+        mixAddress: computerAccount.mix_address,
+        chainAddress: computerAccount.chain_address,
+        mixinUserId: mixinUser.user_id,
+        traceId: resultTrace,
+        extra: {
+          groupAddress: selectedBank.info.rawBank.group.toBase58(),
+          bankAddress1: selectedBank.info.rawBank.address.toBase58(),
+          type: txAction.toString(),
+          inputAmount: amount.toString(),
+        },
+      },
+    ]);
+  }
   return { resultTrace, invoice };
 }
 
@@ -608,6 +631,7 @@ async function handleVxLength2({
   rentMap,
   invoice,
   amount,
+  mixinUser,
   // actionTxns,
 }: HandleVxArgs): Promise<{
   resultTrace: string;
@@ -743,8 +767,96 @@ async function handleVxLength2({
       index_references: [2, 3],
       hash_references: [],
     });
-    return { resultTrace, invoice };
+  } else if (
+    updatedTransactions[0].type === TransactionType.CRANK &&
+    updatedTransactions[1].type === TransactionType.REPAY
+  ) {
+    // 这里只处理 repay 的情况
+    const nonce2 = await computerClient.getNonce(getUserMix());
+
+    const repayAddressLookupsRes = await Promise.all(
+      (versionedTransactions[1] as VersionedTransaction).message.addressTableLookups.map((a) =>
+        connection.getAddressLookupTable(a.accountKey)
+      )
+    );
+    const repayAddressLookups = repayAddressLookupsRes
+      .filter((r) => r.value)
+      .map((r) => r.value) as AddressLookupTableAccount[];
+
+    const repayInx = TransactionMessage.decompile(versionedTransactions[1].message, {
+      addressLookupTableAccounts: repayAddressLookups,
+    }).instructions;
+
+    const nonce2Ins = SystemProgram.nonceAdvance({
+      noncePubkey: new PublicKey(nonce2.nonce_address),
+      authorizedPubkey: new PublicKey(computerInfo.payer),
+    });
+    const message1V0 = new TransactionMessage({
+      payerKey: new PublicKey(computerInfo.payer),
+      recentBlockhash: nonce2.nonce_hash,
+      instructions: [nonce2Ins, ...repayInx],
+    }).compileToV0Message(repayAddressLookups);
+
+    const repayTx = new VersionedTransaction(message1V0);
+    if (!updatedTransactions[1].signers) {
+      throw new Error("signers not found");
+    }
+    repayTx.sign(updatedTransactions[1].signers);
+
+    // 5. 检查交易大小
+    const repayTxBuf = Buffer.from(repayTx.serialize());
+    if (!checkSystemCallSize(repayTxBuf)) {
+      throw new Error("Transaction size exceeds limit");
+    }
+    const repayTrace = uniqueConversationID(repayTxBuf.toString("hex"), "system call");
+
+    const repayExtra = buildComputerExtra(
+      computerInfo.members.app_id,
+      OperationTypeSystemCall,
+      buildSystemCallInvoiceExtra(computerAccount.id, repayTrace, false)
+    );
+
+    const balance = balanceAddressMap[selectedBank.info.rawBank.mint.toBase58()];
+
+    attachStorageEntry(invoice, uniqueConversationID(repayTrace, "storage"), repayTxBuf);
+    attachInvoiceEntry(invoice, {
+      trace_id: uniqueConversationID(repayTrace, balance.asset_id),
+      asset_id: balance.asset_id,
+      amount: amount.toString(),
+      extra: referenceExtra,
+      index_references: [],
+      hash_references: [],
+    });
+
+    attachInvoiceEntry(invoice, {
+      trace_id: repayTrace,
+      asset_id: XIN_ASSET_ID,
+      amount: BigNumber(computerInfo.params.operation.price).toFixed(8, BigNumber.ROUND_CEIL),
+      extra: Buffer.from(repayExtra),
+      index_references: [0, 1],
+      hash_references: [],
+    });
+    resultTrace = repayTrace;
   }
+
+  if (mixinUser) {
+    await fluxorClient.callComputer([
+      {
+        computerId: computerAccount.id,
+        mixAddress: computerAccount.mix_address,
+        chainAddress: computerAccount.chain_address,
+        mixinUserId: mixinUser.user_id,
+        traceId: resultTrace,
+        extra: {
+          groupAddress: selectedBank.info.rawBank.group.toBase58(),
+          bankAddress1: selectedBank.info.rawBank.address.toBase58(),
+          type: txAction.toString(),
+          inputAmount: amount.toString(),
+        },
+      },
+    ]);
+  }
+
   return { resultTrace, invoice };
 }
 

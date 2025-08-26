@@ -21,6 +21,7 @@ import { initComputerClient } from "../computer";
 import { SOL_ASSET_ID } from "../constants";
 import { NATIVE_MINT, SYSTEM_PROGRAM_ID } from "@mrgnlabs/mrgn-common";
 import { add } from "../number";
+import { initFluxorClient } from "../fluxor";
 
 export type MixinClient = ReturnType<typeof MixinApi>;
 

@@ -1596,14 +1596,14 @@ class MarginfiAccountWrapper {
       withdrawTx = addTransactionMetadata(
         new VersionedTransaction(
           new TransactionMessage({
-            instructions: [...cuRequestIxs, ...updateFeedIxs, ...withdrawIxs.instructions],
+            instructions: [...cuRequestIxs, ...withdrawIxs.instructions],
             payerKey: this.authority,
             recentBlockhash: blockhash,
-          }).compileToV0Message([...clientLookupTables, ...feedLuts])
+          }).compileToV0Message([...clientLookupTables])
         ),
         {
           signers: withdrawIxs.keys,
-          addressLookupTables: [...clientLookupTables, ...feedLuts],
+          addressLookupTables: [...clientLookupTables],
           type: TransactionType.WITHDRAW,
         }
       );
@@ -1730,20 +1730,19 @@ class MarginfiAccountWrapper {
 
     const clientLookupTables = await getClientAddressLookupTableAccounts(this.client);
     let borrowTx: VersionedTransaction & ExtendedTransactionProperties;
-    console.log("borrowOpts: ", borrowOpts);
     if (borrowOpts.isMixin) {
       borrowTx = addTransactionMetadata(
         new VersionedTransaction(
           new TransactionMessage({
-            instructions: [...cuRequestIxs, ...updateFeedIxs, ...borrowIxs.instructions],
+            instructions: [...cuRequestIxs, ...borrowIxs.instructions],
             payerKey: this.authority,
             recentBlockhash: blockhash,
-          }).compileToV0Message([...clientLookupTables, ...feedLuts])
+          }).compileToV0Message([...clientLookupTables])
         ),
         {
           signers: borrowIxs.keys,
           type: TransactionType.BORROW,
-          addressLookupTables: [...clientLookupTables, ...feedLuts],
+          addressLookupTables: [...clientLookupTables],
         }
       );
     } else {

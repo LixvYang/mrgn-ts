@@ -22,6 +22,7 @@ import {
   OperationTypeUserDeposit,
   uniqueConversationID,
   userIdToBytes,
+  UserResponse,
 } from "@mixin.dev/mixin-node-sdk";
 
 import { AccountSummary, ActionType, ExtendedBankInfo } from "@mrgnlabs/mrgn-state";
@@ -67,11 +68,11 @@ import {
   buildSystemCallInvoiceExtra,
   add,
   handleInvoiceSchema,
-  computerClient,
   buildComputerExtra,
+  fluxorClient,
+  computerClient,
 } from "@mrgnlabs/fluxor-state";
 import BigNumber from "bignumber.js";
-import { initComputerClient } from "@mrgnlabs/fluxor-state";
 
 type LendMixinSimulationProps = {
   debouncedAmount: number;
@@ -114,6 +115,7 @@ async function handleLendMixinSimulation({
   computerAccount,
   getComputerRecipient,
   balanceAddressMap,
+  mixinUser,
   selectedStakeAccount,
   processOpts: processOptsArgs,
   txOpts,
@@ -130,6 +132,7 @@ async function handleLendMixinSimulation({
   computerAccount: ComputerUserResponse | undefined;
   getComputerRecipient: (() => string) | undefined;
   balanceAddressMap: Record<string, UserAssetBalance> | undefined;
+  mixinUser?: UserResponse | undefined;
   selectedStakeAccount?: PublicKey;
   processOpts?: ProcessTransactionsClientOpts;
   txOpts?: TransactionOptions;
@@ -143,7 +146,15 @@ async function handleLendMixinSimulation({
     getComputerRecipient,
     balanceAddressMap,
   });
-  if (!getUserMix || !computerInfo || !connection || !computerAccount || !getComputerRecipient || !balanceAddressMap) {
+  if (
+    !mixinUser ||
+    !getUserMix ||
+    !computerInfo ||
+    !connection ||
+    !computerAccount ||
+    !getComputerRecipient ||
+    !balanceAddressMap
+  ) {
     throw new Error("Missing required props");
   }
 
@@ -316,6 +327,7 @@ async function handleLendMixinSimulation({
       rentMap,
       invoice,
       amount,
+      mixinUser,
       actionTxns: actionTxns,
     });
     resultTrace = resultTrace2;
@@ -357,6 +369,7 @@ interface HandleVxLength1Args {
   rentMap: Record<string, number>;
   invoice: MixinInvoice;
   amount: number;
+  mixinUser: UserResponse | undefined;
   actionTxns: {
     transactions: SolanaTransaction[];
     finalAccount: MarginfiAccountWrapper;
@@ -387,6 +400,7 @@ async function handleVxLength1({
   connection,
   updatedTransactions,
   balanceAddressMap,
+  mixinUser,
   selectedBank,
   marginfiClient,
   computerAccount,
@@ -514,7 +528,6 @@ async function handleVxLength1({
     console.log("depositExtra: ", depositExtra);
     console.log("depositTrace: ", depositTrace);
     resultTrace = depositTrace;
-    return { resultTrace, invoice };
   } else if (txAction === TransactionType.BORROW) {
     const { needCreateAta, userAta } = await checkMarginfiAccountNeedCreateAta(
       marginfiClient,
@@ -604,7 +617,6 @@ async function handleVxLength1({
     console.log("borrowExtra: ", borrowExtra);
     console.log("borrowTrace: ", borrowTrace);
     resultTrace = borrowTrace;
-    return { resultTrace, invoice };
   } else if (txAction === TransactionType.WITHDRAW) {
     const { needCreateAta, userAta } = await checkMarginfiAccountNeedCreateAta(
       marginfiClient,
@@ -694,9 +706,29 @@ async function handleVxLength1({
     console.log("withdrawExtra: ", withdrawExtra);
     console.log("withdrawTrace: ", withdrawTrace);
     resultTrace = withdrawTrace;
-    return { resultTrace, invoice };
+  } else {
+    throw new Error(`Unsupported transaction type: ${txAction}`);
   }
-  throw new Error(`Unsupported transaction type: ${txAction}`);
+
+  if (mixinUser) {
+    await fluxorClient.callComputer([
+      {
+        computerId: computerAccount.id,
+        mixAddress: computerAccount.mix_address,
+        chainAddress: computerAccount.chain_address,
+        mixinUserId: mixinUser.user_id,
+        traceId: resultTrace,
+        extra: {
+          groupAddress: selectedBank.info.rawBank.group.toBase58(),
+          bankAddress1: selectedBank.info.rawBank.address.toBase58(),
+          type: txAction.toString(),
+          inputAmount: amount.toString(),
+        },
+      },
+    ]);
+  }
+
+  return { resultTrace: resultTrace, invoice: invoice };
 }
 
 async function handleVxLength2({
@@ -708,6 +740,7 @@ async function handleVxLength2({
   connection,
   updatedTransactions,
   balanceAddressMap,
+  mixinUser,
   selectedBank,
   marginfiClient,
   computerAccount,
@@ -852,7 +885,7 @@ async function handleVxLength2({
     console.log("depositExtra: ", depositExtra);
     console.log("depositTrace: ", depositTrace);
     resultTrace = depositTrace;
-    return { resultTrace, invoice };
+    // return { resultTrace, invoice };
   } else if (
     txAction === TransactionType.BORROW &&
     updatedTransactions[0].type === TransactionType.CRANK &&
@@ -915,7 +948,7 @@ async function handleVxLength2({
         }, 0).toString(),
         SOL_DECIMAL
       ).toString();
-      const fee = await computerClient.getFeeOnXin(solAmount + "0.0001");
+      const fee = await computerClient.getFeeOnXin(solAmount);
       borrowExtra = buildComputerExtra(
         computerInfo.members.app_id,
         OperationTypeSystemCall,
@@ -931,18 +964,18 @@ async function handleVxLength2({
         hash_references: [],
       });
     } else {
-      const fee = await computerClient.getFeeOnXin("0.0001");
+      // const fee = await computerClient.getFeeOnXin("0.0001");
 
       borrowExtra = buildComputerExtra(
         computerInfo.members.app_id,
         OperationTypeSystemCall,
-        buildSystemCallInvoiceExtra(computerAccount.id, borrowTrace, false, fee.fee_id)
+        buildSystemCallInvoiceExtra(computerAccount.id, borrowTrace, false)
       );
       attachStorageEntry(invoice, uniqueConversationID(borrowTrace, "storage"), borrowTxBuf);
       attachInvoiceEntry(invoice, {
         trace_id: borrowTrace,
         asset_id: XIN_ASSET_ID,
-        amount: add(computerInfo.params.operation.price, fee.xin_amount).toFixed(8, BigNumber.ROUND_CEIL),
+        amount: add(computerInfo.params.operation.price, 0).toFixed(8, BigNumber.ROUND_CEIL),
         extra: Buffer.from(borrowExtra),
         index_references: [0],
         hash_references: [],
@@ -952,7 +985,6 @@ async function handleVxLength2({
     console.log("borrowExtra: ", borrowExtra);
     console.log("borrowTrace: ", borrowTrace);
     resultTrace = borrowTrace;
-    return { resultTrace, invoice };
   } else if (
     txAction === TransactionType.WITHDRAW &&
     updatedTransactions[0].type === TransactionType.CRANK &&
@@ -1011,7 +1043,7 @@ async function handleVxLength2({
         }, 0).toString(),
         SOL_DECIMAL
       ).toString();
-      const fee = await computerClient.getFeeOnXin(solAmount + "0.0001");
+      const fee = await computerClient.getFeeOnXin(solAmount);
 
       withdrawExtra = buildComputerExtra(
         computerInfo.members.app_id,
@@ -1029,18 +1061,18 @@ async function handleVxLength2({
         hash_references: [],
       });
     } else {
-      const fee = await computerClient.getFeeOnXin("0.0001");
+      // const fee = await computerClient.getFeeOnXin("0.0001");
 
       withdrawExtra = buildComputerExtra(
         computerInfo.members.app_id,
         OperationTypeSystemCall,
-        buildSystemCallInvoiceExtra(computerAccount.id, withdrawTrace, false, fee.fee_id)
+        buildSystemCallInvoiceExtra(computerAccount.id, withdrawTrace, false)
       );
       attachStorageEntry(invoice, uniqueConversationID(withdrawTrace, "storage"), withdrawTxBuf);
       attachInvoiceEntry(invoice, {
         trace_id: withdrawTrace,
         asset_id: XIN_ASSET_ID,
-        amount: add(computerInfo.params.operation.price, fee.xin_amount).toFixed(8, BigNumber.ROUND_CEIL),
+        amount: add(computerInfo.params.operation.price, 0).toFixed(8, BigNumber.ROUND_CEIL),
         extra: Buffer.from(withdrawExtra),
         index_references: [0],
         hash_references: [],
@@ -1049,10 +1081,29 @@ async function handleVxLength2({
     console.log("withdrawExtra: ", withdrawExtra);
     console.log("withdrawTrace: ", withdrawTrace);
     resultTrace = withdrawTrace;
-    return { resultTrace, invoice };
   } else {
     throw new Error(`Unsupported transaction type: ${txAction}`);
   }
+
+  if (mixinUser) {
+    await fluxorClient.callComputer([
+      {
+        computerId: computerAccount.id,
+        mixAddress: computerAccount.mix_address,
+        chainAddress: computerAccount.chain_address,
+        mixinUserId: mixinUser.user_id,
+        traceId: resultTrace,
+        extra: {
+          groupAddress: selectedBank.info.rawBank.group.toBase58(),
+          bankAddress1: selectedBank.info.rawBank.address.toBase58(),
+          type: txAction.toString(),
+          inputAmount: amount.toString(),
+        },
+      },
+    ]);
+  }
+
+  return { resultTrace, invoice };
 }
 
 // Check if need to create ata

@@ -7,7 +7,7 @@ import { MarginfiAccountWrapper, MarginfiClient, ValidatorStakeGroup } from "@mr
 import { WalletContextStateOverride } from "~/components/wallet-v2";
 import { ComputerInfoResponse, ComputerUserResponse, UserAssetBalance } from "@mrgnlabs/mrgn-common";
 import { Connection } from "@solana/web3.js";
-import { SequencerTransactionRequest } from "@mixin.dev/mixin-node-sdk";
+import { SequencerTransactionRequest, UserResponse } from "@mixin.dev/mixin-node-sdk";
 
 export type HidePoolStats = Array<"amount" | "health" | "size" | "type" | "oracle" | "liquidation">;
 
@@ -32,6 +32,7 @@ type ActionBoxContextType = {
   balanceAddressMap?: Record<string, UserAssetBalance>;
   fetchTransaction?: (transactionId: string) => Promise<SequencerTransactionRequest>;
   refreshMixinBalances?: () => Promise<void>;
+  mixinUser?: UserResponse | undefined;
 };
 
 const ActionBoxContext = React.createContext<ActionBoxContextType | null>(null);

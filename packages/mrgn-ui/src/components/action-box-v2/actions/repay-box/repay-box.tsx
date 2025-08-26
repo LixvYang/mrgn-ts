@@ -50,7 +50,7 @@ import { ActionInput, Preview, PreviewProps } from "./components";
 import { handleRepayMixinSimulation, useRepaySimulation } from "./hooks";
 import { useRepayBoxStore } from "./store";
 import { Connection } from "@solana/web3.js";
-import { SequencerTransactionRequest } from "@mixin.dev/mixin-node-sdk";
+import { SequencerTransactionRequest, UserResponse } from "@mixin.dev/mixin-node-sdk";
 import { toastManager } from "@mrgnlabs/mrgn-toasts";
 import Link from "next/link";
 import { computerClient } from "@mrgnlabs/fluxor-state";
@@ -88,6 +88,7 @@ export type RepayBoxProps = {
   balanceAddressMap?: Record<string, UserAssetBalance>;
   fetchTransaction?: (transactionId: string) => Promise<SequencerTransactionRequest>;
   refreshMixinBalances?: () => Promise<void>;
+  mixinUser?: UserResponse | undefined;
 };
 
 export const RepayBox = ({
@@ -113,6 +114,7 @@ export const RepayBox = ({
   balanceAddressMap,
   fetchTransaction,
   refreshMixinBalances,
+  mixinUser,
 }: RepayBoxProps) => {
   const [
     amountRaw,
@@ -347,6 +349,7 @@ export const RepayBox = ({
         setIsLoading: setSimulationStatus,
         setMaxAmountCollateral,
         setMaxOverflowHit,
+        mixinUser,
         processOptsArgs: {
           broadcastType: "RPC",
           ...priorityFees,

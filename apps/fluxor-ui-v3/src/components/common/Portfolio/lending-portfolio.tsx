@@ -358,7 +358,7 @@ export const LendingPortfolio = () => {
       <div className="pb-6 md:p-6 rounded-xl w-full space-y-8 md:bg-muted/25">
         <div className="transition-opacity duration-500">
           <div className="flex items-center gap-4 w-full">
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <p className="text-sm text-muted-foreground hidden md:block">Account</p>
               {isLoadingMarginfiAccounts || isLoadingSelectedAccount ? (
                 <Skeleton className="w-24 h-8" />
@@ -423,7 +423,7 @@ export const LendingPortfolio = () => {
                   </Tooltip>
                 </TooltipProvider>
               )}
-            </div>
+            </div> */}
           </div>
           <div className="text-muted-foreground mt-8">
             <dl className="flex justify-between items-center gap-1.5">

@@ -1,3 +1,20 @@
+const VERSION = "prod" as "staging" | "prod";
+
+const isStaging = () => {
+  return VERSION !== "prod";
+};
+
+const getEnvConfig = () => {
+  return isStaging()
+    ? {
+        api: "https://computer.mixin.dev/",
+      }
+    : {
+        api: "https://computer.mixin.one/",
+      };
+};
+
+const FLUXOR_HOST = "https://api.fluxor.cc";
 const HOST = "https://computer.mixin.one";
 const RPC = "https://empty-soft-pine.solana-mainnet.quiknode.pro/98995b6d8bf2edcb036e9e0b19252cf178a748dc";
 const BOT = "045d0919-2990-41d6-8176-b7041b6e9ef9";
@@ -21,6 +38,7 @@ const MARGINFI_ACCOUNT_REPAY_COLLATERAL_RENT_SIZES: number[] = [165, 165];
 
 export {
   HOST,
+  FLUXOR_HOST,
   RPC,
   BOT,
   XIN_ASSET_ID,
@@ -36,4 +54,6 @@ export {
   MARGINFI_ACCOUNT_BORROW_RENT_SIZES,
   MARGINFI_ACCOUNT_REPAY_RENT_SIZES,
   MARGINFI_ACCOUNT_REPAY_COLLATERAL_RENT_SIZES,
+  getEnvConfig,
+  isStaging,
 };

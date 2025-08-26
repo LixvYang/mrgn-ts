@@ -60,7 +60,7 @@ import { SimulationStatus } from "../../utils";
 import { handleLendMixinSimulation, useLendSimulation } from "./hooks";
 import { HidePoolStats, useActionBoxContext } from "../../contexts/actionbox/actionbox.context";
 import { useActionContext } from "../../contexts";
-import { SequencerTransactionRequest } from "@mixin.dev/mixin-node-sdk";
+import { SequencerTransactionRequest, UserResponse } from "@mixin.dev/mixin-node-sdk";
 import { toastManager } from "@mrgnlabs/mrgn-toasts";
 import { initComputerClient } from "@mrgnlabs/fluxor-state";
 import { MixinMultipleTracesModal } from "../../components/mixin-multiple-traces-modal";
@@ -100,6 +100,7 @@ export type LendBoxProps = {
   balanceAddressMap?: Record<string, UserAssetBalance>;
   fetchTransaction?: (transactionId: string) => Promise<SequencerTransactionRequest>;
   refreshMixinBalances?: () => Promise<void>;
+  mixinUser?: UserResponse | undefined;
 };
 
 export const LendBox = ({
@@ -132,6 +133,7 @@ export const LendBox = ({
   balanceAddressMap,
   fetchTransaction,
   refreshMixinBalances,
+  mixinUser,
 }: LendBoxProps) => {
   const [
     amountRaw,
@@ -393,6 +395,7 @@ export const LendBox = ({
         computerAccount: computerAccount,
         getComputerRecipient: getComputerRecipient,
         balanceAddressMap: balanceAddressMap,
+        mixinUser,
         processOpts: {
           broadcastType: "RPC",
           ...priorityFees,

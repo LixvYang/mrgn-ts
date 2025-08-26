@@ -8,6 +8,7 @@ import { useUiStore } from "~/store";
 import {
   fetchMarginfiAccount,
   fetchMarginfiAccountAddresses,
+  getConfig,
   initializeMixinVars,
   resetMixinBalanceAddressMap,
   resetMixinState,
@@ -52,6 +53,7 @@ export const FluxlendProvider: React.FC<{
     account: computerAccount,
     getComputerRecipient,
     getMixinClient,
+    user: mixinUser,
   } = useComputerStore();
   const { connection } = useConnection();
 
@@ -70,12 +72,37 @@ export const FluxlendProvider: React.FC<{
     resetMixinState(connected, register);
     if (connected && register) {
       const publicKey = getPublicKey();
+      console.log("mixin publicKey", { publicKey: publicKey?.toBase58() });
+      console.log("walletAddress", { walletAddress: walletAddress.toBase58() });
+
+      // console.log("publicKey.equals(PublicKey.default): ", publicKey.equals(PublicKey.default));
       if (publicKey && !publicKey.equals(PublicKey.default)) {
-        // console.log("🔄 Setting wallet address from getPublicKey:", publicKey.toBase58());
+        console.log("设置前的 walletAddress:", {
+          old: walletAddress.toBase58(),
+          new: publicKey.toBase58(),
+        });
 
         // 只在地址真正变化时才更新状态
         if (!walletAddress.equals(publicKey)) {
           setWalletAddress(publicKey);
+          console.log("状态已更新，新地址将在下次渲染时生效:", publicKey.toBase58());
+
+          // 立即处理新地址，不等待状态更新
+          (async () => {
+            try {
+              console.log("立即处理新地址:", { newAddress: publicKey.toBase58() });
+              refetchMarginfiAccountAddresses();
+              const marginfiAccounts = await fetchMarginfiAccountAddresses(publicKey);
+              console.log("marginfiAccounts: ", marginfiAccounts);
+
+              if (marginfiAccounts.length > 0) {
+                setSelectedAccountKey(marginfiAccounts[0].toBase58());
+                refreshUserData({ newAccountKey: new PublicKey(marginfiAccounts[0].toBase58()) });
+              }
+            } catch (error) {
+              console.error("处理钱包地址更新时出错:", error);
+            }
+          })();
         }
 
         // 只在钱包对象需要更新时才设置
@@ -87,22 +114,23 @@ export const FluxlendProvider: React.FC<{
           });
         }
       }
+      console.log("walletAddress", { walletAddress: walletAddress.toBase58() });
     } else if (!connected && !register) {
       const defaultKey = PublicKey.default;
       // console.log("🔄 Setting default wallet address (not connected, not registered)");
 
       // 只在需要重置时才更新
-      if (!walletAddress.equals(defaultKey)) {
-        setWalletAddress(defaultKey);
-      }
+      // if (!walletAddress.equals(defaultKey)) {
+      setWalletAddress(defaultKey);
+      // }
 
-      if (!wallet.publicKey.equals(defaultKey)) {
-        setWallet({
-          publicKey: defaultKey,
-          signTransaction: () => new Promise(() => {}),
-          signAllTransactions: () => new Promise(() => {}),
-        });
-      }
+      // if (!wallet.publicKey.equals(defaultKey)) {
+      setWallet({
+        publicKey: defaultKey,
+        signTransaction: () => new Promise(() => {}),
+        signAllTransactions: () => new Promise(() => {}),
+      });
+      // }
     } else if (connected && !register) {
       const defaultKey = PublicKey.default;
       // console.log("🔄 Setting default wallet address (connected but not registered)");
@@ -143,7 +171,6 @@ export const FluxlendProvider: React.FC<{
   const { stakePoolMetadataMap } = useNativeStakeData();
 
   const { wrappedAccount: selectedAccount } = useWrappedMarginfiAccount(wallet);
-  // const [selectedAccount, setSelectedAccount] = React.useState<MarginfiAccountWrapper | null>(null);
 
   const {
     data: marginfiAccounts,
@@ -166,42 +193,6 @@ export const FluxlendProvider: React.FC<{
 
   const [hasFetchedAccountLabels, setHasFetchedAccountLabels] = React.useState(false);
 
-  React.useEffect(() => {
-    const fetchMarginfiAccounts = async () => {
-      if (connected && register && walletAddress) {
-        // console.log("🔄 FluxlendProvider useEffect: refetchMarginfiAccountAddresses");
-        refetchMarginfiAccountAddresses();
-        const marginfiAccounts = await fetchMarginfiAccountAddresses(walletAddress);
-        console.log("marginfiAccounts: ", marginfiAccounts);
-        if (marginfiAccounts.length > 0) {
-          setSelectedAccountKey(marginfiAccounts[0].toBase58()); // 设置第一个账户
-          // refetchMarginfiAccount(); // 刷新 marginfiAccount
-          refreshUserData({ newAccountKey: new PublicKey(marginfiAccounts[0].toBase58()) }); // 刷新用户数据
-          // // refreshUserData(); // 刷新 wrappedAccount
-
-          // if (!rawBanks || !oracleData?.pythFeedIdMap || !oracleData?.oracleMap || !metadata?.bankMetadataMap) {
-          //   throw new Error("Required data not available for fetching MarginFi account");
-          // }
-
-          // const result = await fetchMarginfiAccount(
-          //   rawBanks,
-          //   oracleData.pythFeedIdMap,
-          //   oracleData.oracleMap,
-          //   metadata.bankMetadataMap,
-          //   walletAddress ? new PublicKey(walletAddress) : undefined,
-          //   selectedAccountKey ? new PublicKey(selectedAccountKey) : undefined
-          // );
-          // if (result && marginfiClient) {
-          //   setSelectedAccount(
-          //     new MarginfiAccountWrapper(result.address, marginfiClient, MarginfiAccount.fromAccountType(result))
-          //   );
-          // }
-        }
-      }
-    };
-    fetchMarginfiAccounts();
-  }, [connected, register, walletAddress, refetchMarginfiAccountAddresses]); // eslint-disable-line react-hooks/exhaustive-deps
-
   // 处理余额更新
   React.useEffect(() => {
     if (connected && computerAssets.length > 0) {
@@ -214,13 +205,6 @@ export const FluxlendProvider: React.FC<{
     await updateBalances(computerAssets);
     resetMixinBalanceAddressMap(balanceAddressMap);
   };
-
-  // 初始化 Mixin 变量
-  // React.useEffect(() => {
-  //   if (Object.keys(balanceAddressMap).length > 0) {
-  //     initializeMixinVars({ balanceAddressMap, publicKey: walletAddress });
-  //   }
-  // }, [balanceAddressMap, walletAddress]); // 只依赖 balanceAddressMap
 
   // identify user if logged in
   React.useEffect(() => {
@@ -270,6 +254,7 @@ export const FluxlendProvider: React.FC<{
         balanceAddressMap={balanceAddressMap}
         fetchTransaction={getMixinClient()?.utxo.fetchTransaction}
         refreshMixinBalances={refreshMixinBalances}
+        mixinUser={mixinUser}
       >
         {children}
 

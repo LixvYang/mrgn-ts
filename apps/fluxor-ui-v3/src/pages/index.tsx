@@ -26,6 +26,7 @@ import { useBanks, useEmode, useExtendedBanks, useMarginfiAccount, useRefreshUse
 import { useAssetData } from "~/hooks/use-asset-data.hooks";
 import { PublicKey } from "@solana/web3.js";
 import { useComputerStore } from "@mrgnlabs/fluxor-state";
+import { GlobalStatistics } from "~/components/common/GlobalStatistics";
 
 const DesktopAssetsList = dynamic(async () => (await import("~/components/desktop/AssetList")).AssetsList, {
   ssr: false,
@@ -64,18 +65,19 @@ export default function HomePage() {
 
   return (
     <>
+      <GlobalStatistics />
       <Desktop>
         <>
           <div className="flex flex-col h-full justify-start content-start w-full xl:w-4/5 xl:max-w-7xl gap-4">
-            {walletAddress && selectedAccount && isOverride && (
+            {/* {walletAddress && selectedAccount && isOverride && (
               <Banner
                 text={`Read-only view of ${selectedAccount.address.toBase58()} (owner: ${shortenAddress(
                   walletAddress
                 )}) - All actions are simulated`}
                 backgroundColor="#DCE85D"
               />
-            )}
-            {annoucements.length > 0 ? <Announcements items={annoucements} /> : <AnnouncementsSkeleton />}
+            )} */}
+            {/* {annoucements.length > 0 ? <Announcements items={annoucements} /> : <AnnouncementsSkeleton />} */}
             {/* <AnnouncementsDialog /> */}
             <div className="p-4 space-y-4 w-full">
               <ActionBox.BorrowLend
@@ -100,10 +102,9 @@ export default function HomePage() {
         </>
         <OverlaySpinner fetching={isExtendedBanksLoading} />
       </Desktop>
-
       <Mobile>
         <>
-          {annoucements.length > 0 ? <Announcements items={annoucements} /> : <AnnouncementsSkeleton />}
+          {/* {annoucements.length > 0 ? <Announcements items={annoucements} /> : <AnnouncementsSkeleton />} */}
           {/* <AnnouncementsDialog /> */}
           <div className="p-4 space-y-3 w-full">
             {emodePairs.length > 0 && (

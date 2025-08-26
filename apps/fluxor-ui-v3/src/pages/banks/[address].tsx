@@ -36,6 +36,7 @@ import {
 } from "@mrgnlabs/mrgn-state";
 import { Loader } from "~/components/ui/loader";
 import { useComputerStore } from "@mrgnlabs/fluxor-state";
+import { BankChart2 } from "~/components/common/bank/components/bank-chart2";
 
 export default function BankPage() {
   const router = useRouter();
@@ -469,9 +470,9 @@ export default function BankPage() {
         )}
       </header>
       <div className="w-full grid lg:grid-cols-12 gap-8">
-        {/* <div className="lg:col-span-8">
-          <BankChart bankAddress={bank.address.toBase58()} />
-        </div> */}
+        <div className="lg:col-span-8">
+          <BankChart2 bankAddress={bank.address.toBase58()} />
+        </div>
         <div className="lg:col-span-4 py-8 lg:pb-0 lg:pt-0 bg-background-gray rounded-md">
           <ActionBox.BorrowLend
             useProvider={true}

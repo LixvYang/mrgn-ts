@@ -167,6 +167,7 @@ export function useRepaySimulation({
         setActionTxns(repayActionTxns.actionTxns.repayCollatObject);
         setErrorMessage(null);
       } catch (error) {
+        console.log("error:", error);
         if (error instanceof ActionProcessingError) {
           handleError(error.details, {
             setErrorMessage,

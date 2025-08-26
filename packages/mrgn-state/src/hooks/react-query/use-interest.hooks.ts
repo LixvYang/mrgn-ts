@@ -9,32 +9,40 @@ import { calculateLatestNetInterest, calculateNetInterest30dStats } from "../../
  * @returns Interest data with statistics
  */
 export function useInterestData(selectedAccount: string | null): InterestDataResult {
-  const { data, error, isLoading, isError } = useQuery({
-    queryKey: ["interestData", selectedAccount],
-    queryFn: () => fetchInterestData(selectedAccount),
-    staleTime: 5 * 60_000, // 5 minutes
-    retry: 2,
-    enabled: !!selectedAccount,
-  });
-
-  // Calculate latest net interest
-  const latestNetInterest = data ? calculateLatestNetInterest(data) : 0;
-
-  // Calculate net interest change across actual data range
-  const netInterest30d = data
-    ? calculateNetInterest30dStats(data)
-    : {
-        value: 0,
-        change: 0,
-        changePercent: 0,
-      };
-
   return {
-    data: data || [],
-    latestNetInterest,
-    netInterest30d,
-    error: error as Error | null,
-    isLoading,
-    isError,
+    data: [],
+    latestNetInterest: 0,
+    netInterest30d: { value: 0, change: 0, changePercent: 0 },
+    error: null,
+    isLoading: false,
+    isError: false,
   };
+  // const { data, error, isLoading, isError } = useQuery({
+  //   queryKey: ["interestData", selectedAccount],
+  //   queryFn: () => fetchInterestData(selectedAccount),
+  //   staleTime: 5 * 60_000, // 5 minutes
+  //   retry: 2,
+  //   enabled: !!selectedAccount,
+  // });
+
+  // // Calculate latest net interest
+  // const latestNetInterest = data ? calculateLatestNetInterest(data) : 0;
+
+  // // Calculate net interest change across actual data range
+  // const netInterest30d = data
+  //   ? calculateNetInterest30dStats(data)
+  //   : {
+  //       value: 0,
+  //       change: 0,
+  //       changePercent: 0,
+  //     };
+
+  // return {
+  //   data: data || [],
+  //   latestNetInterest,
+  //   netInterest30d,
+  //   error: error as Error | null,
+  //   isLoading,
+  //   isError,
+  // };
 }

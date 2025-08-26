@@ -10,6 +10,7 @@ export * from "./spl";
 export * from "./priority";
 export { NodeWallet };
 export * from "./computer.types";
+export * from "./fluxor.types";
 
 // constants
 export * from "./constants";

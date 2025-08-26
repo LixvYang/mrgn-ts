@@ -34,6 +34,7 @@ import "swiper/css/effect-fade";
 import { ToastProvider } from "@mrgnlabs/mrgn-toasts";
 import { AdditionalProvider } from "~/context/AdditionalProvider";
 import { MixinProvider } from "~/context/MixinProvider";
+import { GlobalStatistics } from "~/components/common/GlobalStatistics";
 
 registerMoonGateWallet({ authMode: "Google", position: "bottom-right" });
 registerMoonGateWallet({ authMode: "Ethereum", position: "bottom-right" });

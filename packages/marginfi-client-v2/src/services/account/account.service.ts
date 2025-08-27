@@ -83,56 +83,56 @@ export async function simulateAccountHealthCacheWithFallback(props: {
     MarginRequirementType.Equity
   );
 
-  try {
-    const simulatedAccount = await simulateAccountHealthCache({
-      program: props.program,
-      bankMap: props.bankMap,
-      oraclePrices: props.oraclePrices,
-      marginfiAccountPk: props.marginfiAccount.address,
-      balances: props.balances,
-      bankMetadataMap: props.bankMetadataMap,
-    });
+  // try {
+  //   const simulatedAccount = await simulateAccountHealthCache({
+  //     program: props.program,
+  //     bankMap: props.bankMap,
+  //     oraclePrices: props.oraclePrices,
+  //     marginfiAccountPk: props.marginfiAccount.address,
+  //     balances: props.balances,
+  //     bankMetadataMap: props.bankMetadataMap,
+  //   });
 
-    simulatedAccount.healthCache.assetValueEquity = bigNumberToWrappedI80F48(assetValueEquity);
-    simulatedAccount.healthCache.liabilityValueEquity = bigNumberToWrappedI80F48(liabilityValueEquity);
+  //   simulatedAccount.healthCache.assetValueEquity = bigNumberToWrappedI80F48(assetValueEquity);
+  //   simulatedAccount.healthCache.liabilityValueEquity = bigNumberToWrappedI80F48(liabilityValueEquity);
 
-    marginfiAccount = MarginfiAccount.fromAccountParsed(props.marginfiAccount.address, simulatedAccount);
-  } catch (e) {
-    console.log("e", e);
-    const { assets: assetValueMaint, liabilities: liabilityValueMaint } = computeHealthComponentsLegacy(
-      activeBalances,
-      props.bankMap,
-      props.oraclePrices,
-      MarginRequirementType.Maintenance
-    );
+  //   marginfiAccount = MarginfiAccount.fromAccountParsed(props.marginfiAccount.address, simulatedAccount);
+  // } catch (e) {
+  //   console.log("e", e);
+  const { assets: assetValueMaint, liabilities: liabilityValueMaint } = computeHealthComponentsLegacy(
+    activeBalances,
+    props.bankMap,
+    props.oraclePrices,
+    MarginRequirementType.Maintenance
+  );
 
-    const { assets: assetValueInitial, liabilities: liabilityValueInitial } = computeHealthComponentsLegacy(
-      activeBalances,
-      props.bankMap,
-      props.oraclePrices,
-      MarginRequirementType.Initial
-    );
+  const { assets: assetValueInitial, liabilities: liabilityValueInitial } = computeHealthComponentsLegacy(
+    activeBalances,
+    props.bankMap,
+    props.oraclePrices,
+    MarginRequirementType.Initial
+  );
 
-    marginfiAccount.setHealthCache(
-      new HealthCache(
-        assetValueInitial,
-        liabilityValueInitial,
-        assetValueMaint,
-        liabilityValueMaint,
-        assetValueEquity,
-        liabilityValueEquity,
-        new BigNumber(0),
-        [],
-        [],
-        true
-      )
-    );
+  marginfiAccount.setHealthCache(
+    new HealthCache(
+      assetValueInitial,
+      liabilityValueInitial,
+      assetValueMaint,
+      liabilityValueMaint,
+      assetValueEquity,
+      liabilityValueEquity,
+      new BigNumber(0),
+      [],
+      [],
+      true
+    )
+  );
 
-    // Return the error if it's a HealthCacheSimulationError
-    if (e instanceof HealthCacheSimulationError) {
-      return { marginfiAccount, error: e };
-    }
-  }
+  //   // Return the error if it's a HealthCacheSimulationError
+  //   if (e instanceof HealthCacheSimulationError) {
+  //     return { marginfiAccount, error: e };
+  //   }
+  // }
 
   return { marginfiAccount };
 }

@@ -445,7 +445,7 @@ export const Navbar: FC = () => {
                 </PopoverContent>
               </Popover> */}
 
-              <ResponsiveSettingsWrapper
+              {/* <ResponsiveSettingsWrapper
                 transactionOptions={{
                   broadcastType,
                   priorityType,
@@ -465,7 +465,7 @@ export const Navbar: FC = () => {
                 >
                   <IconSettings size={20} className="text-muted-foreground" />
                 </Button>
-              </ResponsiveSettingsWrapper>
+              </ResponsiveSettingsWrapper> */}
 
               {/* <Wallet
                 connection={connection}

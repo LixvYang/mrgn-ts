@@ -202,13 +202,26 @@ export const PortfolioAssetCard = ({
             <div className="flex gap-3">
               <div className="flex items-center">
                 <Link href={`/banks/${bank.address.toBase58()}`}>
-                  <Image
-                    src={bank.meta.tokenLogoUri}
-                    className="rounded-full"
-                    alt={bank.meta.tokenSymbol}
-                    height={40}
-                    width={40}
-                  />
+                  <div className="relative size-10">
+                    <Image
+                      src={bank.meta.tokenLogoUri}
+                      className="rounded-full size-10"
+                      alt={bank.meta.tokenSymbol}
+                      height={40}
+                      width={40}
+                    />
+                    {bank.meta.chainLogoUri && (
+                      <div className="absolute -bottom-1 -right-1 size-4">
+                        <Image
+                          src={bank.meta.chainLogoUri}
+                          alt="chain logo"
+                          height={16}
+                          width={16}
+                          className="rounded-full size-4 border"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </Link>
               </div>
               <div className="flex flex-col w-full">

@@ -466,7 +466,7 @@ export const LendingPortfolio = () => {
                   className="text-xl md:text-2xl font-medium flex flex-row items-center gap-1.5"
                   style={{ color: healthColor }}
                 >
-                  {accountSummary.healthSimFailed && (
+                  {/* {accountSummary.healthSimFailed && (
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger className="inline-flex items-center gap-1">
@@ -480,7 +480,7 @@ export const LendingPortfolio = () => {
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
-                  )}
+                  )} */}
                   {numeralFormatter(accountSummary.healthFactor * 100)}%
                 </dd>
               )}

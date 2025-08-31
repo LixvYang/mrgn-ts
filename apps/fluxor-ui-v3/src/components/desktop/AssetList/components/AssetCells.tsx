@@ -49,7 +49,20 @@ export const getAssetCell = (asset: AssetData) => {
         }
       }}
     >
-      <Image src={asset.image} alt={`${asset.symbol} logo`} height={25} width={25} className="rounded-full" />
+      <div className="relative size-6">
+        <Image src={asset.image} alt={`${asset.symbol} logo`} height={25} width={25} className="rounded-full size-6" />
+        {asset.chainImage && (
+          <div className="absolute -bottom-1 -right-1 size-3">
+            <Image
+              src={asset.chainImage}
+              alt="chain logo"
+              height={12}
+              width={12}
+              className="rounded-full size-3 border"
+            />
+          </div>
+        )}
+      </div>
       <div>{asset.symbol}</div>
       {asset.isReduceOnly && (
         <TooltipProvider>

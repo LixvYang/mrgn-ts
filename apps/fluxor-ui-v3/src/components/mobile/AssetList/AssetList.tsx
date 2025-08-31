@@ -52,13 +52,26 @@ const MobileAssetCard = ({ bank }: MobileAssetCardProps) => {
       <CardContent className="p-4">
         {/* Asset Header */}
         <div className="flex items-center gap-3 mb-4">
-          <Image
-            src={bank.meta.tokenLogoUri || ""}
-            alt={`${bank.meta.tokenSymbol} logo`}
-            height={32}
-            width={32}
-            className="rounded-full"
-          />
+          <div className="relative size-8">
+            <Image
+              src={bank.meta.tokenLogoUri || ""}
+              alt={`${bank.meta.tokenSymbol} logo`}
+              height={32}
+              width={32}
+              className="rounded-full size-8"
+            />
+            {bank.meta.chainLogoUri && (
+              <div className="absolute -bottom-1 -right-1 size-3.5">
+                <Image
+                  src={bank.meta.chainLogoUri}
+                  alt="chain logo"
+                  height={14}
+                  width={14}
+                  className="rounded-full size-3.5 border"
+                />
+              </div>
+            )}
+          </div>
           <div>
             <div className="font-medium text-sm">{bank.meta.tokenSymbol}</div>
             <div className="text-xs text-muted-foreground">{bank.meta.tokenName}</div>
@@ -127,7 +140,9 @@ export const MobileAssetList = ({ extendedBanks }: AssetListProps) => {
           <Card key={index} className="p-4">
             <CardContent className="space-y-4">
               <div className="flex items-center gap-3">
-                <Skeleton className="size-8 rounded-full" />
+                <div className="relative size-8">
+                  <Skeleton className="size-8 rounded-full" />
+                </div>
                 <div className="space-y-2">
                   <Skeleton className="h-4 w-16" />
                   <Skeleton className="h-3 w-12" />

@@ -119,7 +119,7 @@ const GlobalStatistics: React.FC = () => {
         <div className="flex items-center justify-between gap-2 sm:gap-4">
           {/* TVL */}
           <div className="text-center flex-1">
-            <div className="text-gray-400 text-xs sm:text-sm mb-1">总锁仓</div>
+            <div className="text-gray-400 text-xs sm:text-sm mb-1">TVL</div>
             <div className="text-emerald-400 text-sm sm:text-lg md:text-xl font-bold">
               {usdFormatter.format(parseFloat(data.tvl))}
             </div>

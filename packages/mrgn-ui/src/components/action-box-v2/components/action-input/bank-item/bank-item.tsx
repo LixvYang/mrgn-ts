@@ -8,6 +8,7 @@ import { EmodeTag, OracleSetup } from "@mrgnlabs/marginfi-client-v2";
 import { IconEmodeSimple, IconEmodeSimpleInactive } from "~/components/ui/icons";
 import { useActionBoxContext } from "~/components/action-box-v2/contexts";
 import { Skeleton } from "~/components/ui/skeleton";
+import Image from "next/image";
 
 type BankItemProps = {
   bank: ExtendedBankInfo;
@@ -71,8 +72,27 @@ export const BankItem = ({
   return (
     <>
       <div className={cn("flex items-center gap-3", isStakedActivating && "opacity-30")}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={bank.meta.tokenLogoUri} alt={bank.meta.tokenName} width={28} height={28} className="rounded-full" />
+        <div className="relative size-7">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <Image
+            src={bank.meta.tokenLogoUri}
+            alt={bank.meta.tokenName}
+            width={28}
+            height={28}
+            className="rounded-full size-7"
+          />
+          {bank.meta.chainLogoUri && (
+            <div className="absolute -bottom-1 -right-1 size-3">
+              <Image
+                src={bank.meta.chainLogoUri}
+                alt="chain logo"
+                width={14}
+                height={14}
+                className="rounded-full size-3 border"
+              />
+            </div>
+          )}
+        </div>
         <div>
           <div className="flex items-center">
             <p className="font-medium">{bank.meta.tokenSymbol}</p>

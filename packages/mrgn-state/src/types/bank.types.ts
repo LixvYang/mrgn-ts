@@ -17,6 +17,7 @@ export interface ExtendedBankMetadata {
   tokenSymbol: string;
   tokenName: string;
   tokenLogoUri: string;
+  chainLogoUri: string;
 }
 
 export interface BankState {

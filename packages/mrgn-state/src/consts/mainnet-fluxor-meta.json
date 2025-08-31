@@ -36,6 +36,10 @@
       "logoURI": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png",
       "extensions": {
         "coingeckoId": "solana"
+      },
+      "chain": {
+        "symbol": "SOL",
+        "logoURI": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png"
       }
     },
     "USDC": {
@@ -49,6 +53,10 @@
         "coingeckoId": "usd-coin",
         "serumV3Usdt": "77quYg4MGneUdjgXCunt9GgM1usmrxKY31twEy3WHwcS",
         "website": "https://www.centre.io/"
+      },
+      "chain": {
+        "symbol": "SOL",
+        "logoURI": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png"
       }
     },
     "USDT": {
@@ -62,6 +70,10 @@
         "coingeckoId": "tether",
         "serumV3Usdc": "77quYg4MGneUdjgXCunt9GgM1usmrxKY31twEy3WHwcS",
         "website": "https://tether.to/"
+      },
+      "chain": {
+        "symbol": "SOL",
+        "logoURI": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png"
       }
     },
     "JitoSOL": {
@@ -73,6 +85,10 @@
       "logoURI": "https://storage.googleapis.com/token-metadata/JitoSOL-256.png",
       "extensions": {
         "coingeckoId": ""
+      },
+      "chain": {
+        "symbol": "SOL",
+        "logoURI": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png"
       }
     },
     "XIN": {
@@ -84,6 +100,10 @@
       "logoURI": "https://images.mixin.one/UasWtBZO0TZyLTLCFQjvE_UYekjC7eHCuT_9_52ZpzmCC-X-NPioVegng7Hfx0XmIUavZgz5UL-HIgPCBECc-Ws=s128",
       "extensions": {
         "coingeckoId": "https://mixin.one"
+      },
+      "chain": {
+        "symbol": "ETH",
+        "logoURI": "https://images.mixin.one/zVDjOxNTQvVsA8h2B4ZVxuHoCF3DJszufYKWpd9duXUSbSapoZadC7_13cnWBqg0EmwmRcKGbJaUpA8wFfpgZA=s128"
       }
     }
   }

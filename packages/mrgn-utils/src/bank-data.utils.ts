@@ -24,6 +24,7 @@ export interface AssetData {
   symbol: string;
   name: string;
   image: string;
+  chainImage: string;
   stakePool?: StakePoolMetadata;
   hasEmode: boolean;
   emodeTag: string;
@@ -139,6 +140,7 @@ export const getAssetData = (
     symbol: bank.meta.tokenSymbol,
     name: bank.meta.tokenName,
     image: bank.meta.tokenLogoUri,
+    chainImage: bank.meta.chainLogoUri,
     hasEmode: bank.info.state.hasEmode,
     emodeTag: bank.info.state.hasEmode ? EmodeTag[bank.info.rawBank.emode.emodeTag] : "",
     isInLendingMode,

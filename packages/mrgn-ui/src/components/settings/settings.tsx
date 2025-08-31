@@ -472,9 +472,9 @@ export const Settings = ({
                   <TabsTrigger value="transaction" className="">
                     Transaction
                   </TabsTrigger>
-                  <TabsTrigger value="swap" className="">
+                  {/* <TabsTrigger value="swap" className="">
                     Swap
-                  </TabsTrigger>
+                  </TabsTrigger> */}
                 </TabsList>
               </Tabs>
             </div>

@@ -205,7 +205,7 @@ function getGeneralChecks(
 
   if (marginfiAccount) {
     if (marginfiAccount.data.healthCache.simulationFailed) {
-      checks.push(STATIC_SIMULATION_ERRORS.HEALTH_SIMULATION_CHECK);
+      // checks.push(STATIC_SIMULATION_ERRORS.HEALTH_SIMULATION_CHECK);
       return checks;
     }
   }

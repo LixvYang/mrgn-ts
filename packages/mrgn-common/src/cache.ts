@@ -11,6 +11,10 @@ interface TokenMetadata {
   name: string;
   symbol: string;
   decimals: number;
+  chain?: {
+    symbol?: string;
+    logoURI?: string;
+  };
 }
 
 const TokenMetadataRaw = object({
@@ -21,6 +25,10 @@ const TokenMetadataRaw = object({
   symbol: string(),
   logoURI: string(),
   extensions: object(),
+  chain: optional(object({
+    symbol: string(),
+    logoURI: string(),
+  })),
 });
 const TokenMetadataList = array(TokenMetadataRaw);
 

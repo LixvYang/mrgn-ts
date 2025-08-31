@@ -4,6 +4,7 @@ import { ExtendedBankInfo, StakePoolMetadata } from "@mrgnlabs/mrgn-state";
 import { cn, LendingModes } from "@mrgnlabs/mrgn-utils";
 import { WalletToken } from "@mrgnlabs/mrgn-common";
 import { AssetTag } from "@mrgnlabs/marginfi-client-v2";
+import Image from "next/image";
 
 type SelectedBankItemProps = {
   bank: ExtendedBankInfo | WalletToken;
@@ -19,7 +20,7 @@ const isExtendedBankInfo = (bank: ExtendedBankInfo | WalletToken): bank is Exten
 
 export const SelectedBankItem = ({ rate, bank, lendingMode, stakePoolMetadata }: SelectedBankItemProps) => {
   // Extract common properties based on bank type
-  const { tokenName, tokenSymbol, tokenLogoUri, calculatedApy } = React.useMemo(() => {
+  const { tokenName, tokenSymbol, tokenLogoUri, chainLogoUri, calculatedApy } = React.useMemo(() => {
     if (isExtendedBankInfo(bank)) {
       // Handle ExtendedBankInfo
       const isStaked = bank.info.rawBank.config.assetTag === AssetTag.STAKED;
@@ -29,6 +30,7 @@ export const SelectedBankItem = ({ rate, bank, lendingMode, stakePoolMetadata }:
         tokenName: bank.meta.tokenName,
         tokenSymbol: bank.meta.tokenSymbol,
         tokenLogoUri: bank.meta.tokenLogoUri,
+        chainLogoUri: bank.meta.chainLogoUri,
         calculatedApy,
       };
     } else {
@@ -37,6 +39,7 @@ export const SelectedBankItem = ({ rate, bank, lendingMode, stakePoolMetadata }:
         tokenName: bank.name,
         tokenSymbol: bank.symbol,
         tokenLogoUri: bank.logoUri,
+        chainLogoUri: "",
         calculatedApy: rate,
       };
     }
@@ -45,7 +48,15 @@ export const SelectedBankItem = ({ rate, bank, lendingMode, stakePoolMetadata }:
   return (
     <>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={tokenLogoUri} alt={tokenName} width={30} height={30} className="rounded-full w-6 h-6" />
+      <div className="relative size-6">
+        <Image src={tokenLogoUri} alt={tokenName} width={30} height={30} className="rounded-full size-6" />
+        {chainLogoUri && (
+          <div className="absolute -bottom-1 -right-1 size-3">
+            <Image src={chainLogoUri} alt="chain logo" width={12} height={12} className="rounded-full size-3" />
+          </div>
+        )}
+      </div>
+
       <div className="flex flex-col gap-1 mr-auto xs:mr-0 min-w-14">
         <p className="leading-none text-sm">{tokenSymbol}</p>
         {lendingMode && calculatedApy && (

@@ -44,6 +44,9 @@ export function makeExtendedBankMetadata(
       ? (tokenMetadata.logoURI ??
         "https://storage.googleapis.com/mrgn-public/mrgn-token-icons/${bank.mint.toBase58()}.png")
       : `https://storage.googleapis.com/mrgn-public/mrgn-token-icons/${bank.mint.toBase58()}.png`,
+    chainLogoUri:
+      tokenMetadata.chain?.logoURI ??
+      "https://images.mixin.one/eTzm8_cWke8NqJ3zbQcx7RkvbcTytD_NgBpdwIAgKJRpOoo0S0AQ3IQ-YeBJgUKmpsMPUHcZFzfuWowv3801cF5HXfya5MQ9fTA9HQ=s128",
   };
 }
 

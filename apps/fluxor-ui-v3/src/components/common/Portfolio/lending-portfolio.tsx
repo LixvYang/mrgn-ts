@@ -515,13 +515,13 @@ export const LendingPortfolio = () => {
           </div>
         </div>
         <Tabs defaultValue="portfolio" className="w-full">
-          <TabsList className="grid max-w-fit grid-cols-2">
+          <TabsList className="grid max-w-fit grid-cols-1">
             <TabsTrigger value="portfolio" disabled={isLoadingMarginfiClient}>
               投资组合
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="gap-1" disabled={isLoadingMarginfiClient}>
+            {/* <TabsTrigger value="analytics" className="gap-1" disabled={isLoadingMarginfiClient}>
               <IconChartAreaLine size={18} /> 详细信息
-            </TabsTrigger>
+            </TabsTrigger> */}
           </TabsList>
           <TabsContent value="portfolio" className="mt-6">
             <div ref={containerRef} className="relative flex flex-col gap-6">

@@ -11,6 +11,41 @@ export function useSelectedAccountKey(keys: PublicKey[] | undefined) {
     return localStorage.getItem(storageKey);
   });
 
+  // Sync localStorage with state when keys change
+  useEffect(() => {
+    const storedKey = localStorage.getItem(storageKey);
+    if (storedKey && keys) {
+      const base58Keys = keys.map((k) => k.toBase58());
+      // if (base58Keys.includes(storedKey)) {
+      //   setSelectedKeyState(storedKey);
+      // } else {
+      // Invalid key, remove it and auto-select first available
+      // localStorage.removeItem(storageKey);
+      if (base58Keys.length > 0) {
+        const lastKey = base58Keys[base58Keys.length - 1];
+        // const firstKey = base58Keys[0];
+        localStorage.setItem(storageKey, lastKey);
+        setSelectedKeyState(lastKey);
+        // Invalidate React Query cache when auto-selecting
+        queryClient.invalidateQueries({
+          queryKey: ["marginfiAccount"],
+        });
+      } else {
+        setSelectedKeyState(null);
+      }
+      // }
+    } else if (keys && keys.length > 0 && !storedKey) {
+      // Auto-select first key if none is stored
+      const firstKey = keys[keys.length - 1].toBase58();
+      localStorage.setItem(storageKey, firstKey);
+      setSelectedKeyState(firstKey);
+      // Invalidate React Query cache when auto-selecting
+      queryClient.invalidateQueries({
+        queryKey: ["marginfiAccount"],
+      });
+    }
+  }, [keys, queryClient]);
+
   // // Sync localStorage with state when keys change
   // useEffect(() => {
   //   const storedKey = localStorage.getItem(storageKey);
@@ -19,12 +54,12 @@ export function useSelectedAccountKey(keys: PublicKey[] | undefined) {
   //     if (base58Keys.includes(storedKey)) {
   //       setSelectedKeyState(storedKey);
   //     } else {
-  //       // Invalid key, remove it and auto-select first available
+  //       // Invalid key, remove it and auto-select last available
   //       localStorage.removeItem(storageKey);
   //       if (base58Keys.length > 0) {
-  //         const firstKey = base58Keys[0];
-  //         localStorage.setItem(storageKey, firstKey);
-  //         setSelectedKeyState(firstKey);
+  //         const lastKey = base58Keys[base58Keys.length - 1];
+  //         localStorage.setItem(storageKey, lastKey);
+  //         setSelectedKeyState(lastKey);
   //         // Invalidate React Query cache when auto-selecting
   //         queryClient.invalidateQueries({
   //           queryKey: ["marginfiAccount"],
@@ -34,50 +69,16 @@ export function useSelectedAccountKey(keys: PublicKey[] | undefined) {
   //       }
   //     }
   //   } else if (keys && keys.length > 0 && !storedKey) {
-  //     // Auto-select first key if none is stored
-  //     const firstKey = keys[0].toBase58();
-  //     localStorage.setItem(storageKey, firstKey);
-  //     setSelectedKeyState(firstKey);
+  //     // Auto-select last key if none is stored
+  //     const lastKey = keys[keys.length - 1].toBase58();
+  //     localStorage.setItem(storageKey, lastKey);
+  //     setSelectedKeyState(lastKey);
   //     // Invalidate React Query cache when auto-selecting
   //     queryClient.invalidateQueries({
   //       queryKey: ["marginfiAccount"],
   //     });
   //   }
   // }, [keys, queryClient]);
-
-  // Sync localStorage with state when keys change
-  useEffect(() => {
-    const storedKey = localStorage.getItem(storageKey);
-    if (storedKey && keys) {
-      const base58Keys = keys.map((k) => k.toBase58());
-      if (base58Keys.includes(storedKey)) {
-        setSelectedKeyState(storedKey);
-      } else {
-        // Invalid key, remove it and auto-select last available
-        localStorage.removeItem(storageKey);
-        if (base58Keys.length > 0) {
-          const lastKey = base58Keys[base58Keys.length - 1];
-          localStorage.setItem(storageKey, lastKey);
-          setSelectedKeyState(lastKey);
-          // Invalidate React Query cache when auto-selecting
-          queryClient.invalidateQueries({
-            queryKey: ["marginfiAccount"],
-          });
-        } else {
-          setSelectedKeyState(null);
-        }
-      }
-    } else if (keys && keys.length > 0 && !storedKey) {
-      // Auto-select last key if none is stored
-      const lastKey = keys[keys.length - 1].toBase58();
-      localStorage.setItem(storageKey, lastKey);
-      setSelectedKeyState(lastKey);
-      // Invalidate React Query cache when auto-selecting
-      queryClient.invalidateQueries({
-        queryKey: ["marginfiAccount"],
-      });
-    }
-  }, [keys, queryClient]);
 
   // Setter that validates and updates both localStorage and state
   const setSelectedKey = useCallback(

@@ -47,6 +47,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const marginfiAccounts = await fetchMarginfiAccountAddresses(program, authorityPk, groupPk);
 
+    // 临时解决一下
+    if (
+      authorityPk.toBase58() === "J7V72Ap7pfxT3SDPwCYu2Cjvg7Put79Dix45BwQUeFeW" &&
+      groupPk.toBase58() === "4X38G7YHpS1jjc7hAKvT2dzcGuTCaZfhyDx56Qs9Tk51"
+    ) {
+      res.status(200).json({ marginfiAccounts: ["7g1RboWwS2cTVEaiDWYes7DBQBbeJSUCRJihH6rZTP5r"] });
+      return;
+    }
+
     res.status(200).json({ marginfiAccounts: marginfiAccounts.map((a) => a.toBase58()) });
   } catch (error) {
     console.error("Error:", error);

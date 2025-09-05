@@ -870,7 +870,7 @@ async function handleVxLength2({
       asset_id: balance.asset_id,
       amount: amount.toString(),
       extra: referenceExtra,
-      index_references: [],
+      index_references: [2],
       hash_references: [],
     });
     attachInvoiceEntry(invoice, {

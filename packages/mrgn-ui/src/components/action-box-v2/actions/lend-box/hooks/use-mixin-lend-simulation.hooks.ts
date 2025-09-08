@@ -863,6 +863,16 @@ async function handleVxLength2({
     );
 
     const balance = balanceAddressMap[selectedBank.info.rawBank.mint.toBase58()];
+    const solAmount2 = formatUnits(
+      [165]
+        .reduce((prev, cur) => {
+          const total = prev + rentMap[cur];
+          return total;
+        }, 0)
+        .toString(),
+      SOL_DECIMAL
+    ).toString();
+    const fee2 = await computerClient.getFeeOnXin(solAmount2);
 
     attachStorageEntry(invoice, uniqueConversationID(depositTrace, "storage"), depositTxBuf);
     attachInvoiceEntry(invoice, {
@@ -876,7 +886,7 @@ async function handleVxLength2({
     attachInvoiceEntry(invoice, {
       trace_id: depositTrace,
       asset_id: XIN_ASSET_ID,
-      amount: BigNumber(computerInfo.params.operation.price).toFixed(8, BigNumber.ROUND_CEIL),
+      amount: add(computerInfo.params.operation.price, fee2.xin_amount).toFixed(8, BigNumber.ROUND_CEIL),
       extra: Buffer.from(depositExtra),
       index_references: [2, 3],
       hash_references: [],

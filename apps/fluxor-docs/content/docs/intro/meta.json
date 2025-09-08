@@ -2,6 +2,7 @@
   "pages": [
     "mixin-computer",
     "marginfi",
+    "use-case",
     "[Mixin](https://github.com/MixinNetwork)",
     "[MarginFi](https://github.com/mrgnlabs)"
   ]

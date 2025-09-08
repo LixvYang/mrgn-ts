@@ -1,0 +1,116 @@
+---
+title: 使用案例 
+description: 在 Mixin 中使用 Fluxor 完成借贷所需的全部操作
+index: true
+---
+
+Fluxor 的 Mixin 机器人ID: 7000105323, 您也可以通过搜索关键词 **"借"** **"flux"** **"fluxor"** 来搜索
+
+使用 Fluxor 您需要事先完成 Computer 的注册
+
+> 您可以给机器人留言 "/r" 来判断您是否已完成 Computer 的注册
+
+> 如果没有注册,机器人会发送给您一个注册链接,你可以通过支付 0.001 XIN 来完成 Mixin Computer 的注册,等待几分钟后 重新输入 "/r" 来判断您是否已完成注册(注意不要重复支付链接,重复支付并不会退款)
+
+<Callout type='info'>
+您也可以去 [mvm.dev](https://mvm.dev/demo) 注册 Mixin Computer, 登录您的Mixin Messenger 账户即可查看您是否已完成注册.
+</Callout>
+
+Fluxor 的第一个 MVP 版本非常简单 您可以通过观看[视频](https://www.youtube.com/watch?v=pk4algZiEww&t=1145s)来了解通过 Mixin Messager 完成全部的借贷操作
+
+## 完成借贷的步骤
+
+进入机器人首页后,可以看到目前已有的借贷池,每个借贷池都支持 存入/借款/提现/还款 操作:
+
+![hero](https://docs.image.fluxor.cc/Fluxor%20Use%20Case/hero.png)
+
+
+点击左上角连接钱包即可开始进行借贷操作:
+
+进入借贷池后您就可以查看具体借贷池的信息,例如 XIN 的借贷池如下:
+
+
+### 存款
+
+> 第一次存款时需要额外 0.04 左右的XIN 完成注册借贷账户操作,推荐您第一次存款时进行小额存入.
+
+> 后续每次通过 Computer 进行操作都需要支付 0.001 XIN 的费用
+
+打开XIN 的借贷池:
+
+![XIN Bank](https://docs.image.fluxor.cc/Fluxor%20Use%20Case/xin-bank-info.png)
+
+例如存 0.1 XIN:
+
+![lend xin 0.1 01](https://docs.image.fluxor.cc/Fluxor%20Use%20Case/lend-xin-0.1-01.png)
+
+点击存入:
+![lend xin 0.1 02](https://docs.image.fluxor.cc/Fluxor%20Use%20Case/lend-xin-0.1-02.png)
+
+> 对于第一次存入某个资产到借贷池,可能需要额外 0.003 左右的 XIN,后续就不会了,例如:
+
+![lend xin 0.1 03](https://docs.image.fluxor.cc/Fluxor%20Use%20Case/lend-xin-0.1-03.png)
+
+操作完成后等待几分钟,机器人会发出通知:
+
+![lend xin 0.1 04](https://docs.image.fluxor.cc/Fluxor%20Use%20Case/lend-xin-0.1-04.png)
+
+当确认完成后,页面会提示已完成:
+
+![lend xin 0.1 05](https://docs.image.fluxor.cc/Fluxor%20Use%20Case/lend-xin-0.1-05.png)
+
+与此同时,你的借贷组合界面会进行更新:
+
+![lend xin 0.1 06](https://docs.image.fluxor.cc/Fluxor%20Use%20Case/lend-xin-0.1-06.png)
+
+机器人也会发出提示
+
+![lend xin 0.1 07](https://docs.image.fluxor.cc/Fluxor%20Use%20Case/lend-xin-0.1-07.png)
+
+> 如果您在第一次存款后又很快第二次操作,那么可能会额外多 0.04 左右的XIN,这个时候可能是第一次操作初始化的账户没有加载出来,可以重新刷新一下界面避免初始化第二个借贷账户.
+
+### 借款
+
+您可以通过借贷组合界面或者借贷池界面对没有存入过的资产进行借款操作:
+
+![borrow usdc 10 01](https://docs.image.fluxor.cc/Fluxor%20Use%20Case/borrow-usdc-10-01.png)
+
+![borrow usdc 10 02](https://docs.image.fluxor.cc/Fluxor%20Use%20Case/borrow-usdc-10-02.png)
+
+![borrow usdc 10 03](https://docs.image.fluxor.cc/Fluxor%20Use%20Case/borrow-usdc-10-03.png)
+
+![borrow usdc 10 04](https://docs.image.fluxor.cc/Fluxor%20Use%20Case/borrow-usdc-10-04.png)
+
+操作成功:
+
+![borrow usdc 10 05](https://docs.image.fluxor.cc/Fluxor%20Use%20Case/borrow-usdc-10-05.png)
+
+机器人提示:
+
+![borrow usdc 10 06](https://docs.image.fluxor.cc/Fluxor%20Use%20Case/borrow-usdc-10-06.png)
+
+Computer 也会发送通知:
+
+![borrow usdc 10 07](https://docs.image.fluxor.cc/Fluxor%20Use%20Case/borrow-usdc-10-07.png)
+
+### 提出
+
+可以通过投资组合界面进行提出操作
+
+![withdraw usdt 6 01](https://docs.image.fluxor.cc/Fluxor%20Use%20Case/withdraw-usdt-6-01.png)
+
+![withdraw usdt 6 02](https://docs.image.fluxor.cc/Fluxor%20Use%20Case/withdraw-usdt-6-02.png)
+
+![withdraw usdt 6 03](https://docs.image.fluxor.cc/Fluxor%20Use%20Case/withdraw-usdt-6-03.png)
+
+### 还款
+
+![withdraw usdc 5 01](https://docs.image.fluxor.cc/Fluxor%20Use%20Case/repay-usdc-5-01.png)
+
+![withdraw usdc 5 02](https://docs.image.fluxor.cc/Fluxor%20Use%20Case/repay-usdc-5-02.png)
+
+![withdraw usdc 5 03](https://docs.image.fluxor.cc/Fluxor%20Use%20Case/repay-usdc-5-03.png)
+
+
+> 上述即通过 Fluxor 的所有操作,第一次操作某个借贷池时,会有 0.003 XIN 的费用,后续操作就都是 0.001XIN 的费用了
+

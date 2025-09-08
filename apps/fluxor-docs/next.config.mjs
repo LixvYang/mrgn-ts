@@ -11,6 +11,9 @@ const config = {
     remotePatterns: [
       {
         hostname: "images.pexels.com"
+      },
+      {
+        hostname: "docs.image.fluxor.cc"
       }
     ],
   },

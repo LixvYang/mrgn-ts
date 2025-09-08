@@ -455,6 +455,7 @@ async function handleVxLength1({
   resultTrace: string;
   invoice: MixinInvoice;
 }> {
+  let traceIds: string[] = [];
   let resultTrace = "";
 
   const referenceExtra = Buffer.from(
@@ -518,8 +519,6 @@ async function handleVxLength1({
       hash_references: [],
     });
 
-    resultTrace = repayTrace;
-
     attachInvoiceEntry(invoice, {
       trace_id: repayTrace,
       asset_id: XIN_ASSET_ID,
@@ -528,6 +527,12 @@ async function handleVxLength1({
       index_references: [0, 1],
       hash_references: [],
     });
+    resultTrace = repayTrace;
+    traceIds.push(
+      uniqueConversationID(repayTrace, "storage"),
+      uniqueConversationID(repayTrace, balance.asset_id),
+      repayTrace
+    );
   } else if (txAction === TransactionType.REPAY_COLLAT) {
     // repay collateral
     const nonce = await computerClient.getNonce(getUserMix());
@@ -584,7 +589,6 @@ async function handleVxLength1({
       hash_references: [],
     });
 
-    resultTrace = repayCollatTrace;
     attachInvoiceEntry(invoice, {
       trace_id: repayCollatTrace,
       asset_id: XIN_ASSET_ID,
@@ -593,6 +597,12 @@ async function handleVxLength1({
       index_references: [0, 1],
       hash_references: [],
     });
+    resultTrace = repayCollatTrace;
+    traceIds.push(
+      uniqueConversationID(repayCollatTrace, "storage"),
+      uniqueConversationID(repayCollatTrace, balance.asset_id),
+      repayCollatTrace
+    );
   }
 
   if (mixinUser) {
@@ -609,6 +619,7 @@ async function handleVxLength1({
           type: txAction.toString(),
           inputAmount: amount.toString(),
         },
+        traceIds: traceIds,
       },
     ]);
   }
@@ -638,6 +649,7 @@ async function handleVxLength2({
   invoice: MixinInvoice;
 }> {
   let resultTrace = "";
+  let traceIds: string[] = [];
 
   const referenceExtra = Buffer.from(
     buildComputerExtra(computerInfo.members.app_id, OperationTypeUserDeposit, userIdToBytes(computerAccount.id))
@@ -758,7 +770,6 @@ async function handleVxLength2({
       hash_references: [],
     });
 
-    resultTrace = repayCollatTrace;
     attachInvoiceEntry(invoice, {
       trace_id: repayCollatTrace,
       asset_id: XIN_ASSET_ID,
@@ -767,6 +778,14 @@ async function handleVxLength2({
       index_references: [2, 3],
       hash_references: [],
     });
+    resultTrace = repayCollatTrace;
+    traceIds.push(
+      uniqueConversationID(createAccountTrace, "storage"),
+      createAccountTrace,
+      uniqueConversationID(repayCollatTrace, "storage"),
+      uniqueConversationID(repayCollatTrace, balance.asset_id),
+      repayCollatTrace
+    );
   } else if (
     updatedTransactions[0].type === TransactionType.CRANK &&
     updatedTransactions[1].type === TransactionType.REPAY
@@ -837,6 +856,11 @@ async function handleVxLength2({
       hash_references: [],
     });
     resultTrace = repayTrace;
+    traceIds.push(
+      uniqueConversationID(repayTrace, "storage"),
+      uniqueConversationID(repayTrace, balance.asset_id),
+      repayTrace
+    );
   }
 
   if (mixinUser) {
@@ -853,6 +877,7 @@ async function handleVxLength2({
           type: txAction.toString(),
           inputAmount: amount.toString(),
         },
+        traceIds: traceIds,
       },
     ]);
   }

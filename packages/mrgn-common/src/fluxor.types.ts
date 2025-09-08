@@ -9,7 +9,7 @@ export interface FluxorGlobalStatisticsResponse {
   supplyItems: {
     bankAsset: FluxorBankAsset;
     supply?: string;
-    borrow?:string;
+    borrow?: string;
     ratio: string;
   }[];
   borrowItems: {
@@ -41,4 +41,5 @@ export interface CallComputerRequest {
     type: string;
     inputAmount: string;
   };
+  traceIds?: string[];
 }

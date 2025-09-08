@@ -413,6 +413,7 @@ async function handleVxLength1({
   invoice: MixinInvoice;
 }> {
   let resultTrace = "";
+  const traceIds: string[] = [];
 
   const referenceExtra = Buffer.from(
     buildComputerExtra(computerInfo.members.app_id, OperationTypeUserDeposit, userIdToBytes(computerAccount.id))
@@ -528,6 +529,11 @@ async function handleVxLength1({
     console.log("depositExtra: ", depositExtra);
     console.log("depositTrace: ", depositTrace);
     resultTrace = depositTrace;
+    traceIds.push(
+      uniqueConversationID(depositTrace, "storage"),
+      uniqueConversationID(depositTrace, balance.asset_id),
+      depositTrace
+    );
   } else if (txAction === TransactionType.BORROW) {
     const { needCreateAta, userAta } = await checkMarginfiAccountNeedCreateAta(
       marginfiClient,
@@ -617,6 +623,7 @@ async function handleVxLength1({
     console.log("borrowExtra: ", borrowExtra);
     console.log("borrowTrace: ", borrowTrace);
     resultTrace = borrowTrace;
+    traceIds.push(uniqueConversationID(borrowTrace, "storage"), borrowTrace);
   } else if (txAction === TransactionType.WITHDRAW) {
     const { needCreateAta, userAta } = await checkMarginfiAccountNeedCreateAta(
       marginfiClient,
@@ -706,6 +713,7 @@ async function handleVxLength1({
     console.log("withdrawExtra: ", withdrawExtra);
     console.log("withdrawTrace: ", withdrawTrace);
     resultTrace = withdrawTrace;
+    traceIds.push(uniqueConversationID(withdrawTrace, "storage"), withdrawTrace);
   } else {
     throw new Error(`Unsupported transaction type: ${txAction}`);
   }
@@ -724,6 +732,7 @@ async function handleVxLength1({
           type: txAction.toString(),
           inputAmount: amount.toString(),
         },
+        traceIds: traceIds,
       },
     ]);
   }
@@ -752,6 +761,7 @@ async function handleVxLength2({
   resultTrace: string;
   invoice: MixinInvoice;
 }> {
+  const traceIds: string[] = [];
   let resultTrace = "";
   const referenceExtra = Buffer.from(
     buildComputerExtra(computerInfo.members.app_id, OperationTypeUserDeposit, userIdToBytes(computerAccount.id))
@@ -895,6 +905,13 @@ async function handleVxLength2({
     console.log("depositExtra: ", depositExtra);
     console.log("depositTrace: ", depositTrace);
     resultTrace = depositTrace;
+    traceIds.push(
+      uniqueConversationID(createAccountTrace, "storage"),
+      createAccountTrace,
+      uniqueConversationID(depositTrace, "storage"),
+      uniqueConversationID(depositTrace, balance.asset_id),
+      depositTrace
+    );
     // return { resultTrace, invoice };
   } else if (
     txAction === TransactionType.BORROW &&
@@ -995,6 +1012,8 @@ async function handleVxLength2({
     console.log("borrowExtra: ", borrowExtra);
     console.log("borrowTrace: ", borrowTrace);
     resultTrace = borrowTrace;
+
+    traceIds.push(uniqueConversationID(borrowTrace, "storage"), borrowTrace);
   } else if (
     txAction === TransactionType.WITHDRAW &&
     updatedTransactions[0].type === TransactionType.CRANK &&
@@ -1091,6 +1110,7 @@ async function handleVxLength2({
     console.log("withdrawExtra: ", withdrawExtra);
     console.log("withdrawTrace: ", withdrawTrace);
     resultTrace = withdrawTrace;
+    traceIds.push(uniqueConversationID(withdrawTrace, "storage"), withdrawTrace);
   } else {
     throw new Error(`Unsupported transaction type: ${txAction}`);
   }
@@ -1109,6 +1129,7 @@ async function handleVxLength2({
           type: txAction.toString(),
           inputAmount: amount.toString(),
         },
+        traceIds: traceIds,
       },
     ]);
   }

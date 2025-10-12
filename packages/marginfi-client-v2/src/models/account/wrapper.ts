@@ -22,9 +22,7 @@ import {
   BankMetadataMap,
   TransactionType,
   ExtendedTransactionProperties,
-  decompileV0Transaction,
 } from "@mrgnlabs/mrgn-common";
-import * as sb from "@switchboard-xyz/on-demand";
 import { Address, BorshCoder, Idl, translateAddress } from "@coral-xyz/anchor";
 import {
   AccountMeta,
@@ -71,6 +69,7 @@ import {
   EmodeTag,
   EmodePair,
   ActionEmodeImpact,
+  RiskTier,
 } from "../..";
 import { AccountType, MarginfiConfig, MarginfiProgram } from "../../types";
 import { MarginfiAccount, MarginRequirementType } from "./pure";
@@ -86,6 +85,8 @@ import {
   SinglePoolInstruction,
 } from "../../vendor";
 import instructions from "../../instructions";
+import { AnchorUtils, PullFeed } from "@switchboard-xyz/on-demand";
+import { CrossbarClient } from "@switchboard-xyz/common";
 
 // Temporary imports
 export const MAX_TX_SIZE = 1232;
@@ -1191,15 +1192,24 @@ class MarginfiAccountWrapper {
 
       const blockhash = (await this.client.provider.connection.getLatestBlockhash("confirmed")).blockhash;
 
-      const tx = new VersionedTransaction(
+      const updateFeedTx = new VersionedTransaction(
         new TransactionMessage({
-          instructions: [computeIx, ...updateFeedIx.instructions, ...healthPulseIx.instructions],
+          instructions: [...updateFeedIx.instructions],
           payerKey: this.client.provider.publicKey,
           recentBlockhash: blockhash,
-        }).compileToV0Message([...this.client.addressLookupTables, ...updateFeedIx.luts])
+        }).compileToV0Message([...updateFeedIx.luts])
       );
 
-      additionalTxs.push(tx);
+      const healthCacheTx = new VersionedTransaction(
+        new TransactionMessage({
+          instructions: [computeIx, ...healthPulseIx.instructions],
+          payerKey: this.client.provider.publicKey,
+          recentBlockhash: blockhash,
+        }).compileToV0Message([...this.client.addressLookupTables])
+      );
+
+      additionalTxs.push(updateFeedTx);
+      additionalTxs.push(healthCacheTx);
     }
 
     const [mfiAccountData, ...bankData] = await this.client.simulateTransactions(
@@ -1386,6 +1396,10 @@ class MarginfiAccountWrapper {
     // get bank and metadata
     const bank = this.client.getBankByPk(bankAddress);
     const solBank = this.client.getBankByMint(WSOL_MINT);
+    const { instructions: updateFeedIxs, luts: feedLuts } = await this.makeUpdateFeedIx(
+      solBank?.address ? [solBank.address] : []
+    );
+
     const bankMetadata = this.client.bankMetadataMap![bankAddress.toBase58()];
 
     if (!bank || !solBank) {
@@ -1447,6 +1461,16 @@ class MarginfiAccountWrapper {
       value: { blockhash },
     } = await this._program.provider.connection.getLatestBlockhashAndContext("confirmed");
 
+    const crankMessage = new TransactionMessage({
+      payerKey: this.client.wallet.publicKey,
+      recentBlockhash: blockhash,
+      instructions: updateFeedIxs,
+    }).compileToV0Message(feedLuts);
+    const crankTxn = addTransactionMetadata(new VersionedTransaction(crankMessage), {
+      addressLookupTables: feedLuts,
+      type: TransactionType.CRANK,
+    });
+
     const withdrawMessage = new TransactionMessage({
       payerKey: this.client.wallet.publicKey,
       recentBlockhash: blockhash,
@@ -1469,7 +1493,7 @@ class MarginfiAccountWrapper {
       type: TransactionType.WITHDRAW_STAKE,
     });
 
-    return { transactions: [withdrawTxn, stakeTxn], actionTxIndex: 1 };
+    return { transactions: [crankTxn, withdrawTxn, stakeTxn], actionTxIndex: 2 };
   }
 
   /**
@@ -1624,6 +1648,21 @@ class MarginfiAccountWrapper {
       );
     }
 
+    // const withdrawTx = addTransactionMetadata(
+    //   new VersionedTransaction(
+    //     new TransactionMessage({
+    //       instructions: [...cuRequestIxs, ...withdrawIxs.instructions],
+    //       payerKey: this.authority,
+    //       recentBlockhash: blockhash,
+    //     }).compileToV0Message(clientLookupTables)
+    //   ),
+    //   {
+    //     signers: withdrawIxs.keys,
+    //     addressLookupTables: clientLookupTables,
+    //     type: TransactionType.WITHDRAW,
+    //   }
+    // );
+
     const transactions = [...feedCrankTxs, withdrawTx];
 
     return { transactions, actionTxIndex: transactions.length - 1 };
@@ -1729,6 +1768,7 @@ class MarginfiAccountWrapper {
     }
 
     const clientLookupTables = await getClientAddressLookupTableAccounts(this.client);
+
     let borrowTx: VersionedTransaction & ExtendedTransactionProperties;
     if (borrowOpts.isMixin) {
       borrowTx = addTransactionMetadata(
@@ -1762,8 +1802,22 @@ class MarginfiAccountWrapper {
       );
     }
 
+    // const borrowTx = addTransactionMetadata(
+    //   new VersionedTransaction(
+    //     new TransactionMessage({
+    //       instructions: [...cuRequestIxs, ...borrowIxs.instructions],
+    //       payerKey: this.authority,
+    //       recentBlockhash: blockhash,
+    //     }).compileToV0Message(clientLookupTables)
+    //   ),
+    //   {
+    //     signers: borrowIxs.keys,
+    //     type: TransactionType.BORROW,
+    //     addressLookupTables: clientLookupTables,
+    //   }
+    // );
+
     const transactions = [...feedCrankTxs, borrowTx];
-    // return { transactions: [borrowTx], actionTxIndex: 0 };
     return { transactions, actionTxIndex: transactions.length - 1 };
   }
 
@@ -1953,7 +2007,7 @@ class MarginfiAccountWrapper {
     args: FlashLoanArgs,
     lookupTables?: AddressLookupTableAccount[]
   ): Promise<ExtendedV0Transaction> {
-    const endIndex = args.isMixin ? args.ixs.length + 2 : args.ixs.length + 1;
+    const endIndex = args.ixs.length + 1;
 
     const projectedActiveBalances: PublicKey[] = this._marginfiAccount.projectActiveBalancesNoCpi(
       this._program,
@@ -1988,28 +2042,31 @@ class MarginfiAccountWrapper {
 
   public async makeAccountTransferToNewAccountIx(
     newMarginfiAccount: PublicKey,
-    newAccountAuthority: PublicKey
+    newAccountAuthority: PublicKey,
+    globalFeeWallet: PublicKey
   ): Promise<InstructionsWrapper> {
     return this._marginfiAccount.makeAccountTransferToNewAccountIx(
       this._program,
       newMarginfiAccount,
-      newAccountAuthority
+      newAccountAuthority,
+      globalFeeWallet
     );
   }
 
-  async makeAccountTransferToNewAccount(
+  async makeAccountTransferToNewAccountTx(
     newMarginfiAccount: PublicKey,
-    newAccountAuthority: PublicKey,
-    processOpts?: ProcessTransactionsClientOpts,
-    txOpts?: TransactionOptions
-  ): Promise<string> {
-    const ixs = await this.makeAccountTransferToNewAccountIx(newMarginfiAccount, newAccountAuthority);
+    newAccountAuthority: PublicKey
+  ): Promise<Transaction> {
+    const [feeStateKey] = PublicKey.findProgramAddressSync([Buffer.from("feestate", "utf-8")], this._program.programId);
+    const feeState = await this._program.account.feeState.fetch(feeStateKey);
+
+    const ixs = await this.makeAccountTransferToNewAccountIx(
+      newMarginfiAccount,
+      newAccountAuthority,
+      feeState.globalFeeWallet
+    );
     const tx = new Transaction().add(...ixs.instructions);
-    const solanaTx = addTransactionMetadata(tx, {
-      type: TransactionType.TRANSFER_AUTH,
-    });
-    const sig = await this.client.processTransaction(solanaTx, processOpts, txOpts);
-    return sig;
+    return tx;
   }
 
   async makeUpdateFeedIx(
@@ -2030,33 +2087,39 @@ class MarginfiAccountWrapper {
       (bank) => bank.config.oracleSetup === OracleSetup.SwitchboardPull
     );
 
-    console.log("swbPullBanks", swbPullBanks);
-
     if (swbPullBanks.length > 0) {
-      const staleOracles = swbPullBanks
+      const filteredSwbPullBanks = swbPullBanks
         .filter((bank) => {
-          // always crank swb feeds
-          return true;
-          // const oraclePrice = this.client.oraclePrices.get(bank.address.toBase58());
-          // const maxAge = bank.config.oracleMaxAge;
-          // const currentTime = Math.round(Date.now() / 1000);
-          // const oracleTime = Math.round(
-          //   oraclePrice?.timestamp ? oraclePrice.timestamp.toNumber() : new Date().getTime()
-          // );
-          // const adjustedMaxAge = Math.max(maxAge - txLandingBuffer, 0);
-          // const isStale = currentTime - oracleTime > adjustedMaxAge;
+          // filter if isolated and collateral
+          const activeBalance = this._marginfiAccount.balances.find((balance) => balance.bankPk.equals(bank.address));
 
-          // return isStale;
+          if (activeBalance?.assetShares.gt(new BigNumber(0)) && bank.config.riskTier === RiskTier.Isolated) {
+            return false;
+          }
+          return true;
+        })
+        .filter((bank) => {
+          // filter 0 feeds
+          return !bank.oracleKey.equals(new PublicKey("DMhGWtLAKE5d56WdyHQxqeFncwUeqMEnuC2RvvZfbuur"));
         })
         .map((bank) => bank.oracleKey);
 
-      if (staleOracles.length > 0) {
-        const sbProgram = getSwitchboardProgram(this._program.provider);
-        const [pullIx, luts] = await sb.PullFeed.fetchUpdateManyIx(sbProgram, {
-          feeds: staleOracles,
+      if (filteredSwbPullBanks.length > 0) {
+        const swbProgram = await AnchorUtils.loadProgramFromConnection(this.client.provider.connection);
+        const pullFeedInstances: PullFeed[] = filteredSwbPullBanks.map((pubkey) => new PullFeed(swbProgram, pubkey));
+        const crossbarClient = new CrossbarClient(
+          process.env.NEXT_PUBLIC_SWITCHBOARD_CROSSSBAR_API || "https://integrator-crossbar.prod.mrgn.app"
+        );
+        const gateway = await pullFeedInstances[0].fetchGatewayUrl(crossbarClient);
+
+        const [pullIx, luts] = await PullFeed.fetchUpdateManyIx(swbProgram, {
+          feeds: pullFeedInstances,
+          gateway,
           numSignatures: 1,
+          payer: this.authority,
+          crossbarClient,
         });
-        return { instructions: [pullIx], luts };
+        return { instructions: pullIx, luts };
       }
 
       return { instructions: [], luts: [] };

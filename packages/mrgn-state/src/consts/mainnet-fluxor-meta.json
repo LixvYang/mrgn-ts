@@ -24,6 +24,11 @@
       "tokenAddress": "4s4H5v4TXpmS4Ss66nxcCLgxrU5nunuwtkQceinZfGuw",
       "tokenName": "Mixin",
       "tokenSymbol": "XIN"
+    },
+    "oHy5VfaQbLepwapcWwAhUhCt6ji8FPD81zRuSTA44uN": {
+      "tokenAddress": "CvJmpFKM3jT7o3K5yumJNB1ffmz19XWGZXT4KtmDB6x8",
+      "tokenName": "Bitcoin",
+      "tokenSymbol": "BTC"
     }
   },
   "tokenMetadata": {
@@ -104,6 +109,21 @@
       "chain": {
         "symbol": "ETH",
         "logoURI": "https://images.mixin.one/zVDjOxNTQvVsA8h2B4ZVxuHoCF3DJszufYKWpd9duXUSbSapoZadC7_13cnWBqg0EmwmRcKGbJaUpA8wFfpgZA=s128"
+      }
+    },
+    "BTC": {
+      "symbol": "BTC",
+      "address": "CvJmpFKM3jT7o3K5yumJNB1ffmz19XWGZXT4KtmDB6x8",
+      "chainId": 101,
+      "decimals": 8,
+      "name": "Bitcoin",
+      "logoURI": "https://images.mixin.one/HvYGJsV5TGeZ-X9Ek3FEQohQZ3fE9LBEBGcOcn4c4BNHovP4fW4YB97Dg5LcXoQ1hUjMEgjbl1DPlKg1TW7kK6XP=s128",
+      "extensions": {
+        "coingeckoId": "https://mixin.one"
+      },
+      "chain": {
+        "symbol": "BTC",
+        "logoURI": "https://images.mixin.one/HvYGJsV5TGeZ-X9Ek3FEQohQZ3fE9LBEBGcOcn4c4BNHovP4fW4YB97Dg5LcXoQ1hUjMEgjbl1DPlKg1TW7kK6XP=s128"
       }
     }
   }

@@ -33,25 +33,51 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(200).json(JSON.parse(cachedData.toString()));
     }
 
-    const feedIdMap: Record<string, { feedId: string }> = {};
+    // const feedIdMap: Record<string, { feedId: string }> = {};
 
     const connection = new Connection(process.env.PRIVATE_RPC_ENDPOINT_OVERRIDE);
+    const swbOracleAiDataByKey: Record<string, { feedId: string; stdev: string; rawPrice: string }> = {};
 
     const oracleAis = await chunkedGetRawMultipleAccountInfoOrdered(connection, oracleKeys);
 
-    oracleAis.forEach((oracleAi: any, idx: number) => {
-      const feedHash = Buffer.from(vendor.decodeSwitchboardPullFeedData(oracleAi.data).feed_hash).toString("hex");
+    oracleAis.forEach((oracleAi, idx) => {
+      if (!oracleAi?.data || idx >= oracleKeys.length) return;
+
       const oracleKey = oracleKeys[idx];
+      if (!oracleKey) return;
 
-      feedIdMap[oracleKey] = { feedId: feedHash };
+      const { feed_hash, result } = vendor.decodeSwitchboardPullFeedData(oracleAi.data);
+
+      const feedHash = Buffer.from(feed_hash).toString("hex");
+
+      swbOracleAiDataByKey[oracleKey] = {
+        feedId: feedHash,
+        stdev: result.std_dev.toString(),
+        rawPrice: result.value.toString(),
+      };
     });
-
     // 将数据转换为 buffer 并缓存 60 秒
-    const responseBuffer = Buffer.from(JSON.stringify(feedIdMap));
+    const responseBuffer = Buffer.from(JSON.stringify(swbOracleAiDataByKey));
     await setCacheBuffer(cacheKey, responseBuffer, 60);
 
-    res.setHeader("Cache-Control", "s-maxage=600, stale-while-revalidate=599");
-    return res.status(200).json(feedIdMap);
+    res.setHeader("Cache-Control", "max-age=120, stale-while-revalidate=119");
+    return res.status(200).json(swbOracleAiDataByKey);
+
+    // const oracleAis = await chunkedGetRawMultipleAccountInfoOrdered(connection, oracleKeys);
+
+    // oracleAis.forEach((oracleAi: any, idx: number) => {
+    //   const feedHash = Buffer.from(vendor.decodeSwitchboardPullFeedData(oracleAi.data).feed_hash).toString("hex");
+    //   const oracleKey = oracleKeys[idx];
+
+    //   feedIdMap[oracleKey] = { feedId: feedHash };
+    // });
+
+    // // 将数据转换为 buffer 并缓存 60 秒
+    // const responseBuffer = Buffer.from(JSON.stringify(feedIdMap));
+    // await setCacheBuffer(cacheKey, responseBuffer, 60);
+
+    // res.setHeader("Cache-Control", "s-maxage=600, stale-while-revalidate=599");
+    // return res.status(200).json(feedIdMap);
   } catch (error) {
     console.error("Error:", error);
     return res.status(500).json({ error: "Error fetching data" });

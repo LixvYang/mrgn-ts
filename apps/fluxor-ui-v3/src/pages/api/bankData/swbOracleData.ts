@@ -11,9 +11,18 @@ const SWITCHBOARD_CROSSSBAR_API = process.env.SWITCHBOARD_CROSSSBAR_API || "http
 const S_MAXAGE_TIME = 10;
 const STALE_WHILE_REVALIDATE_TIME = 15;
 
+const Mixin_BTC_ASSET_ID = "c6d0c728-2624-429b-8e0d-d9d19b6592fa";
+const Mixin_ETH_ASSET_ID = "43d61dcd-e413-450d-80b8-101d5e903357";
+const Mixin_USDT_TRON_ASSET_ID = "b91e18ff-a9ae-3dc7-8679-e935d9a4b34b";
+const Mixin_USDT_ETH_ASSET_ID = "4d8c508b-91c5-375b-92b0-ee702ed2dac5";
+
 const FEED_ID_MIXIN_ASSET_MAP: Record<string, string> = {
   "3a763682892910586fed762422247c344565edbfe2788116391771d79e09dc4c": XINAssetID,
   ad79d0898d2c490a3a368d99092899948add87ac3cc8ee8820bf5430665fdd70: XINAssetID,
+  "10ede18aafa08c2597bd5fd9be758a92854a9939a662e82b7bfaa369e66cc036": Mixin_BTC_ASSET_ID,
+  "73acb2b31c7ac7d1fc441cb5cdc29cc36e0d0daeb77606b0ef8c05f9e762c10b": Mixin_ETH_ASSET_ID,
+  "25c91b194efc5b63b518e2adb0f4621bcbfba39c20aa6a6f787ad8d9802bf9b2": Mixin_USDT_TRON_ASSET_ID,
+  "92fd69b07be4c16afd6ce313e4ce4acceaa44fd0ea2d2f2e36ab55ae0e868cff": Mixin_USDT_ETH_ASSET_ID,
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {

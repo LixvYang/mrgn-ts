@@ -17,6 +17,7 @@ import { STABLECOINS, LSTS, MEMES } from "~/config/constants";
 import { IMAGE_CDN_URL } from "~/config/constants";
 import { dynamicNumeralFormatter, usdFormatter, percentFormatter, aprToApy } from "@mrgnlabs/mrgn-common";
 import { ExtendedBankInfo } from "@mrgnlabs/mrgn-state";
+import { OperationalState } from "@mrgnlabs/marginfi-client-v2";
 
 type AssetListProps = {
   extendedBanks: ExtendedBankInfo[];
@@ -132,6 +133,27 @@ const MobileAssetCard = ({ bank }: MobileAssetCardProps) => {
 };
 
 export const MobileAssetList = ({ extendedBanks }: AssetListProps) => {
+  const router = useRouter();
+  const [lendingMode] = useUiStore((state) => [state.lendingMode]);
+
+  // Filter out reduce-only banks (unless user has open position or showReduceOnlyBanks is set)
+  const filteredBanks = React.useMemo(() => {
+    if (!extendedBanks || extendedBanks.length === 0) return [];
+
+    // Check if showReduceOnlyBanks query parameter is set
+    const showReduceOnlyBanks = router.query.showReduceOnlyBanks;
+
+    return extendedBanks.filter((bank) => {
+      // Filter out reduce only banks (unless user has open position or showReduceOnlyBanks is set)
+      if (!showReduceOnlyBanks) {
+        const isReduceOnly = bank.info.rawBank.config.operationalState === OperationalState.ReduceOnly;
+        const hasPosition = bank.isActive; // ExtendedBankInfo.isActive indicates if user has a position
+        return !(isReduceOnly && !hasPosition);
+      }
+      return true;
+    });
+  }, [extendedBanks, router.query.showReduceOnlyBanks]);
+
   if (!extendedBanks || extendedBanks.length === 0) {
     return (
       <div className="space-y-4 p-4">
@@ -179,7 +201,7 @@ export const MobileAssetList = ({ extendedBanks }: AssetListProps) => {
 
   return (
     <div className="space-y-4 p-4">
-      {extendedBanks.map((bank, index) => (
+      {filteredBanks.map((bank, index) => (
         <MobileAssetCard key={`${bank.info.rawBank.address.toBase58()}-${index}`} bank={bank} />
       ))}
     </div>

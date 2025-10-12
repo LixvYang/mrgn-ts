@@ -439,7 +439,7 @@ export async function closePositionBuilder({
   borrowBank,
   quote,
   connection,
-}: ClosePositionProps) {
+}: ClosePositionProps): Promise<FlashloanBuilderResponse> {
   const jupiterQuoteApi = createJupiterApiClient();
   let feeAccountInfo: AccountInfo<any> | null = null;
 

@@ -676,7 +676,7 @@ export const LendBox = ({
           isActive={selectedBank && amount > 0 ? true : false}
         />
 
-        {setDisplaySettings && <ActionSettingsButton onClick={() => setDisplaySettings(true)} />}
+        {/* {setDisplaySettings && <ActionSettingsButton onClick={() => setDisplaySettings(true)} />} */}
       </div>
 
       <Preview

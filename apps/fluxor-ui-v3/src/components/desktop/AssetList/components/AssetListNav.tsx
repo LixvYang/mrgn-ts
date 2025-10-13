@@ -68,9 +68,9 @@ const AssetListNav = () => {
           <ToggleGroupItem value="global" aria-label="Toggle global" className="h-9">
             Global
           </ToggleGroupItem>
-          <ToggleGroupItem value="isolated" aria-label="Toggle isolated" className="h-9">
+          {/* <ToggleGroupItem value="isolated" aria-label="Toggle isolated" className="h-9">
             Isolated
-          </ToggleGroupItem>
+          </ToggleGroupItem> */}
           {/* <ToggleGroupItem value="native_stake" aria-label="Toggle staked" className="relative h-9">
             Native Stake
           </ToggleGroupItem> */}

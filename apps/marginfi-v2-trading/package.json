@@ -43,7 +43,7 @@
     "@solana/wallet-adapter-wallets": "^0.19.10",
     "@solana/web3.js": "^1.91.3",
     "@switchboard-xyz/common": "^2.5.19",
-    "@switchboard-xyz/on-demand": "^1.2.65",
+    "@switchboard-xyz/on-demand": "^2.4.14",
     "@tabler/icons-react": "^2.40.0",
     "@tiplink/wallet-adapter": "^2.1.13",
     "@tiplink/wallet-adapter-react-ui": "^0.1.11",

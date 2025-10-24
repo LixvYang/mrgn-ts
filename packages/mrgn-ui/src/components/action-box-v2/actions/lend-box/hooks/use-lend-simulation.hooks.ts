@@ -70,7 +70,10 @@ export function useLendSimulation({
       };
       callbacks.setErrorMessage(_actionMessage);
     } else {
-      if (actionMessage.code && (actionMessage.code === 119 || actionMessage.code === 120)) {
+      if (
+        actionMessage.code &&
+        (actionMessage.code === 119 || actionMessage.code === 120 || actionMessage.code === 149)
+      ) {
         return;
       } else {
         // const _actionMessage: ActionMessageType = {
@@ -135,11 +138,28 @@ export function useLendSimulation({
           stakeOpts: stakeOpts,
         };
 
+        console.log("预测信息: ", {
+          marginfiAccount: selectedAccount?.address.toBase58(),
+          bank: selectedBank.meta.address.toBase58(),
+          amount: amount,
+          stakeOpts: stakeOpts,
+          lendMode: lendMode,
+          setSimulationResult: setSimulationResult,
+          setActionTxns: setActionTxns,
+          setErrorMessage: setErrorMessage,
+          setIsLoading: setIsLoading,
+        });
+
         const actionTxns = await fetchActionTxns(props);
 
         if (actionTxns.finalAccount === null) {
           throw new ActionProcessingError(STATIC_SIMULATION_ERRORS.ACCOUNT_NOT_INITIALIZED);
         }
+
+        console.log("预测 txns: ", {
+          actionTxns: actionTxns.actionTxns,
+          finalAccount: actionTxns.finalAccount.address.toBase58(),
+        });
 
         const simulationResult = await getLendSimulationResult({
           txns: actionTxns.actionTxns.transactions,

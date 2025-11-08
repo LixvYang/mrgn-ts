@@ -110,17 +110,28 @@ const createComputerStore = () => {
                 threshold: 1,
               });
               const account = await computerClient.fetchUser(mix);
-              if (account)
+
+              // 修复: 正确处理已注册和未注册的情况
+              if (account) {
+                // 用户已在 Computer 注册
                 set({
                   user,
                   account,
                   register: true,
                   connected: true,
+                  publicKey: new PublicKey(account.chain_address),
                 });
-              if (account.chain_address !== get().publicKey) {
-                set({ publicKey: new PublicKey(account.chain_address) });
-              } else set({ user, connected: true, register: false });
-            } catch {}
+              } else {
+                // 用户未在 Computer 注册，但已登录 Mixin
+                set({
+                  user,
+                  connected: true,
+                  register: false,
+                });
+              }
+            } catch (error) {
+              console.error("getMe failed:", error);
+            }
           },
 
           getUserMix: () => {

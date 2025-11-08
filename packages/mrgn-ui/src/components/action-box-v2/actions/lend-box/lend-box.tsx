@@ -639,6 +639,7 @@ export const LendBox = ({
 
       {additionalActionMessages.concat(actionMessages).map(
         (actionMessage, idx) =>
+          actionMessage &&
           actionMessage.description && (
             <div className="pb-6" key={idx}>
               <ActionMessage
@@ -660,7 +661,8 @@ export const LendBox = ({
           isEnabled={
             // !additionalActionMessages.concat(actionMessages).filter((value) => value.isEnabled === false).length &&
             // actionTxns?.transactions.length > 0
-            !additionalActionMessages.concat(actionMessages).filter((value) => value.isEnabled === false).length
+            !additionalActionMessages.concat(actionMessages).filter((value) => value && value.isEnabled === false)
+              .length
           }
           connected={connected}
           handleAction={() => {

@@ -95,12 +95,13 @@ export const Navbar: FC = () => {
     connected: s.connected,
   }));
 
-  const isLoggedIn = !!user;
+  // 修复: 只要用户登录 Mixin 且连接成功，就算已登录
+  // 即使没有注册 Computer，也应该显示用户头像，用户可以在设置中自行注册
+  const isLoggedIn = !!user && connected;
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [isWalletOpen, setIsWalletOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("assets");
   const [searchTerm, setSearchTerm] = useState("");
-  const [hasHandledConnection, setHasHandledConnection] = useState(false);
 
   const handleAvatarClick = () => {
     if (!isLoggedIn) {
@@ -159,12 +160,6 @@ export const Navbar: FC = () => {
     0
   );
 
-  // 当连接断开时重置处理状态
-  React.useEffect(() => {
-    if (!connected) {
-      setHasHandledConnection(false);
-    }
-  }, [connected]);
 
   return (
     <header className="h-[64px] mb-4 md:mb-8 lg:mb-14">

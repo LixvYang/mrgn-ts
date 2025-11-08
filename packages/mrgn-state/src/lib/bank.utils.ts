@@ -273,7 +273,17 @@ export function makeExtendedBankInfo(
     const debtAmount = ceil(position.amount, bankInfo.mintDecimals);
     maxRepay = Math.min(debtAmount, walletBalance);
     if (getConfig().isMixin) {
-      maxRepay = debtAmount;
+      // 添加缓冲金额以应对交易打包延迟期间的利息累积
+      // 假设最大延迟 10 分钟，使用年化借款利率计算
+      const minutesDelay = 10;
+      const minutesPerYear = 365 * 24 * 60;
+      const interestBuffer = debtAmount * bankInfo.borrowingRate * (minutesDelay / minutesPerYear);
+
+      // 添加 50% 的安全边际，确保足够但不过度
+      const bufferWithMargin = interestBuffer * 1.5;
+
+      // 最终还款金额 = 债务金额 + 缓冲金额，并向上取整
+      maxRepay = ceil(debtAmount + bufferWithMargin, bankInfo.mintDecimals);
     }
   }
 

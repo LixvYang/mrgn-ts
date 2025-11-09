@@ -168,10 +168,40 @@ async function handleLendMixinSimulation({
   }
   setIsLoading({ isLoading: true, status: SimulationStatus.SIMULATING });
 
+  // 修复: 如果 selectedAccount 为 null，主动查询账户是否存在
+  let account = selectedAccount;
+  if (!account) {
+    console.log("🔍 selectedAccount 为 null，正在查询 marginfi 账户...");
+    try {
+      const authority = new PublicKey(computerAccount.chain_address);
+      const marginfiAccounts = await marginfiClient.getMarginfiAccountsForAuthority(authority);
+
+      if (marginfiAccounts.length > 0) {
+        // 找到已存在的账户，使用最后一个（最新的）
+        account = marginfiAccounts[marginfiAccounts.length-1];
+        console.log("✅ 找到已存在的 marginfi 账户:", account.address.toBase58());
+      } else {
+        console.log("ℹ️ 未找到 marginfi 账户，首次 deposit 时会自动创建");
+        // 对于非 deposit 操作，账户为必需
+        if (lendMode !== ActionType.Deposit) {
+          throw new Error("Account not found. Please create an account first by making a deposit.");
+        }
+      }
+    } catch (error) {
+      console.error("❌ 查询 marginfi 账户失败:", error);
+      // 如果查询失败且不是 deposit 操作，抛出错误
+      if (lendMode !== ActionType.Deposit) {
+        throw new Error("Failed to query marginfi account: " + (error instanceof Error ? error.message : String(error)));
+      }
+      // 对于 deposit 操作，即使查询失败也继续（会自动创建账户）
+      // console.log("⚠️ 查询账户失败但继续执行 deposit（会自动创建账户）");
+    }
+  }
+
   try {
-    // 1. 获取交易
+    // 1. 获取交易（使用查询到的 account 或原始的 selectedAccount）
     const actionTxns = await generateActionTxns({
-      marginfiAccount: selectedAccount,
+      marginfiAccount: account,
       marginfiClient,
       bank: selectedBank,
       lendMode,

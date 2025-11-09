@@ -193,10 +193,36 @@ async function handleRepayMixinSimulation({
   if (amount === 0 || !selectedBank || !marginfiClient) {
     return [];
   }
-  if (!selectedSecondaryBank || !selectedAccount || !selectedBank || !jupiterOptions) {
+  if (!selectedSecondaryBank || !selectedBank || !jupiterOptions) {
     setActionTxns({ transactions: [], actionQuote: null });
     return [];
   }
+
+  // 修复: 如果 selectedAccount 为 null，主动查询账户是否存在
+  let account = selectedAccount;
+  if (!account) {
+    console.log("🔍 Repay: selectedAccount 为 null，正在查询 marginfi 账户...");
+    try {
+      const authority = new PublicKey(computerAccount.chain_address);
+      const marginfiAccounts = await marginfiClient.getMarginfiAccountsForAuthority(authority);
+
+      if (marginfiAccounts.length > 0) {
+        // 找到已存在的账户，使用最后一个（最新的）
+        account = marginfiAccounts[marginfiAccounts.length-1];
+        console.log("✅ Repay: 找到已存在的 marginfi 账户:", account.address.toBase58());
+      } else {
+        // Repay 操作必须要有账户
+        console.error("❌ Repay: 未找到 marginfi 账户");
+        setActionTxns({ transactions: [], actionQuote: null });
+        throw new Error("Account not found. Please create an account first by making a deposit.");
+      }
+    } catch (error) {
+      console.error("❌ Repay: 查询 marginfi 账户失败:", error);
+      setActionTxns({ transactions: [], actionQuote: null });
+      throw new Error("Failed to query marginfi account: " + (error instanceof Error ? error.message : String(error)));
+    }
+  }
+
   setIsLoading({ isLoading: true, status: SimulationStatus.SIMULATING });
 
   try {
@@ -213,7 +239,7 @@ async function handleRepayMixinSimulation({
     // }
 
     const props: CalculateRepayTransactionsProps = {
-      marginfiAccount: selectedAccount,
+      marginfiAccount: account,
       selectedBank: selectedBank,
       selectedSecondaryBank: selectedSecondaryBank,
       connection: marginfiClient.provider.connection,

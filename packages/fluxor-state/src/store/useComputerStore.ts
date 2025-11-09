@@ -224,15 +224,23 @@ const createComputerStore = () => {
             const { user, getUserMix } = get();
             if (!user) return;
             const account = await computerClient.fetchUser(getUserMix());
-            if (account)
+
+            // 修复: 正确处理已注册和未注册的情况
+            if (account) {
+              // 用户已在 Computer 注册
               set({
                 account,
                 connected: true,
                 register: true,
+                publicKey: new PublicKey(account.chain_address),
               });
-            if (account.chain_address !== get().publicKey) {
-              set({ publicKey: new PublicKey(account.chain_address) });
-            } else set({ connected: true, register: false });
+            } else {
+              // 用户未在 Computer 注册
+              set({
+                connected: true,
+                register: false,
+              });
+            }
           },
 
           getComputerRecipient: () => {

@@ -68,10 +68,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const bankMap = new Map<string, Bank>();
     const oraclePrices = new Map<string, OraclePrice>();
 
-    Object.entries(body.bankMap).forEach(([bankPk, bank]) => {
-      bankMap.set(bankPk, Bank.fromBankType(dtoToBank(bank)));
-    });
+    // 填充 bankMap 和 banks 数组
     const banks: Bank[] = [];
+    Object.entries(body.bankMap).forEach(([bankPk, bank]) => {
+      const bankInstance = Bank.fromBankType(dtoToBank(bank));
+      bankMap.set(bankPk, bankInstance);
+      banks.push(bankInstance); // 修复: 同时填充到 banks 数组
+    });
 
     const emodePairs = getEmodePairs(banks);
     Object.entries(body.oraclePrices).forEach(([bankPk, oraclePrice]) => {

@@ -17,9 +17,9 @@ export const Meta = ({ path, title }: MrgnProps) => {
     <Head>
       <title>{finalTitle}</title>
       <meta property="og:title" content={finalTitle} />
-      {/* {description && <meta name="description" content={description} />}
+      {description && <meta name="description" content={description} />}
       {description && <meta property="og:description" content={description} />}
-      {description && <meta name="twitter:description" content={description} />} */}
+      {description && <meta name="twitter:description" content={description} />}
       {/* <meta property="og:url" content="https://app.marginfi.com" />
       <meta property="og:type" content="website" />
       <meta property="og:image" content={`${process.env.NEXT_PUBLIC_BASE_URL}/marginfi-banner.png`} />

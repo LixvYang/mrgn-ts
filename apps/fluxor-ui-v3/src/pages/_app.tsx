@@ -177,11 +177,34 @@ MrgnApp.getInitialProps = async (appContext: AppContext): Promise<AppInitialProp
   const path = appContext.ctx.pathname;
 
   if (path === "/banks/[address]") {
-    const mintData = await fetch(`/api/banks/symbol?address=${appContext.ctx.query.address}`);
-    const mintDataJson = await mintData.json();
-    appProps.pageProps.metadata = {
-      title: mintDataJson.symbol,
-    };
+    try {
+      const bankAddress = appContext.ctx.query.address;
+
+      if (bankAddress && typeof bankAddress === "string") {
+        // 银行地址到代币符号的映射表（与API路由保持一致）
+        const BANK_ADDRESS_TO_SYMBOL: Record<string, string> = {
+          CK1Qnz6C6uZEiJFrTSkkgV485UuDJidaSxqewzYeCU7x: "SOL",
+          CnMFqmJhMdbXPAixtVfwwR3xwTid8zjTanrFbRWboFhx: "USDC",
+          FJyfHYZeUzUyNzuPxABdFXMkX8D4fdrqjbLWZi9hjSFg: "USDT",
+          FUjZmnqNMTYMdMTzrUR3UJ5hA8v3jMhpqP9RTxeVMU9E: "JitoSOL",
+          "7uEFHAWngQ5yd8bNgcUSyG3F5sCmWoyKuGQXjrZt2xDh": "XIN",
+          oHy5VfaQbLepwapcWwAhUhCt6ji8FPD81zRuSTA44uN: "BTC",
+          "5nnszMQMzVwLEUyFYMoLsPCQ9B58t6emAN1bWLWEsMyq": "ETH",
+          A1HA62KfSqM1kSM2FR5xwGbzMdihBsRj8HajSMmEaMPo: "USDT(ETH)",
+        };
+
+        const symbol = BANK_ADDRESS_TO_SYMBOL[bankAddress];
+
+        if (symbol) {
+          appProps.pageProps.metadata = {
+            title: symbol,
+          };
+        }
+      }
+    } catch (error) {
+      console.error("Error setting bank metadata:", error);
+      // 即使获取失败，也继续渲染页面，使用默认标题
+    }
   }
 
   return { ...appProps, path };

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useOs, useIsMobile, cn } from "@mrgnlabs/mrgn-utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "~/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "~/components/ui/sheet";
@@ -16,6 +16,23 @@ interface MixinMultipleTracesModalProps {
   fetchTransaction?: (transactionId: string) => Promise<SequencerTransactionRequest>;
 }
 
+// 检测是否在 Mixin 上下文中（Mixin App 内）
+const isMixinContext = (): boolean => {
+  if (typeof window === "undefined") return false;
+
+  // iOS: 检查 webkit.messageHandlers.MixinContext
+  if ((window as any).webkit?.messageHandlers?.MixinContext) {
+    return true;
+  }
+
+  // Android: 检查 MixinContext
+  if ((window as any).MixinContext) {
+    return true;
+  }
+
+  return false;
+};
+
 const PaymentContent = ({
   paymentUrl,
   isMobile,
@@ -25,8 +42,19 @@ const PaymentContent = ({
   isMobile: boolean;
   isCompleted: boolean;
 }) => {
+  // 检测是否在 Mixin App 内
+  const isInMixinApp = useMemo(() => isMixinContext(), []);
+
   const handlePayClick = () => {
-    window.open(paymentUrl, "_blank");
+    if (isInMixinApp) {
+      // 在 Mixin App 内，直接跳转到支付链接
+      console.log("🔗 在 Mixin App 内，跳转到支付链接:", paymentUrl);
+      window.location.href = paymentUrl;
+    } else {
+      // 在浏览器中，新窗口打开
+      console.log("🌐 在浏览器中，新窗口打开支付链接:", paymentUrl);
+      window.open(paymentUrl, "_blank", "noopener,noreferrer");
+    }
   };
 
   const containerSize = isMobile ? "w-[240px] h-[240px]" : "w-[280px] h-[280px]";
@@ -66,7 +94,51 @@ const PaymentContent = ({
             The page will be closed...
           </motion.p>
         </motion.div>
+      ) : isInMixinApp ? (
+        // 在 Mixin App 内：只显示支付按钮，不显示二维码
+        <motion.div
+          key="payment-button-only"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.5 }}
+          className="flex flex-col items-center justify-center gap-6 py-8"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="space-y-2 text-center"
+          >
+            <h3 className="text-lg font-semibold">Ready to pay</h3>
+            <p className="text-sm text-mfi-action-box-accent-foreground">
+              Click the button below to complete payment
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+            className="w-full max-w-[280px]"
+          >
+            <Button onClick={handlePayClick} className="w-full" variant="default" size="lg">
+              Pay with Mixin
+            </Button>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="flex items-center gap-2 text-sm text-mfi-action-box-accent-foreground"
+          >
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>Waiting for payment result...</span>
+          </motion.div>
+        </motion.div>
       ) : (
+        // 在浏览器中：显示二维码 + 支付按钮
         <motion.div
           key="payment"
           initial={{ opacity: 0, y: 20 }}
@@ -119,7 +191,7 @@ const PaymentContent = ({
                 transition={{ delay: 0.4, duration: 0.5 }}
                 className="text-sm text-mfi-action-box-accent-foreground text-center md:text-left"
               >
-                Click the button below to redirect to Mixin for payment
+                Scan QR code or click the button below to redirect to Mixin for payment
               </motion.p>
             </div>
             <motion.div

@@ -188,8 +188,11 @@ export const LendBox = ({
     status: SimulationStatus.IDLE,
   });
 
+  // 添加防重复点击的标志
+  const isExecutingRef = React.useRef(false);
+
   const isLoading = React.useMemo(
-    () => isTransactionExecuting || simulationStatus.isLoading,
+    () => isTransactionExecuting || simulationStatus.isLoading || isExecutingRef.current,
     [isTransactionExecuting, simulationStatus.isLoading]
   );
 
@@ -353,29 +356,73 @@ export const LendBox = ({
   }, [prevSelectedBank, prevAmount, selectedBank, amount, setErrorMessage]);
 
   const handleLendingAction = React.useCallback(async () => {
-    if (!selectedBank || !amount || !transactionSettings || !marginfiClient) return;
-    console.log("🔄 getMixinVars(): ", getMixinVars());
+    // 防止重复点击
+    if (isExecutingRef.current) {
+      console.log("⚠️ [handleLendingAction] 操作正在进行中，忽略重复点击");
+      return;
+    }
 
-    if (getMixinVars().isMixin) {
-      if (!getMixinVars().register) {
-        const toastController = toastManager.showCustomToast(
-          <div className="flex flex-col items-start gap-2">
-            <p className="text-sm text-muted-foreground">
-              You need to{" "}
-              <Link href="/portfolio" className="text-primary">
-                register
-              </Link>{" "}
-              with Mixin Computer to use this feature.
-            </p>
-          </div>
-        );
-        return;
+    // 添加详细的调试日志
+    console.log("🎯 [handleLendingAction] 点击按钮，开始执行...", {
+      selectedBank: selectedBank?.meta.tokenSymbol,
+      amount,
+      transactionSettings: !!transactionSettings,
+      marginfiClient: !!marginfiClient,
+      isMobile,
+      isExecuting: isExecutingRef.current,
+    });
+
+    // 检查必需条件，添加友好的错误提示
+    if (!selectedBank || !amount || !transactionSettings || !marginfiClient) {
+      console.warn("❌ [handleLendingAction] 缺少必需条件:", {
+        selectedBank: !!selectedBank,
+        amount: !!amount,
+        transactionSettings: !!transactionSettings,
+        marginfiClient: !!marginfiClient,
+      });
+
+      // 给用户友好的错误提示
+      if (!selectedBank) {
+        toastManager.showErrorToast("请选择一个代币");
+      } else if (!amount) {
+        toastManager.showErrorToast("请输入数额");
+      } else if (!transactionSettings) {
+        toastManager.showErrorToast("Tx 设置未加载");
+      } else if (!marginfiClient) {
+        toastManager.showErrorToast("客户端未初始化，请等待一会儿再试");
       }
 
-      // mixin here
-      // 这里需要构造 actionTxns
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      const result = await handleLendMixinSimulation({
+      return;
+    }
+
+    // 设置执行标志
+    isExecutingRef.current = true;
+
+    try {
+      console.log("🔄 getMixinVars(): ", getMixinVars());
+
+      if (getMixinVars().isMixin) {
+        if (!getMixinVars().register) {
+          console.log("⚠️ [handleLendingAction] Mixin 用户未注册");
+          const toastController = toastManager.showCustomToast(
+            <div className="flex flex-col items-start gap-2">
+              <p className="text-sm text-muted-foreground">
+                You need to{" "}
+                <Link href="/portfolio" className="text-primary">
+                  register
+                </Link>{" "}
+                with Mixin Computer to use this feature.
+              </p>
+            </div>
+          );
+          return;
+        }
+
+        console.log("🔄 [handleLendingAction] 开始 Mixin 模拟...");
+        // mixin here
+        // 这里需要构造 actionTxns
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        const result = await handleLendMixinSimulation({
         amount: amount,
         selectedAccount,
         // accountSummary,
@@ -402,17 +449,69 @@ export const LendBox = ({
         },
         setIsLoading: setSimulationStatus,
       });
-      // const result: ComputerSystemCallRequest[] = [
-      //   {
-      //     trace: "4bdcc504-3023-3c04-8ded-4f76ad359846",
-      //     value: "https://mixin.one/schemes/4bdcc504-3023-3c04-8ded-4f76ad359846",
-      //   },
-      // ];
-      console.log("result", result);
-      setComputerSystemCallRequest(result);
-      setShouldShowMixinPayModal(true);
+        // const result: ComputerSystemCallRequest[] = [
+        //   {
+        //     trace: "4bdcc504-3023-3c04-8ded-4f76ad359846",
+        //     value: "https://mixin.one/schemes/4bdcc504-3023-3c04-8ded-4f76ad359846",
+        //   },
+        // ];
+        console.log("✅ [handleLendingAction] Mixin 模拟完成，结果:", result);
 
-      const props: ExecuteMixinLendingActionProps = {
+        // 验证结果
+        if (!result || result.length === 0) {
+          console.error("❌ [handleLendingAction] Mixin 模拟返回空结果");
+          toastManager.showErrorToast("Failed to generate transaction. Please try again.");
+          return;
+        }
+
+        setComputerSystemCallRequest(result);
+        setShouldShowMixinPayModal(true);
+
+        const props: ExecuteMixinLendingActionProps = {
+          actionTxns,
+          attemptUuid: uuidv4(),
+          marginfiClient,
+          processOpts: { ...priorityFees, broadcastType: transactionSettings.broadcastType },
+          txOpts: {},
+          callbacks: {
+            captureEvent: captureEvent,
+            onComplete: (txnSig: string) => {
+              onComplete?.();
+
+              // Log the activity
+              const activityDetails: Record<string, any> = {
+                amount: amount,
+                symbol: selectedBank.meta.tokenSymbol,
+                mint: selectedBank.info.rawBank.mint.toBase58(),
+              };
+
+              logActivity(lendMode, txnSig, activityDetails, selectedAccount?.address).catch((error) => {
+                console.error("Failed to log activity:", error);
+              });
+            },
+          },
+          infoProps: {
+            amount: dynamicNumeralFormatter(amount),
+            token: selectedBank.meta.tokenSymbol,
+          },
+          nativeSolBalance: nativeSolBalance,
+          actionType: lendMode,
+          traceId: result[result.length - 1].trace,
+          getComputerSystemCallStatus: async (traceId: string) => {
+            return await initComputerClient().fetchCall(traceId);
+          },
+        };
+
+        console.log("🚀 [handleLendingAction] 执行 Mixin 交易...");
+        executeMixinLendingAction(props);
+
+        setAmountRaw("");
+        console.log("✅ [handleLendingAction] Mixin 流程完成");
+        return;
+      }
+
+      console.log("🚀 [handleLendingAction] 执行普通交易...");
+      const props: ExecuteLendingActionProps = {
         actionTxns,
         attemptUuid: uuidv4(),
         marginfiClient,
@@ -420,8 +519,8 @@ export const LendBox = ({
         txOpts: {},
         callbacks: {
           captureEvent: captureEvent,
-          onComplete: (txnSig: string) => {
-            onComplete?.();
+          onComplete: (txnSig: string, newAccountKey?: PublicKey) => {
+            onComplete?.(newAccountKey);
 
             // Log the activity
             const activityDetails: Record<string, any> = {
@@ -441,53 +540,30 @@ export const LendBox = ({
         },
         nativeSolBalance: nativeSolBalance,
         actionType: lendMode,
-        traceId: result[result.length - 1].trace,
-        getComputerSystemCallStatus: async (traceId: string) => {
-          return await initComputerClient().fetchCall(traceId);
-        },
       };
 
-      executeMixinLendingAction(props);
+      executeLendingAction(props);
+      refreshMixinBalances?.();
 
       setAmountRaw("");
-      return;
+      console.log("✅ [handleLendingAction] 普通流程完成");
+    } catch (error) {
+      console.error("❌ [handleLendingAction] 执行失败:", error);
+
+      // 显示友好的错误提示
+      const errorMessage = error instanceof Error ? error.message : "Transaction failed";
+      toastManager.showErrorToast(`Failed: ${errorMessage}`);
+
+      // 重置加载状态
+      setSimulationStatus({ isLoading: false, status: SimulationStatus.IDLE });
+    } finally {
+      // 无论成功还是失败，都重置执行标志
+      // 延迟 500ms 重置，避免误触
+      setTimeout(() => {
+        isExecutingRef.current = false;
+        console.log("🔓 [handleLendingAction] 重置执行标志");
+      }, 500);
     }
-
-    const props: ExecuteLendingActionProps = {
-      actionTxns,
-      attemptUuid: uuidv4(),
-      marginfiClient,
-      processOpts: { ...priorityFees, broadcastType: transactionSettings.broadcastType },
-      txOpts: {},
-      callbacks: {
-        captureEvent: captureEvent,
-        onComplete: (txnSig: string, newAccountKey?: PublicKey) => {
-          onComplete?.(newAccountKey);
-
-          // Log the activity
-          const activityDetails: Record<string, any> = {
-            amount: amount,
-            symbol: selectedBank.meta.tokenSymbol,
-            mint: selectedBank.info.rawBank.mint.toBase58(),
-          };
-
-          logActivity(lendMode, txnSig, activityDetails, selectedAccount?.address).catch((error) => {
-            console.error("Failed to log activity:", error);
-          });
-        },
-      },
-      infoProps: {
-        amount: dynamicNumeralFormatter(amount),
-        token: selectedBank.meta.tokenSymbol,
-      },
-      nativeSolBalance: nativeSolBalance,
-      actionType: lendMode,
-    };
-
-    executeLendingAction(props);
-    refreshMixinBalances?.();
-
-    setAmountRaw("");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     actionTxns,

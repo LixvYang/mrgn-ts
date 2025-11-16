@@ -104,7 +104,7 @@ export default function MrgnApp({ Component, pageProps }: AppProps) {
 
   return (
     <>
-      <Meta path={pathname} />
+      <Meta path={pathname} title={pageProps.metadata?.title} />
 
       <StateProvider config={{ rpcUrl: rpcConfig.rpcEndpoint, mrgnConfig: config.mfiConfig }}>
         {ready && rpcEndpoint && (
@@ -161,13 +161,13 @@ export default function MrgnApp({ Component, pageProps }: AppProps) {
         )}
       </StateProvider>
 
-      {process.env.NEXT_PUBLIC_ANALYTICS === "true" && ready && (
+      {/* {process.env.NEXT_PUBLIC_ANALYTICS === "true" && ready && (
         <>
           <GoogleAnalytics gaId="G-0ZTQRWVG02" />
           <GoogleTagManager gtmId="GTM-KJJ3CR6Q" />
           <SpeedInsights />
         </>
-      )}
+      )} */}
     </>
   );
 }
@@ -176,15 +176,13 @@ MrgnApp.getInitialProps = async (appContext: AppContext): Promise<AppInitialProp
   const appProps = await App.getInitialProps(appContext);
   const path = appContext.ctx.pathname;
 
-  // if (path === "/banks/[address]") {
-  //   console.log("appContext.ctx.query.address", appContext.ctx.query.address);
-  //   console.log("typeof appContext.ctx.query.address", typeof appContext.ctx.query.address);
-  //   const mintData = await fetch(`/api/banks/get?address=${appContext.ctx.query.address}`);
-  //   const mintDataJson = await mintData.json();
-  //   appProps.pageProps.metadata = {
-  //     title: mintDataJson.symbol,
-  //   };
-  // }
+  if (path === "/banks/[address]") {
+    const mintData = await fetch(`/api/banks/symbol?address=${appContext.ctx.query.address}`);
+    const mintDataJson = await mintData.json();
+    appProps.pageProps.metadata = {
+      title: mintDataJson.symbol,
+    };
+  }
 
   return { ...appProps, path };
 };

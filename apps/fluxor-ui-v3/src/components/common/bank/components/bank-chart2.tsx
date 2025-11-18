@@ -10,15 +10,14 @@ import { useFluxorStore } from "@mrgnlabs/fluxor-state";
 import { getConfig } from "@mrgnlabs/mrgn-state";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
-import { ChartConfig, ChartContainer, ChartTooltip, ChartLegend, ChartLegendContent } from "~/components/ui/chart";
-import { Skeleton } from "~/components/ui/skeleton";
+import { ChartContainer, ChartTooltip, ChartLegend, ChartLegendContent } from "~/components/ui/chart";
 import { ToggleGroup, ToggleGroupItem } from "~/components/ui/toggle-group";
 import { Switch } from "~/components/ui/switch";
 
 import { formatDate, formatChartData, generateInterestCurveData } from "../utils/bank-chart.utils";
 import { chartConfigs, chartColors } from "../types";
 
-type Tabs = "rates" | "tvl";
+type Tabs = "rates" | "tvl" | "interest-curve";
 
 type BankChartProps = {
   bankAddress: string;
@@ -34,16 +33,16 @@ const headerContent: Record<Tabs, { title: string; description: string }> = {
     title: "Rates",
     description: "This chart is a historical view of the deposit and borrow rates.",
   },
-  // "interest-curve": {
-  //   title: "Interest rate curves",
-  //   description: "This chart represents the interest curves at different utilization rates.",
-  // },
+  "interest-curve": {
+    title: "Interest rate curves",
+    description: "This chart represents the interest curves at different utilization rates.",
+  },
 };
 
 const BankChart2 = ({ bankAddress, tab = "tvl" }: BankChartProps) => {
-  const [activeTab, setActiveTab] = React.useState<"tvl" | "rates">(tab);
-  const [showUSD, setShowUSD] = React.useState(true);
-  const [selectedDays, setSelectedDays] = React.useState<number>(7); // 默认7天
+  const [activeTab, setActiveTab] = React.useState<Tabs>(tab);
+  const [showUSD, setShowUSD] = React.useState(false);
+  const selectedDays = 7;
   const [fluxorData, setFluxorData] = useState<FluxorBankTvlApyResponse | null>(null);
   const [fluxorLoading, setFluxorLoading] = useState(true);
   const [fluxorError, setFluxorError] = useState<string | null>(null);
@@ -52,9 +51,9 @@ const BankChart2 = ({ bankAddress, tab = "tvl" }: BankChartProps) => {
   const { getTvlApy } = useFluxorStore();
 
   React.useEffect(() => {
-    // if (activeTab !== "tvl") {
-    //   setShowUSD(false);
-    // }
+    if (activeTab !== "tvl") {
+      setShowUSD(false);
+    }
   }, [activeTab]);
 
   const bank = React.useMemo(() => {
@@ -106,8 +105,8 @@ const BankChart2 = ({ bankAddress, tab = "tvl" }: BankChartProps) => {
         return chartConfigs.tvl;
       case "rates":
         return chartConfigs.rates;
-      // case "interest-curve":
-      //   return chartConfigs.interestCurve;
+      case "interest-curve":
+        return chartConfigs.interestCurve;
       default:
         return chartConfigs.tvl;
     }
@@ -126,12 +125,12 @@ const BankChart2 = ({ bankAddress, tab = "tvl" }: BankChartProps) => {
           tooltipLabel: "%",
           domain: [0, "auto"] as [number, "auto"],
         };
-      // case "interest-curve":
-      //   return {
-      //     yAxisLabel: "",
-      //     tooltipLabel: "%",
-      //     domain: [0, 1] as [number, number],
-      //   };
+      case "interest-curve":
+        return {
+          yAxisLabel: "",
+          tooltipLabel: "%",
+          domain: [0, 1] as [number, number],
+        };
       default:
         return {
           yAxisLabel: "",
@@ -141,41 +140,83 @@ const BankChart2 = ({ bankAddress, tab = "tvl" }: BankChartProps) => {
     }
   })();
 
-  // 使用 Fluxor 数据而不是原来的 useBankChart 数据
-  const hasError = Boolean(fluxorError) || !fluxorData || !fluxorData.items || fluxorData.items.length === 0;
+  const oraclePrice = bank?.info.oraclePrice.priceRealtime.price.toNumber() ?? 0;
+  const interestRateConfig = React.useMemo(() => {
+    const config = bank?.info.rawBank.config.interestRateConfig;
+    if (!config) return null;
+
+    const toNum = (value: { toNumber: () => number } | undefined | null) => value?.toNumber() || 0;
+
+    return {
+      optimalUtilizationRate: toNum(config.optimalUtilizationRate),
+      plateauInterestRate: toNum(config.plateauInterestRate),
+      maxInterestRate: toNum(config.maxInterestRate),
+      insuranceFeeFixedApr: toNum(config.insuranceFeeFixedApr),
+      insuranceIrFee: toNum(config.insuranceIrFee),
+      protocolFixedFeeApr: toNum(config.protocolFixedFeeApr),
+      protocolIrFee: toNum(config.protocolIrFee),
+    };
+  }, [bank]);
+
+  const chartData = React.useMemo(() => {
+    if (!fluxorData?.items) {
+      return null;
+    }
+
+    return fluxorData.items
+      .map((item) => {
+        const timestampNum = Number(item.timestamp) || 0;
+        const timestampMs = timestampNum < 1e12 ? timestampNum * 1000 : timestampNum;
+        const totalDeposits = Number(item.totalSupply) || 0;
+        const totalBorrows = Number(item.totalBorrow) || 0;
+        const totalDepositsUsd = totalDeposits * oraclePrice;
+        const totalBorrowsUsd = totalBorrows * oraclePrice;
+        const utilization = totalDeposits > 0 ? totalBorrows / totalDeposits : 0;
+
+        return {
+          timestamp: new Date(timestampMs).toISOString(),
+          borrowRate: Number(item.borrowApy) || 0,
+          depositRate: Number(item.supplyApy) || 0,
+          totalDeposits,
+          totalBorrows,
+          totalDepositsUsd,
+          totalBorrowsUsd,
+          usdPrice: oraclePrice,
+          utilization,
+          optimalUtilizationRate: interestRateConfig?.optimalUtilizationRate ?? 0,
+          plateauInterestRate: interestRateConfig?.plateauInterestRate ?? 0,
+          maxInterestRate: interestRateConfig?.maxInterestRate ?? 0,
+          insuranceIrFee: interestRateConfig?.insuranceIrFee ?? 0,
+          protocolIrFee: interestRateConfig?.protocolIrFee ?? 0,
+          insuranceFeeFixedApr: interestRateConfig?.insuranceFeeFixedApr ?? 0,
+          protocolFixedFeeApr: interestRateConfig?.protocolFixedFeeApr ?? 0,
+          programFeeRate: 0,
+          baseRate: 0,
+        };
+      })
+      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+  }, [fluxorData, oraclePrice, interestRateConfig]);
+
+  const hasError = Boolean(fluxorError) || !chartData || chartData.length === 0;
   const errorMessage = fluxorError || "No data available";
 
   const formattedData = React.useMemo(() => {
-    if (hasError || !fluxorData?.items) return [];
+    return formatChartData(hasError ? null : chartData, showUSD);
+  }, [chartData, hasError, showUSD]);
 
-    // 将 FluxorBankTvlApyResponse 数据格式化为图表需要的格式
-    return fluxorData.items.map((item) => {
-      const totalSupply = parseFloat(item.totalSupply);
-      const totalBorrow = parseFloat(item.totalBorrow);
-
-      return {
-        timestamp: item.timestamp,
-        // TVL 数据
-        displayTotalDeposits: showUSD ? totalSupply : totalSupply,
-        displayTotalBorrows: showUSD ? totalBorrow : totalBorrow,
-        // Rates 数据
-        depositRate: parseFloat(item.supplyApy),
-        borrowRate: parseFloat(item.borrowApy),
-        // Interest curve 数据 - 直接使用 APY 数据
-        supplyAPY: parseFloat(item.supplyApy),
-        borrowAPY: parseFloat(item.borrowApy),
-        utilization: totalSupply > 0 ? totalBorrow / totalSupply : 0,
-      };
-    });
-  }, [fluxorData, hasError, showUSD]);
-
-  // 移除 generateInterestCurveData，直接使用真实数据
+  const interestCurveData = React.useMemo(() => {
+    const latestDataPoint = formattedData[formattedData.length - 1];
+    return generateInterestCurveData(latestDataPoint);
+  }, [formattedData]);
 
   const CustomTooltipContent = ({ active, payload, label }: any) => {
     if (active && payload && payload.length && !hasError) {
+      const tooltipLabel =
+        activeTab === "interest-curve" ? `Utilization ${(Number(label) * 100).toFixed(0)}%` : formatDate(label);
+
       return (
         <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
-          <p className="text-foreground font-medium">{formatDate(label)}</p>
+          <p className="text-foreground font-medium">{tooltipLabel}</p>
           {payload.map((entry: any, index: number) => (
             <div key={index} className="flex items-center gap-2 mt-1">
               <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: entry.color }} />
@@ -188,9 +229,8 @@ const BankChart2 = ({ bankAddress, tab = "tvl" }: BankChartProps) => {
                         ? `$${dynamicNumeralFormatter(entry.value)}`
                         : `${dynamicNumeralFormatter(entry.value)} ${bank?.meta.tokenSymbol || ""}`;
                     case "rates":
+                    case "interest-curve":
                       return `${entry.value.toFixed(2)}%`;
-                    // case "interest-curve":
-                    //   return `${entry.value.toFixed(2)}%`;
                     default:
                       return entry.value;
                   }
@@ -230,34 +270,7 @@ const BankChart2 = ({ bankAddress, tab = "tvl" }: BankChartProps) => {
             <p className="text-sm text-muted-foreground">{headerContent[activeTab].description}</p>
           </div>
           <div className="flex items-center justify-end gap-2">
-            {/* 天数选择器 */}
-            {/* <ToggleGroup
-              type="single"
-              value={selectedDays.toString()}
-              onValueChange={(value) => value && setSelectedDays(parseInt(value))}
-              className="p-1.5 rounded-md"
-              disabled={hasError}
-            >
-              <ToggleGroupItem
-                value="7"
-                className="text-muted-foreground font-normal h-[1.65rem] data-[state=on]:font-medium data-[state=on]:bg-mfi-action-box-accent data-[state=on]:text-mfi-action-box-accent-foreground hover:bg-mfi-action-box-accent/50 disabled:opacity-50"
-              >
-                7D
-              </ToggleGroupItem>
-              <ToggleGroupItem
-                value="30"
-                className="text-muted-foreground font-normal h-[1.65rem] data-[state=on]:font-medium data-[state=on]:bg-mfi-action-box-accent data-[state=on]:text-mfi-action-box-accent-foreground hover:bg-mfi-action-box-accent/50 disabled:opacity-50"
-              >
-                30D
-              </ToggleGroupItem>
-              <ToggleGroupItem
-                value="90"
-                className="text-muted-foreground font-normal h-[1.65rem] data-[state=on]:font-medium data-[state=on]:bg-mfi-action-box-accent data-[state=on]:text-mfi-action-box-accent-foreground hover:bg-mfi-action-box-accent/50 disabled:opacity-50"
-              >
-                90D
-              </ToggleGroupItem>
-            </ToggleGroup> */}
-            {/* {activeTab === "tvl" && (
+            {activeTab === "tvl" && (
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">USD</span>
                 <Switch
@@ -267,11 +280,11 @@ const BankChart2 = ({ bankAddress, tab = "tvl" }: BankChartProps) => {
                   disabled={hasError}
                 />
               </div>
-            )} */}
+            )}
             <ToggleGroup
               type="single"
               value={activeTab}
-              onValueChange={(value) => setActiveTab(value as "tvl" | "rates")}
+              onValueChange={(value) => setActiveTab(value as Tabs)}
               className="p-1.5 rounded-md"
               disabled={hasError}
             >
@@ -290,12 +303,12 @@ const BankChart2 = ({ bankAddress, tab = "tvl" }: BankChartProps) => {
                 </ToggleGroupItem>
               )}
 
-              {/*   <ToggleGroupItem
+              <ToggleGroupItem
                 value="interest-curve"
                 className="text-muted-foreground font-normal h-[1.65rem] data-[state=on]:font-medium data-[state=on]:bg-mfi-action-box-accent data-[state=on]:text-mfi-action-box-accent-foreground hover:bg-mfi-action-box-accent/50 disabled:opacity-50"
               >
                 IR Curve
-              </ToggleGroupItem> */}
+              </ToggleGroupItem>
             </ToggleGroup>
           </div>
         </div>
@@ -312,7 +325,7 @@ const BankChart2 = ({ bankAddress, tab = "tvl" }: BankChartProps) => {
         <ChartContainer config={chartConfig} className="lg:h-[420px] w-full">
           <AreaChart
             key={activeTab}
-            data={formattedData}
+            data={activeTab === "interest-curve" ? interestCurveData : formattedData}
             margin={{
               top: 24,
               right: 24,
@@ -322,9 +335,14 @@ const BankChart2 = ({ bankAddress, tab = "tvl" }: BankChartProps) => {
           >
             <CartesianGrid vertical={false} />
             <XAxis
-              dataKey="timestamp"
-              tickFormatter={formatDate}
-              interval="preserveStartEnd"
+              dataKey={activeTab === "interest-curve" ? "utilization" : "timestamp"}
+              type={activeTab === "interest-curve" ? "number" : undefined}
+              domain={activeTab === "interest-curve" ? [0, 1] : undefined}
+              tickFormatter={
+                activeTab === "interest-curve" ? (value: number) => `${(value * 100).toFixed(0)}%` : formatDate
+              }
+              ticks={activeTab === "interest-curve" ? [0, 0.2, 0.4, 0.6, 0.8, 1.0] : undefined}
+              interval={activeTab === "interest-curve" ? 0 : "preserveStartEnd"}
               axisLine={false}
               tickLine={false}
               tickMargin={12}
@@ -335,7 +353,7 @@ const BankChart2 = ({ bankAddress, tab = "tvl" }: BankChartProps) => {
               tickFormatter={(value) => {
                 if (activeTab === "tvl" && showUSD) {
                   return `$${dynamicNumeralFormatter(value)}`;
-                } else if (activeTab === "rates") {
+                } else if (activeTab === "rates" || activeTab === "interest-curve") {
                   return `${value.toFixed(2)}%`;
                 } else {
                   return dynamicNumeralFormatter(value);
@@ -415,31 +433,44 @@ const BankChart2 = ({ bankAddress, tab = "tvl" }: BankChartProps) => {
                         />
                       </>
                     );
-                  // case "interest-curve": {
-                  //   return (
-                  //     <>
-                  //       <Area
-                  //         dataKey="borrowAPY"
-                  //         type="monotone"
-                  //         fill="url(#fillPrimary)"
-                  //         stroke={chartColors.secondary}
-                  //         strokeWidth={2}
-                  //         name="Borrow APY"
-                  //       />
-                  //       <Area
-                  //         dataKey="supplyAPY"
-                  //         type="monotone"
-                  //         fill="url(#fillSecondary)"
-                  //         stroke={chartColors.primary}
-                  //         strokeWidth={2}
-                  //         name="Supply APY"
-                  //       />
-                  //     </>
-                  // );
-                  // }
+                  case "interest-curve": {
+                    return (
+                      <>
+                        <Area
+                          dataKey="borrowAPY"
+                          data={interestCurveData}
+                          type="monotone"
+                          fill="url(#fillPrimary)"
+                          stroke={chartColors.secondary}
+                          strokeWidth={2}
+                          name="Borrow APY"
+                        />
+                        <Area
+                          dataKey="supplyAPY"
+                          data={interestCurveData}
+                          type="monotone"
+                          fill="url(#fillSecondary)"
+                          stroke={chartColors.primary}
+                          strokeWidth={2}
+                          name="Supply APY"
+                        />
+                        <ReferenceLine
+                          x={currentUtilizationRateDecimal}
+                          stroke="#ffffff"
+                          strokeDasharray="3 3"
+                          label={{
+                            value: `Current utilization: ${(currentUtilizationRateDecimal * 100).toFixed(1)}%`,
+                            position: "top",
+                            fill: "#ffffff",
+                            fontSize: 12,
+                          }}
+                        />
+                      </>
+                    );
+                  }
 
-                  // default:
-                  //   return null;
+                  default:
+                    return null;
                 }
               })()}
           </AreaChart>

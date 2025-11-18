@@ -132,8 +132,22 @@ export const fillDataGaps = (
   return filledData;
 };
 
-export const formatDate = (dateStr: string) => {
-  const date = new Date(dateStr);
+export const formatDate = (value: string | number | Date) => {
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+  let date: Date;
+
+  if (value instanceof Date) {
+    date = value;
+  } else if (typeof value === "number") {
+    const normalizedValue = value < 1e12 ? value * 1000 : value;
+    date = new Date(normalizedValue);
+  } else {
+    date = new Date(value);
+  }
+
   return date.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",

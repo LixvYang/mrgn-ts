@@ -148,7 +148,7 @@ export const formatDate = (value: string | number | Date) => {
     date = new Date(value);
   }
 
-  return date.toLocaleDateString("en-US", {
+  return date.toLocaleDateString("zh-CN", {
     month: "short",
     day: "numeric",
   });

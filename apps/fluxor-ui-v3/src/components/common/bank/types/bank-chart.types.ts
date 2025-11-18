@@ -41,31 +41,31 @@ export const chartColors = {
 export const chartConfigs = {
   rates: {
     depositRate: {
-      label: "Deposit Rate",
+      label: "存款利率",
       color: chartColors.primary,
     },
     borrowRate: {
-      label: "Borrow Rate",
+      label: "借款利率",
       color: chartColors.secondary,
     },
   },
   interestCurve: {
     borrowAPY: {
-      label: "Borrow APY",
+      label: "借款 APY",
       color: chartColors.secondary,
     },
     supplyAPY: {
-      label: "Supply APY",
+      label: "存款 APY",
       color: chartColors.primary,
     },
   },
   tvl: {
     displayTotalDeposits: {
-      label: "Total Deposits",
+      label: "总存款",
       color: chartColors.primary,
     },
     displayTotalBorrows: {
-      label: "Total Borrows",
+      label: "总借款",
       color: chartColors.secondary,
     },
   },

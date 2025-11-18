@@ -26,16 +26,16 @@ type BankChartProps = {
 
 const headerContent: Record<Tabs, { title: string; description: string }> = {
   tvl: {
-    title: "TVL",
-    description: "This chart is a historical view of the total locked value in the bank.",
+    title: "TVL（锁仓规模）",
+    description: "展示该银行近一段时间的总锁仓及借款规模。",
   },
   rates: {
-    title: "Rates",
-    description: "This chart is a historical view of the deposit and borrow rates.",
+    title: "利率表现",
+    description: "展示存款与借款利率的历史走势。",
   },
   "interest-curve": {
-    title: "Interest rate curves",
-    description: "This chart represents the interest curves at different utilization rates.",
+    title: "利率曲线",
+    description: "展示不同利用率下的利率曲线，便于评估资金成本。",
   },
 };
 
@@ -115,8 +115,8 @@ const BankChart2 = ({ bankAddress, tab = "tvl" }: BankChartProps) => {
     switch (activeTab) {
       case "tvl":
         return {
-          yAxisLabel: showUSD ? "USD" : "Tokens",
-          tooltipLabel: showUSD ? "USD" : bank?.meta.tokenSymbol || "Tokens",
+          yAxisLabel: showUSD ? "美元" : bank?.meta.tokenSymbol || "代币",
+          tooltipLabel: showUSD ? "美元" : bank?.meta.tokenSymbol || "代币",
           domain: [0, "auto"] as [number, "auto"],
         };
       case "rates":
@@ -198,7 +198,7 @@ const BankChart2 = ({ bankAddress, tab = "tvl" }: BankChartProps) => {
   }, [fluxorData, oraclePrice, interestRateConfig]);
 
   const hasError = Boolean(fluxorError) || !chartData || chartData.length === 0;
-  const errorMessage = fluxorError || "No data available";
+  const errorMessage = fluxorError || "暂无图表数据";
 
   const formattedData = React.useMemo(() => {
     return formatChartData(hasError ? null : chartData, showUSD);
@@ -212,7 +212,7 @@ const BankChart2 = ({ bankAddress, tab = "tvl" }: BankChartProps) => {
   const CustomTooltipContent = ({ active, payload, label }: any) => {
     if (active && payload && payload.length && !hasError) {
       const tooltipLabel =
-        activeTab === "interest-curve" ? `Utilization ${(Number(label) * 100).toFixed(0)}%` : formatDate(label);
+        activeTab === "interest-curve" ? `利用率 ${(Number(label) * 100).toFixed(0)}%` : formatDate(label);
 
       return (
         <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
@@ -228,8 +228,8 @@ const BankChart2 = ({ bankAddress, tab = "tvl" }: BankChartProps) => {
                       return showUSD
                         ? `$${dynamicNumeralFormatter(entry.value)}`
                         : `${dynamicNumeralFormatter(entry.value)} ${bank?.meta.tokenSymbol || ""}`;
-                    case "rates":
-                    case "interest-curve":
+                  case "rates":
+                  case "interest-curve":
                       return `${entry.value.toFixed(2)}%`;
                     default:
                       return entry.value;
@@ -248,7 +248,7 @@ const BankChart2 = ({ bankAddress, tab = "tvl" }: BankChartProps) => {
       <Card className="w-full bg-background-gray h-[520px] flex flex-col items-center justify-center">
         <CardContent className="flex flex-col items-center justify-center w-full h-full gap-2">
           <IconLoader2 size={16} className="animate-spin" />
-          <p className="text-muted-foreground">Loading chart...</p>
+          <p className="text-muted-foreground">正在加载图表...</p>
         </CardContent>
       </Card>
     );
@@ -257,22 +257,19 @@ const BankChart2 = ({ bankAddress, tab = "tvl" }: BankChartProps) => {
   return (
     <Card className="bg-transparent border-none h-full md:h-[520px]">
       <CardHeader className="sr-only">
-        <CardTitle>Bank History</CardTitle>
-        <CardDescription>
-          Chart showing interest rates and total deposits and borrows over the last {selectedDays} days.
-        </CardDescription>
+        <CardTitle>银行历史数据</CardTitle>
+        <CardDescription>展示近 {selectedDays} 天的锁仓规模、利率表现以及利率曲线。</CardDescription>
       </CardHeader>
       <CardContent className="p-3 rounded-lg space-y-4 relative bg-background-gray pt-8">
-        <div className="flex items-center justify-between px-3">
-          <div className="max-w-[65%] flex flex-col items-start justify-start gpa-1">
+        <div className="flex w-full flex-col gap-4 px-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex flex-col items-start justify-start gap-1 max-w-full sm:max-w-[65%]">
             <h3 className="text-lg">{headerContent[activeTab].title}</h3>
-
-            <p className="text-sm text-muted-foreground">{headerContent[activeTab].description}</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">{headerContent[activeTab].description}</p>
           </div>
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex w-full flex-wrap items-center justify-start gap-2 sm:w-auto sm:justify-end">
             {activeTab === "tvl" && (
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">USD</span>
+                <span className="text-sm text-muted-foreground">美元</span>
                 <Switch
                   checked={showUSD}
                   onCheckedChange={setShowUSD}
@@ -285,7 +282,7 @@ const BankChart2 = ({ bankAddress, tab = "tvl" }: BankChartProps) => {
               type="single"
               value={activeTab}
               onValueChange={(value) => setActiveTab(value as Tabs)}
-              className="p-1.5 rounded-md"
+              className="p-1.5 rounded-md flex flex-wrap gap-1"
               disabled={hasError}
             >
               <ToggleGroupItem
@@ -397,7 +394,7 @@ const BankChart2 = ({ bankAddress, tab = "tvl" }: BankChartProps) => {
                           fillOpacity={0.4}
                           stroke={chartColors.primary}
                           strokeWidth={2}
-                          name="Total Deposits"
+                          name="总存款"
                         />
                         <Area
                           dataKey="displayTotalBorrows"
@@ -406,7 +403,7 @@ const BankChart2 = ({ bankAddress, tab = "tvl" }: BankChartProps) => {
                           fillOpacity={0.4}
                           stroke={chartColors.secondary}
                           strokeWidth={2}
-                          name="Total Borrows"
+                          name="总借款"
                         />
                       </>
                     );
@@ -420,7 +417,7 @@ const BankChart2 = ({ bankAddress, tab = "tvl" }: BankChartProps) => {
                           fillOpacity={0.4}
                           stroke={chartColors.primary}
                           strokeWidth={2}
-                          name="Deposit Rate"
+                          name="存款利率"
                         />
                         <Area
                           dataKey="borrowRate"
@@ -429,7 +426,7 @@ const BankChart2 = ({ bankAddress, tab = "tvl" }: BankChartProps) => {
                           fillOpacity={0.4}
                           stroke={chartColors.secondary}
                           strokeWidth={2}
-                          name="Borrow Rate"
+                          name="借款利率"
                         />
                       </>
                     );
@@ -443,7 +440,7 @@ const BankChart2 = ({ bankAddress, tab = "tvl" }: BankChartProps) => {
                           fill="url(#fillPrimary)"
                           stroke={chartColors.secondary}
                           strokeWidth={2}
-                          name="Borrow APY"
+                          name="借款 APY"
                         />
                         <Area
                           dataKey="supplyAPY"
@@ -452,14 +449,14 @@ const BankChart2 = ({ bankAddress, tab = "tvl" }: BankChartProps) => {
                           fill="url(#fillSecondary)"
                           stroke={chartColors.primary}
                           strokeWidth={2}
-                          name="Supply APY"
+                          name="存款 APY"
                         />
                         <ReferenceLine
                           x={currentUtilizationRateDecimal}
                           stroke="#ffffff"
                           strokeDasharray="3 3"
                           label={{
-                            value: `Current utilization: ${(currentUtilizationRateDecimal * 100).toFixed(1)}%`,
+                            value: `当前利用率 ${(currentUtilizationRateDecimal * 100).toFixed(1)}%`,
                             position: "top",
                             fill: "#ffffff",
                             fontSize: 12,

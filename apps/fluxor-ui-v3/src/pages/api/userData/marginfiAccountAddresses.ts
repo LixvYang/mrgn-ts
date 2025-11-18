@@ -45,19 +45,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const authorityPk = new PublicKey(authority);
     const groupPk = new PublicKey(group);
 
+    // 临时解决一下
+    if (
+      authorityPk.toBase58() === "J7V72Ap7pfxT3SDPwCYu2Cjvg7Put79Dix45BwQUeFeW" &&
+      groupPk.toBase58() === "4X38G7YHpS1jjc7hAKvT2dzcGuTCaZfhyDx56Qs9Tk51"
+    ) {
+      res.status(200).json({ marginfiAccounts: ["7g1RboWwS2cTVEaiDWYes7DBQBbeJSUCRJihH6rZTP5r"] });
+      return;
+    }
+
+    if (
+      authorityPk.toBase58() === "DnpeSizw2obsEnDUe9tdTKPvuUMvEKFn7xfu7QGJBppn" &&
+      groupPk.toBase58() === "4X38G7YHpS1jjc7hAKvT2dzcGuTCaZfhyDx56Qs9Tk51"
+    ) {
+      res.status(200).json({ marginfiAccounts: ["Fh2xgsstK4d9d4qJZUWprYKqYszKsc9LPxtjKJzrU8TF"] });
+      return;
+    }
+
     let marginfiAccounts = await fetchMarginfiAccountAddresses(program, authorityPk, groupPk);
+
     if (marginfiAccounts.length > 1) {
       marginfiAccounts = [marginfiAccounts[marginfiAccounts.length - 1]];
     }
-
-    // // 临时解决一下
-    // if (
-    //   authorityPk.toBase58() === "J7V72Ap7pfxT3SDPwCYu2Cjvg7Put79Dix45BwQUeFeW" &&
-    //   groupPk.toBase58() === "4X38G7YHpS1jjc7hAKvT2dzcGuTCaZfhyDx56Qs9Tk51"
-    // ) {
-    //   res.status(200).json({ marginfiAccounts: ["7g1RboWwS2cTVEaiDWYes7DBQBbeJSUCRJihH6rZTP5r"] });
-    //   return;
-    // }
 
     res.status(200).json({ marginfiAccounts: marginfiAccounts.map((a) => a.toBase58()) });
   } catch (error) {

@@ -25,7 +25,17 @@ import { initFluxorClient } from "../fluxor";
 
 const getErrorStatusCode = (error: unknown): number | undefined => {
   if (!error || typeof error !== "object") return undefined;
-  const err = error as { status?: number; statusCode?: number; response?: { status?: number } };
+  const err = error as {
+    status?: number;
+    statusCode?: number;
+    response?: { status?: number };
+    error?: { code?: number; status?: number }
+  };
+
+  // Mixin API 错误格式: { error: { status: 202, code: 401, description: "..." } }
+  if (err.error?.code) return err.error.code;
+
+  // 标准错误格式
   return err.status ?? err.statusCode ?? err.response?.status;
 };
 
@@ -139,7 +149,13 @@ const createComputerStore = () => {
                 });
               }
             } catch (error) {
-              console.error("getMe failed:", error);
+              const status = getErrorStatusCode(error);
+              if (status === 401) {
+                console.warn("Mixin API returned 401 in getMe, clearing stored session.");
+                get().clear({ sessionExpired: true });
+              } else {
+                console.error("getMe failed:", error);
+              }
             }
           },
 
@@ -337,7 +353,15 @@ const createComputerStore = () => {
               let mas: SafeAsset[] = [];
               try {
                 mas = await mixinClient.safe.fetchAssets(ids);
-              } catch (e) {}
+              } catch (e) {
+                const status = getErrorStatusCode(e);
+                if (status === 401) {
+                  console.warn("Mixin API returned 401 in getComputerAssets, clearing stored session.");
+                  get().clear({ sessionExpired: true });
+                  return;
+                }
+                console.error("Failed to fetch assets:", e);
+              }
               const fas = mas.map((a: any) => ({
                 ...assets[mp[a.asset_id]],
                 asset: a,

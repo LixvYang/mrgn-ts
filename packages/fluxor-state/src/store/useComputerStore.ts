@@ -23,6 +23,12 @@ import { NATIVE_MINT, SYSTEM_PROGRAM_ID } from "@mrgnlabs/mrgn-common";
 import { add } from "../number";
 import { initFluxorClient } from "../fluxor";
 
+const getErrorStatusCode = (error: unknown): number | undefined => {
+  if (!error || typeof error !== "object") return undefined;
+  const err = error as { status?: number; statusCode?: number; response?: { status?: number } };
+  return err.status ?? err.statusCode ?? err.response?.status;
+};
+
 export type MixinClient = ReturnType<typeof MixinApi>;
 
 interface ComputerState {
@@ -36,6 +42,7 @@ interface ComputerState {
   publicKey?: PublicKey | string; // 允许字符串类型以兼容 localStorage 持久化
   connected: boolean;
   register: boolean;
+  sessionExpired: boolean;
 
   // Actions
   getMixinClient: () => MixinClient;
@@ -46,7 +53,8 @@ interface ComputerState {
   getComputerInfo: () => Promise<void>;
   getComputerAccount: () => Promise<void>;
   getComputerRecipient: () => string;
-  clear: () => void;
+  clear: (opts?: { sessionExpired?: boolean }) => void;
+  setSessionExpired: (expired: boolean) => void;
 
   // Computed getters
   getPublicKey: () => PublicKey | undefined;
@@ -69,6 +77,7 @@ const initComputerState = {
   computerAssets: [],
   computerAssetIdMap: {},
   computerAssetAddressMap: {},
+  sessionExpired: false,
 };
 
 const computerClient = initComputerClient();
@@ -148,71 +157,82 @@ const createComputerStore = () => {
           updateBalances: async (as: ComputerAssetResponse[]) => {
             const { user, getMixinClient } = get();
             if (!user) return;
-            const client = getMixinClient();
-            const members = [user.user_id];
-            let offset = 0;
-            let total: SafeUtxoOutput[] = [];
-            while (true) {
-              const outputs = await client.utxo.safeOutputs({
-                limit: 500,
-                members,
-                threshold: 1,
-                state: "unspent",
-                offset,
-              });
-              total = [...total, ...outputs];
-              if (outputs.length < 500) {
-                break;
-              }
-              offset = outputs[outputs.length - 1].sequence + 1;
-            }
-            const bm = total.reduce(
-              (prev, cur) => {
-                const key = cur.asset_id;
-                if (prev[key]) {
-                  prev[key].outputs = [...prev[key].outputs, cur];
-                  prev[key].total_amount = add(prev[key].total_amount, cur.amount).toString();
-                } else {
-                  const address = as.find((a) => a.asset_id === cur.asset_id)?.address;
-                  prev[key] = {
-                    asset_id: cur.asset_id,
-                    total_amount: cur.amount,
-                    outputs: [cur],
-                    address,
-                  };
+
+            try {
+              const client = getMixinClient();
+              const members = [user.user_id];
+              let offset = 0;
+              let total: SafeUtxoOutput[] = [];
+              while (true) {
+                const outputs = await client.utxo.safeOutputs({
+                  limit: 500,
+                  members,
+                  threshold: 1,
+                  state: "unspent",
+                  offset,
+                });
+                total = [...total, ...outputs];
+                if (outputs.length < 500) {
+                  break;
                 }
-                return prev;
-              },
-              {} as Record<string, UserAssetBalanceWithoutAsset>
-            );
-            const assets = await client.safe.fetchAssets(Object.keys(bm));
+                offset = outputs[outputs.length - 1].sequence + 1;
+              }
+              const bm = total.reduce(
+                (prev, cur) => {
+                  const key = cur.asset_id;
+                  if (prev[key]) {
+                    prev[key].outputs = [...prev[key].outputs, cur];
+                    prev[key].total_amount = add(prev[key].total_amount, cur.amount).toString();
+                  } else {
+                    const address = as.find((a) => a.asset_id === cur.asset_id)?.address;
+                    prev[key] = {
+                      asset_id: cur.asset_id,
+                      total_amount: cur.amount,
+                      outputs: [cur],
+                      address,
+                    };
+                  }
+                  return prev;
+                },
+                {} as Record<string, UserAssetBalanceWithoutAsset>
+              );
+              const assets = await client.safe.fetchAssets(Object.keys(bm));
 
-            const fbm = assets.reduce(
-              (prev, cur) => {
-                const b = bm[cur.asset_id];
-                const v: UserAssetBalance = { ...b, asset: cur };
-                if (cur.chain_id === SOL_ASSET_ID) v.address = cur.asset_key;
-                prev[cur.asset_id] = v;
-                return prev;
-              },
-              {} as Record<string, UserAssetBalance>
-            );
+              const fbm = assets.reduce(
+                (prev, cur) => {
+                  const b = bm[cur.asset_id];
+                  const v: UserAssetBalance = { ...b, asset: cur };
+                  if (cur.chain_id === SOL_ASSET_ID) v.address = cur.asset_key;
+                  prev[cur.asset_id] = v;
+                  return prev;
+                },
+                {} as Record<string, UserAssetBalance>
+              );
 
-            const bs = Object.values(fbm).filter((b) => b.address);
-            // const am = Object.fromEntries(bs.map((b) => [b.address, b])) as Record<string, UserAssetBalance>;
-            // 转换地址
-            const convertedBs = bs.map((b) => ({
-              ...b,
-              address:
-                b.address === SYSTEM_PROGRAM_ID.toString()
-                  ? NATIVE_MINT.toString()
-                  : b.address === NATIVE_MINT.toString()
-                    ? SYSTEM_PROGRAM_ID.toString()
-                    : b.address,
-            }));
-            const am = Object.fromEntries(convertedBs.map((b) => [b.address, b])) as Record<string, UserAssetBalance>;
+              const bs = Object.values(fbm).filter((b) => b.address);
+              // const am = Object.fromEntries(bs.map((b) => [b.address, b])) as Record<string, UserAssetBalance>;
+              // 转换地址
+              const convertedBs = bs.map((b) => ({
+                ...b,
+                address:
+                  b.address === SYSTEM_PROGRAM_ID.toString()
+                    ? NATIVE_MINT.toString()
+                    : b.address === NATIVE_MINT.toString()
+                      ? SYSTEM_PROGRAM_ID.toString()
+                      : b.address,
+              }));
+              const am = Object.fromEntries(convertedBs.map((b) => [b.address, b])) as Record<string, UserAssetBalance>;
 
-            set({ balances: fbm, balanceAddressMap: am });
+              set({ balances: fbm, balanceAddressMap: am });
+            } catch (error) {
+              const status = getErrorStatusCode(error);
+              if (status === 401) {
+                console.warn("Mixin API returned 401, clearing stored session.");
+                get().clear({ sessionExpired: true });
+              } else {
+                console.error("Failed to update Mixin balances:", error);
+              }
+            }
           },
 
           getComputerInfo: async () => {
@@ -254,7 +274,7 @@ const createComputerStore = () => {
             });
           },
 
-          clear: () => {
+          clear: (opts?: { sessionExpired?: boolean }) => {
             set({
               user: undefined,
               keystore: undefined,
@@ -265,7 +285,12 @@ const createComputerStore = () => {
               connected: false,
               register: false,
               publicKey: PublicKey.default,
+              sessionExpired: opts?.sessionExpired ?? false,
             });
+          },
+
+          setSessionExpired: (expired: boolean) => {
+            set({ sessionExpired: expired });
           },
 
           // Computed getters

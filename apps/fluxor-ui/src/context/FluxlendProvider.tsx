@@ -32,6 +32,7 @@ import { PublicKey } from "@solana/web3.js";
 import { Wallet } from "@mrgnlabs/mrgn-common";
 import { getConfig, MarginfiAccount, MarginfiAccountType, MarginfiAccountWrapper } from "@mrgnlabs/marginfi-client-v2";
 import { useConnection } from "@mrgnlabs/mrgn-utils";
+import { toastManager } from "@mrgnlabs/mrgn-toasts";
 
 export const FluxlendProvider: React.FC<{
   children: React.ReactNode;
@@ -53,6 +54,8 @@ export const FluxlendProvider: React.FC<{
     user: mixinUser,
     getComputerRecipient,
     getMixinClient,
+    sessionExpired,
+    setSessionExpired,
   } = useComputerStore();
   const { connection } = useConnection();
   const { getGlobalStatistics } = useFluxorStore();
@@ -70,6 +73,13 @@ export const FluxlendProvider: React.FC<{
     signAllTransactions: () => new Promise(() => {}),
   });
   // const { wallet, walletAddress } = useWallet();
+
+  React.useEffect(() => {
+    if (sessionExpired) {
+      toastManager.showErrorToast("Mixin session expired. Please reconnect your wallet.");
+      setSessionExpired(false);
+    }
+  }, [sessionExpired, setSessionExpired]);
 
   // 使用 useEffect 处理钱包状态更新
   React.useEffect(() => {

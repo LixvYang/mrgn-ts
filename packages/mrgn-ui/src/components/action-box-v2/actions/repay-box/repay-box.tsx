@@ -552,7 +552,7 @@ export const RepayBox = ({
           hasErrorMessages={additionalActionMessages.length > 0}
           isActive={selectedBank && amount > 0 ? true : false}
         />
-        {setDisplaySettings && <ActionSettingsButton onClick={() => setDisplaySettings(true)} />}
+        {/* {setDisplaySettings && <ActionSettingsButton onClick={() => setDisplaySettings(true)} />} */}
       </div>
 
       {actionSummary && selectedBank && (

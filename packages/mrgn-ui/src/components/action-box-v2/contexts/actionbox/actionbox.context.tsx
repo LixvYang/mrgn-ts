@@ -14,7 +14,7 @@ export type HidePoolStats = Array<"amount" | "health" | "size" | "type" | "oracl
 type ActionBoxContextType = {
   banks: ExtendedBankInfo[];
   nativeSolBalance: number;
-  connected: boolean;
+  connected: boolean; // ✅ 用户已完全连接 (Mixin 登录 + 金融云注册)
   marginfiClient: MarginfiClient | null;
   selectedAccount: MarginfiAccountWrapper | null;
   walletContextState?: WalletContextStateOverride | WalletContextState;
@@ -24,6 +24,7 @@ type ActionBoxContextType = {
   stakeAccounts?: ValidatorStakeGroup[];
   setDisplaySettings?: (displaySettings: boolean) => void;
 
+  // Mixin 相关状态
   getUserMix?: () => string;
   computerInfo?: ComputerInfoResponse;
   connection?: Connection;
@@ -33,6 +34,10 @@ type ActionBoxContextType = {
   fetchTransaction?: (transactionId: string) => Promise<SequencerTransactionRequest>;
   refreshMixinBalances?: () => Promise<void>;
   mixinUser?: UserResponse | undefined;
+
+  // ✅ 新增: Mixin 注册状态
+  mixinConnected?: boolean; // Mixin 登录状态 (true = 已登录 Mixin)
+  mixinRegistered?: boolean; // 金融云注册状态 (true = 已注册金融云)
 };
 
 const ActionBoxContext = React.createContext<ActionBoxContextType | null>(null);

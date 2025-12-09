@@ -34,6 +34,7 @@ import { Wallet } from "@mrgnlabs/mrgn-common";
 import { MarginfiAccount, MarginfiAccountType, MarginfiAccountWrapper } from "@mrgnlabs/marginfi-client-v2";
 import { useConnection } from "@mrgnlabs/mrgn-utils";
 import { toastManager } from "@mrgnlabs/mrgn-toasts";
+import { MixinRegisterGuard } from "~/components/common/MixinWallet/components/MixinRegisterGuard";
 
 export const FluxlendProvider: React.FC<{
   children: React.ReactNode;
@@ -252,7 +253,7 @@ export const FluxlendProvider: React.FC<{
         nativeSolBalance={userBalances?.nativeSolBalance ?? 0}
         marginfiClient={marginfiClient ?? null}
         selectedAccount={selectedAccount}
-        connected={false}
+        connected={connected && register} // ✅ 修复: 用户必须已连接 Mixin 且已注册金融云
         setDisplaySettings={setDisplaySettings}
         stakePoolMetadataMap={stakePoolMetadataMap}
         stakeAccounts={stakeAccounts ?? []}
@@ -265,8 +266,14 @@ export const FluxlendProvider: React.FC<{
         fetchTransaction={getMixinClient()?.utxo.fetchTransaction}
         refreshMixinBalances={refreshMixinBalances}
         mixinUser={mixinUser}
+        // ✅ 新增: 明确传递 Mixin 登录和注册状态
+        mixinConnected={connected} // Mixin 登录状态
+        mixinRegistered={register} // 金融云注册状态
       >
         {children}
+
+        {/* Mixin 注册守卫 - 检测未注册用户并显示提示 */}
+        <MixinRegisterGuard />
 
         <AuthDialog
           mrgnState={{

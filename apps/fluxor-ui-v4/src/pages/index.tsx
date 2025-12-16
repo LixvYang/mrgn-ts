@@ -2,6 +2,7 @@ import React from "react";
 
 import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
+import { useMediaQuery } from "react-responsive";
 
 import { shortenAddress } from "@mrgnlabs/mrgn-common";
 import { capture, Desktop, LendingModes, Mobile } from "@mrgnlabs/mrgn-utils";
@@ -36,7 +37,7 @@ const MobileAssetsList = dynamic(async () => (await import("~/components/mobile/
   ssr: false,
 });
 
-export default function HomePage() {
+function DesktopHome() {
   const { walletContextState, walletAddress, isOverride } = useWallet();
   const { connected } = useComputerStore();
   const assetData = useAssetData();
@@ -131,4 +132,20 @@ export default function HomePage() {
       </Mobile>
     </>
   );
+}
+
+export default function HomePage() {
+  const router = useRouter();
+  const isMobileHome = useMediaQuery({ maxWidth: 1023 });
+
+  React.useEffect(() => {
+    if (!isMobileHome) return;
+    router.replace("/earn");
+  }, [isMobileHome, router]);
+
+  if (isMobileHome) {
+    return <div className="min-h-screen bg-background pb-24" />;
+  }
+
+  return <DesktopHome />;
 }

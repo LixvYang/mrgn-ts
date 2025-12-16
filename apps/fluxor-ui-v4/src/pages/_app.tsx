@@ -138,7 +138,7 @@ export default function MrgnApp({ Component, pageProps }: AppProps) {
                             </Desktop>
 
                             <Mobile>
-                              <div className={cn("w-full flex flex-col justify-center items-center")}>
+                              <div className={cn("w-full flex flex-col justify-center")}>
                                 <Component {...pageProps} />
                               </div>
                               <MobileNavbar />

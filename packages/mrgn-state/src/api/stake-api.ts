@@ -80,19 +80,20 @@ export const fetchActiveStakePoolMap = async (voteAccounts: PublicKey[]) => {
 };
 
 export const fetchUserStakeAccounts = async (address?: PublicKey) => {
-  if (!address) {
-    return [];
-  }
+  return [];
+  // if (!address) {
+  //   return [];
+  // }
 
-  const response = await fetch("/api/stakeData/userStakeAccountData?address=" + address.toBase58(), {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+  // const response = await fetch("/api/stakeData/userStakeAccountData?address=" + address.toBase58(), {
+  //   method: "GET",
+  //   headers: {
+  //     "Content-Type": "application/json",
+  //   },
+  // });
 
-  const data: ValidatorStakeGroupDto[] = await response.json();
-  const validatorGroups = data.map((validatorGroup) => dtoToValidatorStakeGroup(validatorGroup));
+  // const data: ValidatorStakeGroupDto[] = await response.json();
+  // const validatorGroups = data.map((validatorGroup) => dtoToValidatorStakeGroup(validatorGroup));
 
-  return validatorGroups;
+  // return validatorGroups;
 };

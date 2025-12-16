@@ -360,6 +360,15 @@ export const Navbar: FC = () => {
                 投资组合
               </Link>
 
+              <Link
+                href={"/simulate"}
+                className={`${
+                  router.pathname === "/simulate" ? "text-primary hover-underline-static" : "hover-underline-animation"
+                } whitespace-nowrap`}
+              >
+                模拟
+              </Link>
+
               {/* {lipAccount && lipAccount.deposits.length > 0 && (
                 <Link
                   href={"/earn"}

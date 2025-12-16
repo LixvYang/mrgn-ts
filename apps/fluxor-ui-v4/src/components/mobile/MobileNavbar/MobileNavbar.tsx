@@ -13,6 +13,7 @@ import {
   IconPlus,
   IconHelp,
   IconZoomMoney,
+  IconCalculator,
 } from "@tabler/icons-react";
 import { cn } from "@mrgnlabs/mrgn-utils";
 
@@ -58,6 +59,12 @@ export const mobileLinks: NavLinkInfo[] = [
 ];
 
 const additionalLinks: NavLinkInfo[] = [
+  {
+    href: "/simulate",
+    alt: "simulate icon",
+    label: "模拟",
+    Icon: IconCalculator,
+  },
   // {
   //   href: "/ecosystem",
   //   alt: "world icon",

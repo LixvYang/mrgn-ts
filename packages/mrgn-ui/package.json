@@ -68,6 +68,7 @@
     "lottie-react": "^2.4.0",
     "lucide-react": "^0.475.0",
     "minidenticons": "^4.2.0",
+    "motion": "^12.23.25",
     "numeral": "^2.0.6",
     "qr-code-styling": "^1.9.2",
     "react-confetti": "^6.1.0",

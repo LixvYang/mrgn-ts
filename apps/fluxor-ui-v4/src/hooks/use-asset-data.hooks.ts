@@ -82,7 +82,7 @@ export function useAssetData(): AssetListData {
     // });
 
     // return map;
-  }, [stakeAccounts]);
+  }, []);
 
   const { data: selectedAccount } = useMarginfiAccount();
   const { activeEmodePairs, emodePairs } = useEmode();

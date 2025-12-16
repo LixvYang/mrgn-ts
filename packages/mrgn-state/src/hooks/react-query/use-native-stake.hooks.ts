@@ -95,6 +95,8 @@ export function useValidatorRates() {
 }
 
 export function useUserStakeAccounts() {
+  // return []
+
   const address = useWalletAddress();
   return useQuery<ValidatorStakeGroup[], Error>({
     queryKey: ["userStakeAccounts", address?.toBase58()],

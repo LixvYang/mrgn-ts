@@ -1,5 +1,5 @@
 {
-    "app_dir": "apps/fluxor-ui-v3",
-    "build_command": "cd ../../ && pnpm build --filter=marginfi-client-v2 --filter=mrgn-state --filter=mrgn-toasts --filter=mrgn-ui --filter=mrgn-utils --filter=fluxor-state --filter=fluxor-ui-v3",
+    "app_dir": "apps/fluxor-ui-v4",
+    "build_command": "cd ../../ && pnpm build --filter=marginfi-client-v2 --filter=mrgn-state --filter=mrgn-toasts --filter=mrgn-ui --filter=mrgn-utils --filter=fluxor-state --filter=fluxor-ui-v4 --filter=mrgn-common",
     "start_command": "pnpm start"
 }

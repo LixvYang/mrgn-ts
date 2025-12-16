@@ -24,9 +24,17 @@ interface LoginModalProps {
   onConnected?: () => void;
 }
 
+const isMixinContext = (): boolean => {
+  if (typeof window === "undefined") return false;
+  if ((window as any).webkit?.messageHandlers?.MixinContext) return true;
+  if ((window as any).MixinContext) return true;
+  return false;
+};
+
 export const LoginModal = ({ open, onClose, onConnected }: LoginModalProps) => {
   const [loginCode, setLoginCode] = useState("");
   const [error, setError] = useState<string>();
+  const [hasOpenedMixin, setHasOpenedMixin] = useState(false);
 
   const {
     getMixinClient,
@@ -117,8 +125,19 @@ export const LoginModal = ({ open, onClose, onConnected }: LoginModalProps) => {
       }
       setLoginCode("");
       setError(undefined);
+      setHasOpenedMixin(false);
     };
   }, [open]);
+
+  useEffect(() => {
+    if (!open || !loginCode) return;
+    if (!isMixinContext()) return;
+    if (hasOpenedMixin) return;
+    setHasOpenedMixin(true);
+    window.location.href = loginCode;
+  }, [open, loginCode, hasOpenedMixin]);
+
+  const inMixin = isMixinContext();
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -126,36 +145,57 @@ export const LoginModal = ({ open, onClose, onConnected }: LoginModalProps) => {
         <div className="w-[300px] h-[300px] mx-auto">
           {loginCode ? (
             <>
-              <QrCode value={loginCode} className="w-full h-full  p-4 rounded-lg" />
-              <Button
-                variant="default"
-                size="lg"
-                className="mt-4 w-full"
-                onClick={() => window.open(loginCode, "_blank", "noopener,noreferrer")}
-              >
-                <svg
-                  className="w-5 h-5 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-                  />
-                </svg>
-                Connect Wallet
-              </Button>
+              {inMixin ? (
+                <div className="w-full h-full flex flex-col items-center justify-center gap-4 p-6 text-center">
+                  <div className="text-lg font-semibold text-nav-light-text dark:text-nav-dark-text">正在打开 Mixin…</div>
+                  <div className="text-sm text-nav-light-text/80 dark:text-nav-dark-text/80">
+                    已在 Mixin Messenger 内运行，无需扫码。
+                  </div>
+                  <Button
+                    variant="default"
+                    size="lg"
+                    className="w-full"
+                    onClick={() => {
+                      window.location.href = loginCode;
+                    }}
+                  >
+                    继续连接
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <QrCode value={loginCode} className="w-full h-full  p-4 rounded-lg" />
+                  <Button
+                    variant="default"
+                    size="lg"
+                    className="mt-4 w-full"
+                    onClick={() => window.open(loginCode, "_blank", "noopener,noreferrer")}
+                  >
+                    <svg
+                      className="w-5 h-5 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                      />
+                    </svg>
+                    Connect Wallet
+                  </Button>
+                </>
+              )}
             </>
           ) : (
             <div className="w-full h-full bg-gray-100 dark:bg-gray-800 animate-pulse rounded-lg" />
           )}
         </div>
         <div className="text-center mt-4 text-nav-light-text dark:text-nav-dark-text">
-          {error ? <div className="text-red-500">{error}</div> : "请使用 Mixin 扫码登录"}
+          {error ? <div className="text-red-500">{error}</div> : inMixin ? "等待 Mixin 授权…" : "请使用 Mixin 扫码登录"}
         </div>
       </DialogContent>
     </Dialog>

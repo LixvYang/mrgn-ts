@@ -122,9 +122,20 @@ const PaymentContent = ({
             transition={{ delay: 0.4, duration: 0.5 }}
             className="w-full max-w-[280px]"
           >
-            <Button onClick={handlePayClick} className="w-full" variant="default" size="lg">
-              Pay with Mixin
-            </Button>
+            <motion.div
+              className="rounded-md p-[1px] bg-[linear-gradient(90deg,rgba(255,255,255,0.15),rgba(124,58,237,0.8),rgba(34,197,94,0.75),rgba(255,255,255,0.15))] bg-[length:200%_100%]"
+              animate={{ backgroundPosition: ["0% 50%", "200% 50%"] }}
+              transition={{ duration: 1.6, repeat: Infinity, ease: "linear" }}
+            >
+              <Button
+                onClick={handlePayClick}
+                className="w-full relative z-10 shadow-[0_0_0_1px_rgba(255,255,255,0.08)]"
+                variant="default"
+                size="lg"
+              >
+                Pay with Mixin
+              </Button>
+            </motion.div>
           </motion.div>
 
           <motion.div

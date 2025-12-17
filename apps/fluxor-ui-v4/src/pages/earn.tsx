@@ -105,7 +105,7 @@ export default function EarnPage() {
             <p className="text-sm font-semibold text-foreground">协议数据</p>
             <dl className="space-y-2">
               <div className="flex items-baseline justify-between gap-4">
-                <dt className="text-base text-muted-foreground">协议总存款</dt>
+                <dt className="text-base text-muted-foreground">总存款</dt>
                 <dd className="text-right font-semibold tabular-nums">
                   {!assetData.isReady ? <Skeleton className="h-4 w-24" /> : formatUsdCompact(protocolDepositsUsd)}
                 </dd>

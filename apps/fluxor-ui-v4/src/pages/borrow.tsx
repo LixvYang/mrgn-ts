@@ -115,7 +115,7 @@ export default function BorrowPage() {
             <p className="text-sm font-semibold text-foreground">协议数据</p>
             <dl className="space-y-2">
               <div className="flex items-baseline justify-between gap-4">
-                <dt className="text-base text-muted-foreground">协议总借款</dt>
+                <dt className="text-base text-muted-foreground">总借款</dt>
                 <dd className="text-right font-semibold tabular-nums">
                   {!assetData.isReady ? <Skeleton className="h-4 w-24" /> : formatUsdCompact(protocolBorrowedUsd)}
                 </dd>
@@ -181,7 +181,7 @@ export default function BorrowPage() {
                         </dd>
                       </div>
                       <div className="flex items-baseline justify-between gap-4">
-                        <dt className="text-base text-muted-foreground">我的平均借款 APY</dt>
+                        <dt className="text-base text-muted-foreground">平均年化</dt>
                         <dd className="text-right tabular-nums">
                           {isUserDataLoading ? (
                             <Skeleton className="h-5 w-20" />

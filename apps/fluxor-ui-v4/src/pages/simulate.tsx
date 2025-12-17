@@ -200,7 +200,7 @@ export default function SimulatePage() {
           <CardHeader className="pb-4">
             <CardTitle className="text-base">输入</CardTitle>
             <CardDescription className="text-xs text-muted-foreground">
-              选择抵押资产与数量，再选择要借入的资产（Reduce Only 资产不支持新增抵押/借入，已隐藏）。
+              选择抵押资产与数量，再选择要借出的资产（Reduce Only 资产不支持新增抵押/借入，已隐藏）。
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
@@ -213,7 +213,7 @@ export default function SimulatePage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-foreground">抵押（Lend in）</span>
+                      <span className="text-sm text-foreground">抵押（Lend）</span>
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -261,7 +261,7 @@ export default function SimulatePage() {
 
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-foreground">借入（Borrow in）</span>
+                      <span className="text-sm text-foreground">借出（Borrow）</span>
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -326,6 +326,38 @@ export default function SimulatePage() {
                     </Button>
                   </div>
                 </div>
+
+                <div className="rounded-lg border border-border/60 bg-background/40 p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="text-sm font-semibold text-foreground">预测借出</div>
+                    <div className="text-sm text-muted-foreground">按当前比例 {borrowRatio}%</div>
+                  </div>
+                  {!isReady ? (
+                    <div className="text-sm text-muted-foreground">请选择资产后查看预测结果。</div>
+                  ) : (
+                    <dl className="space-y-1">
+                      <div className="flex items-baseline justify-between gap-4">
+                        <dt className="text-xs text-muted-foreground">借出数量</dt>
+                        <dd className="text-right text-lg font-bold text-foreground tabular-nums">
+                          {borrowBank?.meta.tokenSymbol} {tokenAmountFormatter.format(borrowAmount)}
+                        </dd>
+                      </div>
+                      <div className="flex items-baseline justify-between gap-4">
+                        <dt className="text-xs text-muted-foreground">折合</dt>
+                        <dd className="text-right font-semibold text-foreground tabular-nums">
+                          {usdFormatter.format(borrowUsd)}
+                        </dd>
+                      </div>
+                      <div className="flex items-baseline justify-between gap-4">
+                        <dt className="text-xs text-muted-foreground">最多可借（100%）</dt>
+                        <dd className="text-right text-xs text-muted-foreground tabular-nums">
+                          {borrowBank?.meta.tokenSymbol} {tokenAmountFormatter.format(maxBorrowAmount)}（
+                          {usdFormatter.format(maxBorrowUsd)}）
+                        </dd>
+                      </div>
+                    </dl>
+                  )}
+                </div>
               </>
             )}
           </CardContent>
@@ -333,7 +365,7 @@ export default function SimulatePage() {
 
         <Card className="bg-card/70 border border-border/60 shadow-sm">
           <CardHeader className="pb-4">
-            <CardTitle className="text-base">结果</CardTitle>
+            <CardTitle className="text-base">计算过程</CardTitle>
             <CardDescription className="text-xs text-muted-foreground">
               最大可借（USD）= 抵押价值 × 资产权重 × 债务 LTV
             </CardDescription>
@@ -379,17 +411,7 @@ export default function SimulatePage() {
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-border/60 bg-background/40 p-3 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm text-foreground">按当前比例借入</div>
-                    <div className="text-sm text-muted-foreground">
-                      {borrowBank?.meta.tokenSymbol} {tokenAmountFormatter.format(borrowAmount)}（{usdFormatter.format(borrowUsd)}）
-                    </div>
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    抵押 {collateralBank?.meta.tokenSymbol} {collateralAmountInput || "0"} →
-                    可借上限 {borrowBank?.meta.tokenSymbol} {tokenAmountFormatter.format(maxBorrowAmount)}（由权重与 LTV 决定）
-                  </div>
+                <div className="rounded-lg border border-border/60 bg-background/40 p-3">
                   <div className={cn("text-xs", borrowRatio >= 90 ? "text-warning" : "text-muted-foreground")}>
                     提示：100% 代表刚好触及初始保证金边界，实际操作建议留出安全余量。
                   </div>

@@ -63,7 +63,6 @@ export const BorrowAssetCard = ({ asset, isConnected, onConnect }: BorrowAssetCa
             <div className="text-xs text-muted-foreground">{asset.asset.symbol}</div>
           </div>
           <div className="text-right">
-            <div className="text-[11px] text-muted-foreground">借款 APY</div>
             <div className="flex items-center justify-end gap-1 text-warning text-2xl font-bold leading-tight">
               {percentFormatter.format(asset.rate.rateAPY)}
             </div>
@@ -75,7 +74,7 @@ export const BorrowAssetCard = ({ asset, isConnected, onConnect }: BorrowAssetCa
           <div className="flex justify-between items-center">
             <span className="text-xs text-muted-foreground">借出率</span>
             <div className="text-right">
-              <div className="text-sm font-semibold text-warning">{percentFormatterDyn.format(utilization/100)}</div>
+              <div className="text-sm font-semibold">{percentFormatterDyn.format(utilization/100)}</div>
             </div>
           </div>
           <div className="flex justify-between items-center">

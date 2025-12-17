@@ -8,7 +8,6 @@ import { IconRoute } from "@tabler/icons-react";
 
 import { useAccountSummary, useMarginfiAccount, useMarginfiAccountAddresses } from "@mrgnlabs/mrgn-state";
 import { BorrowAssetCard } from "~/components/mobile/ProductCards";
-import { StatBadge } from "~/components/mobile/shared";
 import { useAssetData } from "~/hooks/use-asset-data.hooks";
 import { useMixinWalletConnection } from "~/hooks/use-mixin-wallet-connection";
 import { LoginModal } from "~/components/common/MixinWallet";
@@ -50,7 +49,7 @@ export default function BorrowPage() {
         (!isMarginfiAccountFetched || isMarginfiAccountLoading)));
   const [poolFilter] = useUiStore((state) => [state.poolFilter]);
 
-  const { protocolBorrowedUsd, protocolAvailableUsd, userBorrowUsd, userBorrowRate, filteredAssets } = useMemo(() => {
+  const { protocolBorrowedUsd, protocolAvailableUsd, userBorrowRate, filteredAssets } = useMemo(() => {
     // Apply filtering logic similar to desktop AssetList
     let filtered = assetData.borrowData;
 
@@ -100,7 +99,6 @@ export default function BorrowPage() {
     return {
       protocolBorrowedUsd: borrowedUsd,
       protocolAvailableUsd: availableUsd,
-      userBorrowUsd: userTotal,
       userBorrowRate: userWeightedApy,
       filteredAssets: sorted.slice(0, 12), // Show top 12
     };
@@ -111,20 +109,40 @@ export default function BorrowPage() {
       <LoginModal open={showLoginModal} onClose={handleCloseModal} onConnected={handleConnected} />
       <MixinRegisterModal isOpen={showRegisterModal} onClose={() => setShowRegisterModal(false)} />
 
-      <div className="px-4 pt-6 space-y-6">
+      <div className="mx-4 mt-6 rounded-2xl border border-border/50 bg-muted/20 p-4 space-y-4">
+        <Card className="bg-background/70 border border-border/60 shadow-sm">
+          <CardContent className="p-4 space-y-2">
+            <p className="text-sm font-semibold text-foreground">协议数据</p>
+            <dl className="space-y-2">
+              <div className="flex items-baseline justify-between gap-4">
+                <dt className="text-base text-muted-foreground">协议总借款</dt>
+                <dd className="text-right font-semibold tabular-nums">
+                  {!assetData.isReady ? <Skeleton className="h-4 w-24" /> : formatUsdCompact(protocolBorrowedUsd)}
+                </dd>
+              </div>
+            </dl>
+          </CardContent>
+        </Card>
+
         {!connected && (
-          <div className="flex flex-col items-center text-center gap-3">
-            <IconRoute size={72} className="text-warning" />
-            <StatBadge label="借款总量" value={formatUsdCompact(protocolBorrowedUsd)} />
-            <p className="text-xs text-muted-foreground">抵押借款</p>
-            <Button onClick={handleConnect} className="mt-2 px-8">
-              连接钱包
-            </Button>
-          </div>
+          <Card className="bg-background/70 border border-border/60 shadow-sm">
+            <CardContent className="p-4 space-y-4">
+              <div className="flex items-center gap-3">
+                <IconRoute size={40} className="text-warning shrink-0" />
+                <div>
+                  <p className="text-base font-semibold text-foreground">Borrow</p>
+                  <p className="text-xs text-muted-foreground">抵押借款</p>
+                </div>
+              </div>
+              <Button onClick={handleConnect} className="w-full">
+                连接钱包
+              </Button>
+            </CardContent>
+          </Card>
         )}
 
         {connected && !register && (
-          <Card className="bg-card/70 border border-border/60 shadow-sm">
+          <Card className="bg-background/70 border border-border/60 shadow-sm">
             <CardContent className="p-4 space-y-3">
               <div>
                 <p className="text-base font-semibold text-foreground">需要注册 Computer 才能使用借贷</p>
@@ -148,61 +166,67 @@ export default function BorrowPage() {
               </TabsList>
 
               <TabsContent value="debt" className="mt-4 space-y-4">
-                <Card className="bg-card/70 border border-border/60 shadow-sm">
+                <Card className="bg-background/70 border border-border/60 shadow-sm">
                   <CardContent className="p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs text-muted-foreground">我的借款</p>
-                        {isUserDataLoading ? (
-                          <Skeleton className="h-9 w-36 mt-1" />
-                        ) : (
-                          <p className="text-3xl font-bold text-foreground">{formatUsd(userDebtUsd)}</p>
-                        )}
+                    <p className="text-sm font-semibold text-foreground">我的借款</p>
+                    <dl className="space-y-2">
+                      <div className="flex items-baseline justify-between gap-4">
+                        <dt className="text-base text-muted-foreground">借款金额</dt>
+                        <dd className="text-right tabular-nums">
+                          {isUserDataLoading ? (
+                            <Skeleton className="h-7 w-36" />
+                          ) : (
+                            <span className="text-base font-bold text-foreground">{formatUsd(userDebtUsd)}</span>
+                          )}
+                        </dd>
                       </div>
-                      <div className="flex flex-col items-end gap-2">
-                        {isUserDataLoading ? (
-                          <Skeleton className="h-6 w-28" />
-                        ) : (
-                          <StatBadge label="全网借款" value={formatUsdCompact(protocolBorrowedUsd)} />
-                        )}
-                        {/* <StatBadge label="剩余流动性" value={formatUsdCompact(protocolAvailableUsd)} tone="muted" /> */}
+                      <div className="flex items-baseline justify-between gap-4">
+                        <dt className="text-base text-muted-foreground">我的平均借款 APY</dt>
+                        <dd className="text-right tabular-nums">
+                          {isUserDataLoading ? (
+                            <Skeleton className="h-5 w-20" />
+                          ) : (
+                            <span className="text-base font-semibold text-warning">
+                              {percentFormatter.format(userBorrowRate)}
+                            </span>
+                          )}
+                        </dd>
                       </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs text-muted-foreground">我的平均借款 APY</p>
-                      {isUserDataLoading ? (
-                        <Skeleton className="h-6 w-20" />
-                      ) : (
-                        <p className="text-xl font-semibold text-warning">{percentFormatter.format(userBorrowRate)}</p>
-                      )}
-                    </div>
+                    </dl>
                   </CardContent>
                 </Card>
               </TabsContent>
 
               <TabsContent value="collateral" className="mt-4 space-y-4">
-                <Card className="bg-card/70 border border-border/60 shadow-sm">
+                <Card className="bg-background/70 border border-border/60 shadow-sm">
                   <CardContent className="p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs text-muted-foreground">总存款</p>
-                        {isUserDataLoading ? (
-                          <Skeleton className="h-9 w-36 mt-1" />
-                        ) : (
-                          <p className="text-3xl font-bold text-foreground">
-                            {formatUsd(accountSummary.lendingAmountEquity)}
-                          </p>
-                        )}
+                    <p className="text-sm font-semibold text-foreground">我的抵押物</p>
+                    <dl className="space-y-2">
+                      <div className="flex items-baseline justify-between gap-4">
+                        <dt className="text-base text-muted-foreground">总存款</dt>
+                        <dd className="text-right tabular-nums">
+                          {isUserDataLoading ? (
+                            <Skeleton className="h-7 w-36" />
+                          ) : (
+                            <span className="text-base font-bold text-foreground">
+                              {formatUsd(accountSummary.lendingAmountEquity)}
+                            </span>
+                          )}
+                        </dd>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs text-muted-foreground">可用抵押物</p>
-                        {isUserDataLoading ? (
-                          <Skeleton className="h-6 w-24 mt-1 ml-auto" />
-                        ) : (
-                          <p className="text-lg font-semibold text-foreground">{formatUsd(availableCollateralUsd)}</p>
-                        )}
+                      <div className="flex items-baseline justify-between gap-4">
+                        <dt className="text-base text-muted-foreground">可用抵押物</dt>
+                        <dd className="text-right tabular-nums">
+                          {isUserDataLoading ? (
+                            <Skeleton className="h-5 w-24" />
+                          ) : (
+                            <span className="text-base font-semibold text-foreground">
+                              {formatUsd(availableCollateralUsd)}
+                            </span>
+                          )}
+                        </dd>
                       </div>
-                    </div>
+                    </dl>
                     <p className="text-xs text-muted-foreground">
                       数据参考你的当前投资组合，数值会随仓位和价格自动更新。
                     </p>
@@ -217,48 +241,50 @@ export default function BorrowPage() {
         )}
       </div>
 
-      <div className="mt-6 px-4 space-y-4">
+      <div className="mx-4 mt-6 rounded-2xl border border-border/40 bg-card/30 p-4">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold text-foreground">Vaults</h2>
           </div>
         </div>
 
-        {!assetData.isReady && (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {Array.from({ length: 6 }).map((_, idx) => (
-              <Card key={idx} className="bg-card/70 border border-border/60">
-                <CardContent className="p-4 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Skeleton className="h-11 w-11 rounded-full" />
-                      <div className="space-y-2">
-                        <Skeleton className="h-4 w-24" />
-                        <Skeleton className="h-3 w-16" />
+        <div className="mt-4">
+          {!assetData.isReady && (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {Array.from({ length: 6 }).map((_, idx) => (
+                <Card key={idx} className="bg-background/70 border border-border/60">
+                  <CardContent className="p-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-11 w-11 rounded-full" />
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-24" />
+                          <Skeleton className="h-3 w-16" />
+                        </div>
                       </div>
+                      <Skeleton className="h-4 w-12" />
                     </div>
-                    <Skeleton className="h-4 w-12" />
-                  </div>
-                  <Skeleton className="h-12 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
 
-        {assetData.isReady && (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {filteredAssets.map((asset) => (
-              <BorrowAssetCard
-                key={asset.asset.address.toBase58()}
-                asset={asset}
-                isConnected={canUse}
-                onConnect={handleConnect}
-              />
-            ))}
-          </div>
-        )}
+          {assetData.isReady && (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {filteredAssets.map((asset) => (
+                <BorrowAssetCard
+                  key={asset.asset.address.toBase58()}
+                  asset={asset}
+                  isConnected={canUse}
+                  onConnect={handleConnect}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

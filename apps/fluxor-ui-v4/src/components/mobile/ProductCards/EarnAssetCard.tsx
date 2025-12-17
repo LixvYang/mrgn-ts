@@ -60,7 +60,6 @@ export const EarnAssetCard = ({ asset, isConnected, onConnect }: EarnAssetCardPr
             <div className="text-xs text-muted-foreground">{asset.asset.symbol}</div>
           </div>
           <div className="text-right">
-            <div className="text-[11px] text-muted-foreground">存款 APY</div>
             <div className="flex items-center justify-end gap-1 text-success text-2xl font-bold leading-tight">
               {percentFormatter.format(asset.rate.rateAPY)}
             </div>

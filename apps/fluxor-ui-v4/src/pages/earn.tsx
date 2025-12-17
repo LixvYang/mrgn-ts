@@ -11,7 +11,6 @@ import { useMixinWalletConnection } from "~/hooks/use-mixin-wallet-connection";
 import { LoginModal } from "~/components/common/MixinWallet";
 import { MixinRegisterModal } from "~/components/common/MixinWallet/components/MixinRegisterModal";
 import { EarnAssetCard } from "~/components/mobile/ProductCards";
-import { StatBadge } from "~/components/mobile/shared";
 import { Card, CardContent } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Skeleton } from "~/components/ui/skeleton";
@@ -100,20 +99,40 @@ export default function EarnPage() {
       <LoginModal open={showLoginModal} onClose={handleCloseModal} onConnected={handleConnected} />
       <MixinRegisterModal isOpen={showRegisterModal} onClose={() => setShowRegisterModal(false)} />
 
-      <div className="px-4 pt-6 space-y-6">
+      <div className="mx-4 mt-6 rounded-2xl border border-border/50 bg-muted/20 p-4 space-y-4">
+        <Card className="bg-background/70 border border-border/60 shadow-sm">
+          <CardContent className="p-4 space-y-2">
+            <p className="text-sm font-semibold text-foreground">协议数据</p>
+            <dl className="space-y-2">
+              <div className="flex items-baseline justify-between gap-4">
+                <dt className="text-base text-muted-foreground">协议总存款</dt>
+                <dd className="text-right font-semibold tabular-nums">
+                  {!assetData.isReady ? <Skeleton className="h-4 w-24" /> : formatUsdCompact(protocolDepositsUsd)}
+                </dd>
+              </div>
+            </dl>
+          </CardContent>
+        </Card>
+
         {!connected && (
-          <div className="flex flex-col items-center text-center gap-2">
-            <IconCoins size={72} className="text-success" />
-            <StatBadge label="供贷总量" value={formatUsdCompact(protocolDepositsUsd)} />
-            <p className="text-xs text-muted-foreground">存款生息</p>
-            <Button onClick={handleConnect} className="mt-2 px-8">
-              连接钱包
-            </Button>
-          </div>
+          <Card className="bg-background/70 border border-border/60 shadow-sm">
+            <CardContent className="p-4 space-y-4">
+              <div className="flex items-center gap-3">
+                <IconCoins size={40} className="text-success shrink-0" />
+                <div>
+                  <p className="text-base font-semibold text-foreground">Earn</p>
+                  <p className="text-xs text-muted-foreground">存款生息</p>
+                </div>
+              </div>
+              <Button onClick={handleConnect} className="w-full">
+                连接钱包
+              </Button>
+            </CardContent>
+          </Card>
         )}
 
         {connected && !register && (
-          <Card className="bg-card/70 border border-border/60 shadow-sm">
+          <Card className="bg-background/70 border border-border/60 shadow-sm">
             <CardContent className="p-4 space-y-3">
               <div>
                 <p className="text-base font-semibold text-foreground">需要注册 Computer 才能使用借贷</p>
@@ -129,76 +148,78 @@ export default function EarnPage() {
         )}
 
         {canUse && (
-          <Card className="bg-card/70 border border-border/60 shadow-sm">
+          <Card className="bg-background/70 border border-border/60 shadow-sm">
             <CardContent className="p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground">我的存款</p>
-                  {isUserDataLoading ? (
-                    <Skeleton className="h-9 w-36 mt-1" />
-                  ) : (
-                    <p className="text-3xl font-bold text-foreground">{formatUsd(userDepositsUsd)}</p>
-                  )}
+              <p className="text-sm font-semibold text-foreground">我的存款</p>
+              <dl className="space-y-2">
+                <div className="flex items-baseline justify-between gap-4">
+                  <dt className="text-base text-muted-foreground">存款金额</dt>
+                  <dd className="text-right tabular-nums">
+                    {isUserDataLoading ? (
+                      <Skeleton className="h-7 w-36" />
+                    ) : (
+                      <span className="text-base font-bold text-foreground">{formatUsd(userDepositsUsd)}</span>
+                    )}
+                  </dd>
                 </div>
-                {isUserDataLoading ? (
-                  <Skeleton className="h-6 w-28" />
-                ) : (
-                  <StatBadge label="协议总存款" value={formatUsdCompact(protocolDepositsUsd)} />
-                )}
-              </div>
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-muted-foreground">我的净年化 (加权)</p>
-                {isUserDataLoading ? (
-                  <Skeleton className="h-6 w-20" />
-                ) : (
-                  <p className="text-xl font-semibold text-success">{percentFormatter.format(netApy)}</p>
-                )}
-              </div>
+                <div className="flex items-baseline justify-between gap-4">
+                  <dt className="text-base text-muted-foreground">平均年化</dt>
+                  <dd className="text-right tabular-nums">
+                    {isUserDataLoading ? (
+                      <Skeleton className="h-5 w-20" />
+                    ) : (
+                      <span className="text-base font-semibold text-success">{percentFormatter.format(netApy)}</span>
+                    )}
+                  </dd>
+                </div>
+              </dl>
             </CardContent>
           </Card>
         )}
-
-        <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-foreground">Vaults</h2>
-        </div>
       </div>
 
-      <div className="mt-4 px-4">
-        {!assetData.isReady && (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {Array.from({ length: 6 }).map((_, idx) => (
-              <Card key={idx} className="bg-card/70 border border-border/60">
-                <CardContent className="p-4 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Skeleton className="h-11 w-11 rounded-full" />
-                      <div className="space-y-2">
-                        <Skeleton className="h-4 w-24" />
-                        <Skeleton className="h-3 w-16" />
-                      </div>
-                    </div>
-                    <Skeleton className="h-4 w-12" />
-                  </div>
-                  <Skeleton className="h-12 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+      <div className="mx-4 mt-6 rounded-2xl border border-border/40 bg-card/30 p-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-foreground">Vaults</h2>
+        </div>
 
-        {assetData.isReady && (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {filteredAssets.map((asset) => (
-              <EarnAssetCard
-                key={asset.asset.address.toBase58()}
-                asset={asset}
-                isConnected={canUse}
-                onConnect={handleConnect}
-              />
-            ))}
-          </div>
-        )}
+        <div className="mt-4">
+          {!assetData.isReady && (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {Array.from({ length: 6 }).map((_, idx) => (
+                <Card key={idx} className="bg-background/70 border border-border/60">
+                  <CardContent className="p-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-11 w-11 rounded-full" />
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-24" />
+                          <Skeleton className="h-3 w-16" />
+                        </div>
+                      </div>
+                      <Skeleton className="h-4 w-12" />
+                    </div>
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {assetData.isReady && (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {filteredAssets.map((asset) => (
+                <EarnAssetCard
+                  key={asset.asset.address.toBase58()}
+                  asset={asset}
+                  isConnected={canUse}
+                  onConnect={handleConnect}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

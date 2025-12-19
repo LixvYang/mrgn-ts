@@ -23,21 +23,21 @@ export const Collateral = ({ selectedAccount, emodeImpact, actionSummary }: Coll
       const banks = selectedAccount.client.banks;
       const modifiedBanks = new Map(banks);
       const activePair = emodeImpact.activePair;
-      const collateralTag = activePair.collateralBankTag;
+      const collateralTag = activePair.collateralBankTags;
 
       const oraclePrices = selectedAccount.client.oraclePrices;
 
       banks.forEach((existingBank, bankKey) => {
         // Only apply to banks with matching tag
-        if (existingBank.emode?.emodeTag === collateralTag) {
-          modifiedBanks.set(
-            bankKey,
-            Bank.withEmodeWeights(existingBank, {
-              assetWeightMaint: activePair.assetWeightMaint,
-              assetWeightInit: activePair.assetWeightInit,
-            })
-          );
-        }
+        // if (existingBank.emode?.emodeTag === collateralTag) {
+        //   modifiedBanks.set(
+        //     bankKey,
+        //     Bank.withEmodeWeights(existingBank, {
+        //       assetWeightMaint: activePair.assetWeightMaint,
+        //       assetWeightInit: activePair.assetWeightInit,
+        //     })
+        //   );
+        // }
       });
 
       const collateralAmount = selectedAccount.pureAccount

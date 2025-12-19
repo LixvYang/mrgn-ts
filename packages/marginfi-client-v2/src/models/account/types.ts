@@ -61,7 +61,6 @@ export interface RepayWithCollateralProps extends RepayWithCollateralTxProps {
 }
 
 export type RepayWithCollateralTxProps = {
-  isMixin?: boolean;
   /** Amount to repay */
   repayAmount: Amount;
   /** Amount of collateral to withdraw */

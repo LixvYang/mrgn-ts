@@ -305,10 +305,6 @@ export async function makePulseHealthIx(
   const healthAccounts = computeHealthCheckAccounts(balances, banks, mandatoryBanks, excludedBanks);
   const accountMetas = computeHealthAccountMetas(healthAccounts, bankMetadataMap);
 
-  const sortIx = await instructions.makeLendingAccountSortBalancesIx(program, {
-    marginfiAccount: marginfiAccountPk,
-  });
-
   const ix = await instructions.makePulseHealthIx(
     program,
     {
@@ -317,7 +313,7 @@ export async function makePulseHealthIx(
     accountMetas.map((account) => ({ pubkey: account, isSigner: false, isWritable: false }))
   );
 
-  return { instructions: [sortIx, ix], keys: [] };
+  return { instructions: [ix], keys: [] };
 }
 export async function createUpdateFeedIx(props: {
   swbPullOracles: PublicKey[];
@@ -329,7 +325,7 @@ export async function createUpdateFeedIx(props: {
     .filter((pubkey) => !pubkey.equals(new PublicKey("DMhGWtLAKE5d56WdyHQxqeFncwUeqMEnuC2RvvZfbuur")))
     .map((pubkey) => new PullFeed(swbProgram, pubkey));
   const crossbarClient = new CrossbarClient(
-    process.env.NEXT_PUBLIC_SWITCHBOARD_CROSSSBAR_API || "https://integrator-crossbar.prod.mrgn.app"
+    process.env.NEXT_PUBLIC_SWITCHBOARD_CROSSSBAR_API || "https://34.97.218.183.sslip.io"
   );
   const gateway = await pullFeedInstances[0].fetchGatewayUrl(crossbarClient);
 

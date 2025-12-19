@@ -21,7 +21,6 @@ import {
   SYSVAR_CLOCK_ID,
   BankMetadataMap,
   TransactionType,
-  ExtendedTransactionProperties,
 } from "@mrgnlabs/mrgn-common";
 import { Address, BorshCoder, Idl, translateAddress } from "@coral-xyz/anchor";
 import {
@@ -104,7 +103,6 @@ export interface FlashLoanArgs {
   signers?: Signer[];
   addressLookupTableAccounts?: AddressLookupTableAccount[];
   blockhash?: string;
-  isMixin?: boolean;
 }
 
 class MarginfiAccountWrapper {
@@ -297,7 +295,7 @@ class MarginfiAccountWrapper {
     bankAddress: PublicKey,
     opts?: {
       volatilityFactor?: number;
-      emodeWeights?: { assetWeightMaint: BigNumber; assetWeightInit: BigNumber; collateralTag: EmodeTag };
+      emodeWeights?: { assetWeightMaint: BigNumber; assetWeightInit: BigNumber; collateralTags: EmodeTag[] };
     }
   ): BigNumber {
     return this._marginfiAccount.computeMaxBorrowForBank(
@@ -1615,53 +1613,20 @@ class MarginfiAccountWrapper {
 
     const clientLookupTables = await getClientAddressLookupTableAccounts(this.client);
 
-    let withdrawTx: VersionedTransaction & ExtendedTransactionProperties;
-    if (withdrawOpts.isMixin) {
-      withdrawTx = addTransactionMetadata(
-        new VersionedTransaction(
-          new TransactionMessage({
-            instructions: [...cuRequestIxs, ...withdrawIxs.instructions],
-            payerKey: this.authority,
-            recentBlockhash: blockhash,
-          }).compileToV0Message([...clientLookupTables])
-        ),
-        {
-          signers: withdrawIxs.keys,
-          addressLookupTables: [...clientLookupTables],
-          type: TransactionType.WITHDRAW,
-        }
-      );
-    } else {
-      withdrawTx = addTransactionMetadata(
-        new VersionedTransaction(
-          new TransactionMessage({
-            instructions: [...cuRequestIxs, ...withdrawIxs.instructions],
-            payerKey: this.authority,
-            recentBlockhash: blockhash,
-          }).compileToV0Message(clientLookupTables)
-        ),
-        {
-          signers: withdrawIxs.keys,
-          addressLookupTables: clientLookupTables,
-          type: TransactionType.WITHDRAW,
-        }
-      );
-    }
-
-    // const withdrawTx = addTransactionMetadata(
-    //   new VersionedTransaction(
-    //     new TransactionMessage({
-    //       instructions: [...cuRequestIxs, ...withdrawIxs.instructions],
-    //       payerKey: this.authority,
-    //       recentBlockhash: blockhash,
-    //     }).compileToV0Message(clientLookupTables)
-    //   ),
-    //   {
-    //     signers: withdrawIxs.keys,
-    //     addressLookupTables: clientLookupTables,
-    //     type: TransactionType.WITHDRAW,
-    //   }
-    // );
+    const withdrawTx = addTransactionMetadata(
+      new VersionedTransaction(
+        new TransactionMessage({
+          instructions: [...cuRequestIxs, ...withdrawIxs.instructions],
+          payerKey: this.authority,
+          recentBlockhash: blockhash,
+        }).compileToV0Message(clientLookupTables)
+      ),
+      {
+        signers: withdrawIxs.keys,
+        addressLookupTables: clientLookupTables,
+        type: TransactionType.WITHDRAW,
+      }
+    );
 
     const transactions = [...feedCrankTxs, withdrawTx];
 
@@ -1769,53 +1734,20 @@ class MarginfiAccountWrapper {
 
     const clientLookupTables = await getClientAddressLookupTableAccounts(this.client);
 
-    let borrowTx: VersionedTransaction & ExtendedTransactionProperties;
-    if (borrowOpts.isMixin) {
-      borrowTx = addTransactionMetadata(
-        new VersionedTransaction(
-          new TransactionMessage({
-            instructions: [...cuRequestIxs, ...borrowIxs.instructions],
-            payerKey: this.authority,
-            recentBlockhash: blockhash,
-          }).compileToV0Message([...clientLookupTables])
-        ),
-        {
-          signers: borrowIxs.keys,
-          type: TransactionType.BORROW,
-          addressLookupTables: [...clientLookupTables],
-        }
-      );
-    } else {
-      borrowTx = addTransactionMetadata(
-        new VersionedTransaction(
-          new TransactionMessage({
-            instructions: [...cuRequestIxs, ...borrowIxs.instructions],
-            payerKey: this.authority,
-            recentBlockhash: blockhash,
-          }).compileToV0Message(clientLookupTables)
-        ),
-        {
-          signers: borrowIxs.keys,
-          type: TransactionType.BORROW,
-          addressLookupTables: clientLookupTables,
-        }
-      );
-    }
-
-    // const borrowTx = addTransactionMetadata(
-    //   new VersionedTransaction(
-    //     new TransactionMessage({
-    //       instructions: [...cuRequestIxs, ...borrowIxs.instructions],
-    //       payerKey: this.authority,
-    //       recentBlockhash: blockhash,
-    //     }).compileToV0Message(clientLookupTables)
-    //   ),
-    //   {
-    //     signers: borrowIxs.keys,
-    //     type: TransactionType.BORROW,
-    //     addressLookupTables: clientLookupTables,
-    //   }
-    // );
+    const borrowTx = addTransactionMetadata(
+      new VersionedTransaction(
+        new TransactionMessage({
+          instructions: [...cuRequestIxs, ...borrowIxs.instructions],
+          payerKey: this.authority,
+          recentBlockhash: blockhash,
+        }).compileToV0Message(clientLookupTables)
+      ),
+      {
+        signers: borrowIxs.keys,
+        type: TransactionType.BORROW,
+        addressLookupTables: clientLookupTables,
+      }
+    );
 
     const transactions = [...feedCrankTxs, borrowTx];
     return { transactions, actionTxIndex: transactions.length - 1 };
@@ -2108,7 +2040,7 @@ class MarginfiAccountWrapper {
         const swbProgram = await AnchorUtils.loadProgramFromConnection(this.client.provider.connection);
         const pullFeedInstances: PullFeed[] = filteredSwbPullBanks.map((pubkey) => new PullFeed(swbProgram, pubkey));
         const crossbarClient = new CrossbarClient(
-          process.env.NEXT_PUBLIC_SWITCHBOARD_CROSSSBAR_API || "https://integrator-crossbar.prod.mrgn.app"
+          process.env.NEXT_PUBLIC_SWITCHBOARD_CROSSSBAR_API || "https://34.97.218.183.sslip.io"
         );
         const gateway = await pullFeedInstances[0].fetchGatewayUrl(crossbarClient);
 

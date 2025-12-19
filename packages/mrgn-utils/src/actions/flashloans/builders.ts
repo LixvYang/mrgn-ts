@@ -424,7 +424,7 @@ export async function repayWithCollatBuilder({
       lookupTables: swapLUTs,
     },
     blockhash,
-    isMixin: getMixinVars().isMixin,
+    // isMixin: getMixinVars().isMixin,
   });
 
   return { transactions, txOverflown, lastValidBlockHeight };

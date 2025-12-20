@@ -369,6 +369,15 @@ export const Navbar: FC = () => {
                 模拟
               </Link>
 
+              <Link
+                href={"/revenue"}
+                className={`${
+                  router.pathname === "/revenue" ? "text-primary hover-underline-static" : "hover-underline-animation"
+                } whitespace-nowrap`}
+              >
+                协议收益
+              </Link>
+
               {/* {lipAccount && lipAccount.deposits.length > 0 && (
                 <Link
                   href={"/earn"}

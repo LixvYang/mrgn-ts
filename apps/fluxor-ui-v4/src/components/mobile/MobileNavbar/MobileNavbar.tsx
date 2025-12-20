@@ -14,6 +14,7 @@ import {
   IconHelp,
   IconZoomMoney,
   IconCalculator,
+  IconChartLine,
 } from "@tabler/icons-react";
 import { cn } from "@mrgnlabs/mrgn-utils";
 
@@ -64,6 +65,12 @@ const additionalLinks: NavLinkInfo[] = [
     alt: "simulate icon",
     label: "模拟",
     Icon: IconCalculator,
+  },
+  {
+    href: "/revenue",
+    alt: "revenue icon",
+    label: "协议收益",
+    Icon: IconChartLine,
   },
   // {
   //   href: "/ecosystem",

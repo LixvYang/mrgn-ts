@@ -355,6 +355,15 @@ export const Navbar: FC = () => {
                 portfolio
               </Link>
 
+              <Link
+                href={"/revenue"}
+                className={`${
+                  router.pathname === "/revenue" ? "text-primary hover-underline-static" : "hover-underline-animation"
+                } whitespace-nowrap`}
+              >
+                revenue
+              </Link>
+
               {/* {lipAccount && lipAccount.deposits.length > 0 && (
                 <Link
                   href={"/earn"}

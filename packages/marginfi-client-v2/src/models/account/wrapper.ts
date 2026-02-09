@@ -1033,8 +1033,8 @@ class MarginfiAccountWrapper {
             authorizedPubkey: this.authority,
             splitStakePubkey: splitStakeAccount.publicKey,
             lamports: amountLamports,
-          }
-          // rentExemptReserve
+          },
+          rentExemptReserve
         ).instructions
       );
     } else {
@@ -1905,20 +1905,30 @@ class MarginfiAccountWrapper {
    * Creates an instruction to begin a flash loan operation.
    *
    * @param endIndex - The index where the flash loan instructions end in the transaction
+   * @param authority - The authority for the flash loan, infers by default
    * @returns An InstructionsWrapper containing the begin flash loan instruction
    */
-  public async makeBeginFlashLoanIx(endIndex: number): Promise<InstructionsWrapper> {
-    return this._marginfiAccount.makeBeginFlashLoanIx(this._program, endIndex);
+  public async makeBeginFlashLoanIx(endIndex: number, authority?: PublicKey): Promise<InstructionsWrapper> {
+    return this._marginfiAccount.makeBeginFlashLoanIx(this._program, endIndex, authority);
   }
 
   /**
    * Creates an instruction to end a flash loan operation.
    *
    * @param projectedActiveBalances - Array of PublicKeys representing the projected active balance accounts after flash loan
+   * @param authority - The authority for the flash loan, infers by default
    * @returns An InstructionsWrapper containing the end flash loan instruction
    */
-  public async makeEndFlashLoanIx(projectedActiveBalances: PublicKey[]): Promise<InstructionsWrapper> {
-    return this._marginfiAccount.makeEndFlashLoanIx(this._program, this.client.banks, projectedActiveBalances);
+  public async makeEndFlashLoanIx(
+    projectedActiveBalances: PublicKey[],
+    authority?: PublicKey
+  ): Promise<InstructionsWrapper> {
+    return this._marginfiAccount.makeEndFlashLoanIx(
+      this._program,
+      this.client.banks,
+      projectedActiveBalances,
+      authority
+    );
   }
 
   public async flashLoan(
@@ -1937,7 +1947,8 @@ class MarginfiAccountWrapper {
 
   public async buildFlashLoanTx(
     args: FlashLoanArgs,
-    lookupTables?: AddressLookupTableAccount[]
+    lookupTables?: AddressLookupTableAccount[],
+    authority?: PublicKey
   ): Promise<ExtendedV0Transaction> {
     const endIndex = args.ixs.length + 1;
 
@@ -1946,8 +1957,8 @@ class MarginfiAccountWrapper {
       args.ixs
     );
 
-    const beginFlashLoanIx = await this.makeBeginFlashLoanIx(endIndex);
-    const endFlashLoanIx = await this.makeEndFlashLoanIx(projectedActiveBalances);
+    const beginFlashLoanIx = await this.makeBeginFlashLoanIx(endIndex, authority);
+    const endFlashLoanIx = await this.makeEndFlashLoanIx(projectedActiveBalances, authority);
 
     const flashloanIxs = [...beginFlashLoanIx.instructions, ...args.ixs, ...endFlashLoanIx.instructions];
     const totalLookupTables = [...(lookupTables ?? []), ...(args.addressLookupTableAccounts ?? [])];
@@ -1975,19 +1986,22 @@ class MarginfiAccountWrapper {
   public async makeAccountTransferToNewAccountIx(
     newMarginfiAccount: PublicKey,
     newAccountAuthority: PublicKey,
-    globalFeeWallet: PublicKey
+    globalFeeWallet: PublicKey,
+    feePayer: PublicKey
   ): Promise<InstructionsWrapper> {
     return this._marginfiAccount.makeAccountTransferToNewAccountIx(
       this._program,
       newMarginfiAccount,
       newAccountAuthority,
-      globalFeeWallet
+      globalFeeWallet,
+      feePayer
     );
   }
 
   async makeAccountTransferToNewAccountTx(
     newMarginfiAccount: PublicKey,
-    newAccountAuthority: PublicKey
+    newAccountAuthority: PublicKey,
+    feePayer: PublicKey
   ): Promise<Transaction> {
     const [feeStateKey] = PublicKey.findProgramAddressSync([Buffer.from("feestate", "utf-8")], this._program.programId);
     const feeState = await this._program.account.feeState.fetch(feeStateKey);
@@ -1995,7 +2009,8 @@ class MarginfiAccountWrapper {
     const ixs = await this.makeAccountTransferToNewAccountIx(
       newMarginfiAccount,
       newAccountAuthority,
-      feeState.globalFeeWallet
+      feeState.globalFeeWallet,
+      feePayer
     );
     const tx = new Transaction().add(...ixs.instructions);
     return tx;
@@ -2036,23 +2051,23 @@ class MarginfiAccountWrapper {
         })
         .map((bank) => bank.oracleKey);
 
-      if (filteredSwbPullBanks.length > 0) {
-        const swbProgram = await AnchorUtils.loadProgramFromConnection(this.client.provider.connection);
-        const pullFeedInstances: PullFeed[] = filteredSwbPullBanks.map((pubkey) => new PullFeed(swbProgram, pubkey));
-        const crossbarClient = new CrossbarClient(
-          process.env.NEXT_PUBLIC_SWITCHBOARD_CROSSSBAR_API || "https://34.97.218.183.sslip.io"
-        );
-        const gateway = await pullFeedInstances[0].fetchGatewayUrl(crossbarClient);
+      // if (filteredSwbPullBanks.length > 0) {
+      //   const swbProgram = await AnchorUtils.loadProgramFromConnection(this.client.provider.connection);
+      //   const pullFeedInstances: PullFeed[] = filteredSwbPullBanks.map((pubkey) => new PullFeed(swbProgram, pubkey));
+      //   const crossbarClient = new CrossbarClient(
+      //     process.env.NEXT_PUBLIC_SWITCHBOARD_CROSSSBAR_API || "https://34.97.218.183.sslip.io"
+      //   );
+      //   const gateway = await pullFeedInstances[0].fetchGatewayUrl(crossbarClient);
 
-        const [pullIx, luts] = await PullFeed.fetchUpdateManyIx(swbProgram, {
-          feeds: pullFeedInstances,
-          gateway,
-          numSignatures: 1,
-          payer: this.authority,
-          crossbarClient,
-        });
-        return { instructions: pullIx, luts };
-      }
+      //   const [pullIx, luts] = await PullFeed.fetchUpdateManyIx(swbProgram, {
+      //     feeds: pullFeedInstances,
+      //     gateway,
+      //     numSignatures: 1,
+      //     payer: this.authority,
+      //     crossbarClient,
+      //   });
+      //   return { instructions: pullIx, luts };
+      // }
 
       return { instructions: [], luts: [] };
     } else {

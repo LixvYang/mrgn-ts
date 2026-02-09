@@ -55,6 +55,7 @@ import { MarginfiAccountWrapper } from "../models/account/wrapper";
 import { ProcessTransactionError, ProcessTransactionErrorType, parseTransactionError } from "../errors";
 import { findOracleKey, PythPushFeedIdMap, buildFeedIdMap } from "../utils";
 import {
+  AssetTag,
   ProcessTransactionOpts,
   ProcessTransactionStrategy,
   ProcessTransactionsClientOpts,
@@ -335,10 +336,13 @@ class MarginfiClient {
       let bankAccountsData = await program.account.bank.all([
         { memcmp: { offset: 8 + 32 + 1, bytes: groupAddress.toBase58() } },
       ]);
-      bankDatasKeyed = bankAccountsData.map((account: any) => ({
-        address: account.publicKey,
-        data: account.account as any as BankRaw,
-      }));
+      // filter out all integrators (KAMINO, DRIFT, SOLEND)
+      bankDatasKeyed = bankAccountsData
+        .filter((data) => data.account.config.assetTag < AssetTag.KAMINO)
+        .map((account: any) => ({
+          address: account.publicKey,
+          data: account.account as any as BankRaw,
+        }));
     }
 
     // const oracleKeys = bankDatasKeyed.map((b) => b.data.config.oracleKeys[0]);
@@ -664,12 +668,28 @@ class MarginfiClient {
 
   getBankByMint(mint: Address): Bank | null {
     const _mint = translateAddress(mint);
-    return [...this.banks.values()].find((bank) => bank.mint.equals(_mint)) ?? null;
+    return (
+      [...this.banks.values()].find(
+        (bank) =>
+          bank.mint.equals(_mint) &&
+          (bank.config.assetTag === AssetTag.DEFAULT ||
+            bank.config.assetTag === AssetTag.SOL ||
+            bank.config.assetTag === AssetTag.STAKED)
+      ) ?? null
+    );
   }
 
   getBankByTokenSymbol(tokenSymbol: string): Bank | null {
     if (tokenSymbol === undefined) return null;
-    return [...this.banks.values()].find((bank) => bank.tokenSymbol === tokenSymbol) ?? null;
+    return (
+      [...this.banks.values()].find(
+        (bank) =>
+          bank.tokenSymbol === tokenSymbol &&
+          (bank.config.assetTag === AssetTag.DEFAULT ||
+            bank.config.assetTag === AssetTag.SOL ||
+            bank.config.assetTag === AssetTag.STAKED)
+      ) ?? null
+    );
   }
 
   getOraclePriceByBank(bankAddress: Address): OraclePrice | null {

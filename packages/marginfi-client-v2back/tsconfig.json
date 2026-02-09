@@ -1,0 +1,24 @@
+{
+  "extends": "@mrgnlabs/tsconfig/base.json",
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "outDir": "dist",
+    "baseUrl": "./src",
+    "paths": {
+      "~/instructions": ["./instructions"],
+      "~/types": ["./types"],
+      "~/utils": ["./utils"],
+      "~/config": ["./config"],
+      "~/constants": ["./constants"],
+      "~/errors": ["./errors"],
+      "~/idl": ["./idl"],
+
+      "~/models/*": ["./models/*"],
+      "~/services/*": ["./services/*"],
+      "~/clients/*": ["./clients/*"],
+      "~/vendor/*": ["./vendor/*"]
+    }
+  },
+  "include": ["."],
+  "exclude": ["dist", "node_modules", "examples"]
+}

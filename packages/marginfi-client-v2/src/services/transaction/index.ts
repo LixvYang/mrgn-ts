@@ -1,2 +1,2 @@
 export * from "./transaction.service";
-export { formatTransactions } from "./helpers/tx-formatting";
+export { formatTransactions } from "./helpers";

@@ -1081,11 +1081,16 @@ class MarginfiAccount implements MarginfiAccountType {
     return { instructions: ixs, keys: [] };
   }
 
-  async makeBeginFlashLoanIx(program: MarginfiProgram, endIndex: number): Promise<InstructionsWrapper> {
+  async makeBeginFlashLoanIx(
+    program: MarginfiProgram,
+    endIndex: number,
+    authority?: PublicKey
+  ): Promise<InstructionsWrapper> {
     const ix = await instructions.makeBeginFlashLoanIx(
       program,
       {
         marginfiAccount: this.address,
+        authority,
       },
       { endIndex: new BN(endIndex) }
     );
@@ -1095,7 +1100,8 @@ class MarginfiAccount implements MarginfiAccountType {
   async makeEndFlashLoanIx(
     program: MarginfiProgram,
     bankMap: Map<string, Bank>,
-    projectedActiveBalances: PublicKey[]
+    projectedActiveBalances: PublicKey[],
+    authority?: PublicKey
   ): Promise<InstructionsWrapper> {
     const banks = projectedActiveBalances.map((account) => {
       const b = bankMap.get(account.toBase58());
@@ -1107,6 +1113,7 @@ class MarginfiAccount implements MarginfiAccountType {
       program,
       {
         marginfiAccount: this.address,
+        authority,
       },
       remainingAccounts.map((account) => ({ pubkey: account, isSigner: false, isWritable: false }))
     );
@@ -1118,12 +1125,14 @@ class MarginfiAccount implements MarginfiAccountType {
     program: MarginfiProgram,
     newMarginfiAccount: PublicKey,
     newAuthority: PublicKey,
+    globalFeeWallet: PublicKey,
     feePayer: PublicKey
   ): Promise<InstructionsWrapper> {
     const accountTransferToNewAccountIx = await instructions.makeAccountTransferToNewAccountIx(program, {
       oldMarginfiAccount: this.address,
       newMarginfiAccount,
       newAuthority,
+      globalFeeWallet,
       feePayer,
     });
     return { instructions: [accountTransferToNewAccountIx], keys: [] };

@@ -89,7 +89,7 @@ export function useRepaySimulation({
     } else {
       if (
         actionMessage.code &&
-        (actionMessage.code === 149 || actionMessage.code === 134 || actionMessage.code === 119)
+        (actionMessage.code === 120 ||  actionMessage.code === 149 || actionMessage.code === 134 || actionMessage.code === 119)
       ) {
         // callbacks.setSimulationResult(null);
         // callbacks.setActionTxns({ transactions: [], actionQuote: null });

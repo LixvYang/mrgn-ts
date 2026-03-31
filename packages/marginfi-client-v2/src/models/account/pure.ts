@@ -59,6 +59,12 @@ import { BorshInstructionCoder } from "@coral-xyz/anchor";
 import { HealthCache } from "../health-cache";
 import { PriceBias } from "../../services/price/types";
 import { MakeMixinIxOpts } from "./mixin";
+import {
+  makeBorrowIx as makeP0BorrowIx,
+  makeDepositIx as makeP0DepositIx,
+  makeRepayIx as makeP0RepayIx,
+  makeWithdrawIx as makeP0WithdrawIx,
+} from "@0dotxyz/p0-ts-sdk";
 
 // ----------------------------------------------------------------------------
 // Client types
@@ -740,6 +746,33 @@ class MarginfiAccount implements MarginfiAccountType {
 
     const wrapAndUnwrapSol = opts.wrapAndUnwrapSol ?? true;
     const wSolBalanceUi = opts.wSolBalanceUi ?? 0;
+    const mixinAuthority = opts.overrideInferAccounts?.authority ?? this.authority;
+    const mixinGroup = opts.overrideInferAccounts?.group ?? this.group;
+    const overrideInferAccounts = opts.isMixin
+      ? {
+          authority: mixinAuthority,
+          group: mixinGroup,
+          liquidityVault: opts.overrideInferAccounts?.liquidityVault,
+        }
+      : opts.overrideInferAccounts;
+
+    if (opts.isMixin) {
+      return makeP0DepositIx({
+        program: program as any,
+        bank: bank as any,
+        tokenProgram: mintData.tokenProgram,
+        amount,
+        accountAddress: this.address,
+        authority: mixinAuthority,
+        group: mixinGroup,
+        isSync: true,
+        opts: {
+          wrapAndUnwrapSol,
+          wSolBalanceUi,
+          overrideInferAccounts,
+        },
+      });
+    }
 
     const userTokenAtaPk = getAssociatedTokenAddressSync(bank.mint, this.authority, true, mintData.tokenProgram); // We allow off curve addresses here to support Fuse.
 
@@ -760,9 +793,9 @@ class MarginfiAccount implements MarginfiAccountType {
         signerTokenAccount: userTokenAtaPk,
         bank: bank.address,
         tokenProgram: mintData.tokenProgram,
-        authority: opts.overrideInferAccounts?.authority ?? this.authority,
-        group: opts.overrideInferAccounts?.group ?? this.group,
-        liquidityVault: opts.overrideInferAccounts?.liquidityVault,
+        authority: overrideInferAccounts?.authority ?? this.authority,
+        group: overrideInferAccounts?.group ?? this.group,
+        liquidityVault: overrideInferAccounts?.liquidityVault,
       },
       { amount: uiToNative(amount, bank.mintDecimals) },
       remainingAccounts
@@ -791,6 +824,33 @@ class MarginfiAccount implements MarginfiAccountType {
 
     const wrapAndUnwrapSol = opts.wrapAndUnwrapSol ?? true;
     const wSolBalanceUi = opts.wSolBalanceUi ?? 0;
+    const mixinAuthority = opts.overrideInferAccounts?.authority ?? this.authority;
+    const mixinGroup = opts.overrideInferAccounts?.group ?? this.group;
+    const overrideInferAccounts = opts.isMixin
+      ? {
+          authority: mixinAuthority,
+          group: mixinGroup,
+          liquidityVault: opts.overrideInferAccounts?.liquidityVault,
+        }
+      : opts.overrideInferAccounts;
+
+    if (opts.isMixin) {
+      return makeP0RepayIx({
+        program: program as any,
+        bank: bank as any,
+        tokenProgram: mintData.tokenProgram,
+        amount,
+        accountAddress: this.address,
+        authority: mixinAuthority,
+        repayAll,
+        isSync: true,
+        opts: {
+          wrapAndUnwrapSol,
+          wSolBalanceUi,
+          overrideInferAccounts,
+        },
+      });
+    }
 
     const repayIxs = [];
 
@@ -819,9 +879,9 @@ class MarginfiAccount implements MarginfiAccountType {
         signerTokenAccount: userAta,
         bank: bankAddress,
         tokenProgram: mintData.tokenProgram,
-        authority: opts.overrideInferAccounts?.authority,
-        group: opts.overrideInferAccounts?.group,
-        liquidityVault: opts.overrideInferAccounts?.liquidityVault,
+        authority: overrideInferAccounts?.authority,
+        group: overrideInferAccounts?.group,
+        liquidityVault: overrideInferAccounts?.liquidityVault,
       },
       { amount: uiToNative(amount, bank.mintDecimals), repayAll },
       remainingAccounts.map((account) => ({ pubkey: account, isSigner: false, isWritable: false }))
@@ -851,6 +911,35 @@ class MarginfiAccount implements MarginfiAccountType {
 
     const wrapAndUnwrapSol = withdrawOpts.wrapAndUnwrapSol ?? true;
     const createAtas = withdrawOpts.createAtas ?? true;
+    const mixinAuthority = withdrawOpts.overrideInferAccounts?.authority ?? this.authority;
+    const mixinGroup = withdrawOpts.overrideInferAccounts?.group ?? this.group;
+    const overrideInferAccounts = withdrawOpts.isMixin
+      ? {
+          authority: mixinAuthority,
+          group: mixinGroup,
+        }
+      : withdrawOpts.overrideInferAccounts;
+
+    if (withdrawOpts.isMixin) {
+      return makeP0WithdrawIx({
+        program: program as any,
+        bank: bank as any,
+        bankMap: bankMap as any,
+        tokenProgram: mintData.tokenProgram,
+        amount,
+        marginfiAccount: this as any,
+        authority: mixinAuthority,
+        bankMetadataMap: bankMetadataMap as any,
+        withdrawAll,
+        isSync: true,
+        opts: {
+          observationBanksOverride: withdrawOpts.observationBanksOverride,
+          wrapAndUnwrapSol,
+          createAtas,
+          overrideInferAccounts,
+        },
+      });
+    }
 
     const withdrawIxs = [];
 
@@ -895,8 +984,8 @@ class MarginfiAccount implements MarginfiAccountType {
         bank: bank.address,
         destinationTokenAccount: userAta,
         tokenProgram: mintData.tokenProgram,
-        authority: withdrawOpts.overrideInferAccounts?.authority,
-        group: withdrawOpts.overrideInferAccounts?.group,
+        authority: overrideInferAccounts?.authority,
+        group: overrideInferAccounts?.group,
       },
       { amount: uiToNative(amount, bank.mintDecimals), withdrawAll },
       remainingAccounts.map((account) => ({ pubkey: account, isSigner: false, isWritable: false }))
@@ -929,6 +1018,33 @@ class MarginfiAccount implements MarginfiAccountType {
 
     const wrapAndUnwrapSol = borrowOpts.wrapAndUnwrapSol ?? true;
     const createAtas = borrowOpts.createAtas ?? true;
+    const mixinAuthority = borrowOpts.overrideInferAccounts?.authority ?? this.authority;
+    const mixinGroup = borrowOpts.overrideInferAccounts?.group ?? this.group;
+    const overrideInferAccounts = borrowOpts.isMixin
+      ? {
+          authority: mixinAuthority,
+          group: mixinGroup,
+        }
+      : borrowOpts.overrideInferAccounts;
+
+    if (borrowOpts.isMixin) {
+      return makeP0BorrowIx({
+        program: program as any,
+        bank: bank as any,
+        bankMap: bankMap as any,
+        tokenProgram: mintData.tokenProgram,
+        amount,
+        marginfiAccount: this as any,
+        authority: mixinAuthority,
+        isSync: true,
+        opts: {
+          observationBanksOverride: borrowOpts.observationBanksOverride,
+          wrapAndUnwrapSol,
+          createAtas,
+          overrideInferAccounts,
+        },
+      });
+    }
 
     const borrowIxs: TransactionInstruction[] = [];
 
@@ -966,8 +1082,8 @@ class MarginfiAccount implements MarginfiAccountType {
         bank: bank.address,
         destinationTokenAccount: userAta,
         tokenProgram: mintData.tokenProgram,
-        authority: borrowOpts?.overrideInferAccounts?.authority,
-        group: borrowOpts?.overrideInferAccounts?.group,
+        authority: overrideInferAccounts?.authority,
+        group: overrideInferAccounts?.group,
       },
       { amount: uiToNative(amount, bank.mintDecimals) },
       remainingAccounts.map((account) => ({ pubkey: account, isSigner: false, isWritable: false }))

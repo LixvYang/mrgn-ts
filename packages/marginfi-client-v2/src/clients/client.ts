@@ -65,6 +65,7 @@ import { BundleSimulationError, simulateBundle } from "../services/transaction/h
 import { getStakeAccount, StakeAccount } from "../vendor";
 import BigNumber from "bignumber.js";
 import { fetchLatestIdl } from "../idl/idl.utils";
+import { deriveMarginfiAccount, findRandomAvailableAccountIndex } from "@0dotxyz/p0-ts-sdk";
 
 export type BankMap = Map<string, Bank>;
 export type OraclePriceMap = Map<string, OraclePrice>;
@@ -705,17 +706,42 @@ class MarginfiClient {
    *
    * @returns transaction instruction
    */
-  async makeCreateMarginfiAccountIx(marginfiAccountPk: PublicKey): Promise<InstructionsWrapper> {
+  async makeCreateMarginfiAccountIx(createOpts?: {
+    authority?: PublicKey;
+    marginfiAccountPk?: PublicKey;
+    accountIndex?: number;
+    thirdPartyId?: number;
+  }): Promise<InstructionsWrapper> {
     const dbg = require("debug")("mfi:client");
+    const authority = createOpts?.authority ?? this.provider.wallet.publicKey;
+    const accountIndex =
+      createOpts?.accountIndex ??
+      (await findRandomAvailableAccountIndex(
+        this.provider.connection,
+        this.programId,
+        this.groupAddress,
+        authority,
+        createOpts?.thirdPartyId
+      ));
+    const [marginfiAccountPk] = createOpts?.marginfiAccountPk
+      ? [createOpts.marginfiAccountPk]
+      : deriveMarginfiAccount(this.programId, this.groupAddress, authority, accountIndex, createOpts?.thirdPartyId);
 
     dbg("Generating marginfi account ix for %s", marginfiAccountPk);
 
-    const initMarginfiAccountIx = await instructions.makeInitMarginfiAccountIx(this.program, {
-      marginfiGroup: this.groupAddress,
-      marginfiAccount: marginfiAccountPk,
-      authority: this.provider.wallet.publicKey,
-      feePayer: this.provider.wallet.publicKey,
-    });
+    const initMarginfiAccountIx = await instructions.makeInitMarginfiAccountPdaIx(
+      this.program,
+      {
+        marginfiGroup: this.groupAddress,
+        marginfiAccount: marginfiAccountPk,
+        authority,
+        feePayer: authority,
+      },
+      {
+        accountIndex,
+        thirdPartyId: createOpts?.thirdPartyId,
+      }
+    );
 
     const ixs = [initMarginfiAccountIx];
 
@@ -735,21 +761,44 @@ class MarginfiClient {
    * @returns Object containing the transaction signature and the created MarginfiAccount instance
    */
   async createMarginfiAccount(
-    createOpts?: { newAccountKey?: PublicKey | undefined },
+    createOpts?: {
+      newAccountKey?: PublicKey | undefined;
+      authority?: PublicKey;
+      accountIndex?: number;
+      thirdPartyId?: number;
+    },
     processOpts?: ProcessTransactionsClientOpts,
     txOpts?: TransactionOptions
   ): Promise<MarginfiAccountWrapper> {
     const dbg = require("debug")("mfi:client");
+    const authority = createOpts?.authority ?? this.provider.wallet.publicKey;
+    const accountIndex =
+      createOpts?.accountIndex ??
+      (await findRandomAvailableAccountIndex(
+        this.provider.connection,
+        this.programId,
+        this.groupAddress,
+        authority,
+        createOpts?.thirdPartyId
+      ));
+    const [newAccountKey] = deriveMarginfiAccount(
+      this.programId,
+      this.groupAddress,
+      authority,
+      accountIndex,
+      createOpts?.thirdPartyId
+    );
 
-    const accountKeypair = Keypair.generate();
-    const newAccountKey = createOpts?.newAccountKey ?? accountKeypair.publicKey;
-
-    const solanaTx = await this.createMarginfiAccountTx({ accountKeypair });
+    const solanaTx = await this.createMarginfiAccountTx({
+      accountIndex,
+      authority,
+      thirdPartyId: createOpts?.thirdPartyId,
+    });
     const sig = await this.processTransaction(solanaTx, processOpts, txOpts);
 
     dbg("Created Marginfi account %s", sig);
 
-    return txOpts?.dryRun || createOpts?.newAccountKey
+    return txOpts?.dryRun
       ? Promise.resolve(undefined as unknown as MarginfiAccountWrapper)
       : MarginfiAccountWrapper.fetch(newAccountKey, this, txOpts?.commitment);
   }
@@ -761,15 +810,40 @@ class MarginfiClient {
    * @param createOpts.newAccountKey - Optional public key to use for the new account. If not provided, a new keypair will be generated.
    * @returns Transaction that can be used to create a new marginfi account
    */
-  async createMarginfiAccountTx(createOpts?: { accountKeypair?: Keypair }): Promise<SolanaTransaction> {
-    const accountKeypair = createOpts?.accountKeypair ?? Keypair.generate();
+  async createMarginfiAccountTx(createOpts?: {
+    accountKeypair?: Keypair;
+    authority?: PublicKey;
+    accountIndex?: number;
+    thirdPartyId?: number;
+  }): Promise<SolanaTransaction> {
+    const authority = createOpts?.authority ?? this.provider.wallet.publicKey;
+    const accountIndex =
+      createOpts?.accountIndex ??
+      (await findRandomAvailableAccountIndex(
+        this.provider.connection,
+        this.programId,
+        this.groupAddress,
+        authority,
+        createOpts?.thirdPartyId
+      ));
+    const [marginfiAccountPk] = deriveMarginfiAccount(
+      this.programId,
+      this.groupAddress,
+      authority,
+      accountIndex,
+      createOpts?.thirdPartyId
+    );
 
-    const ixs = await this.makeCreateMarginfiAccountIx(accountKeypair.publicKey);
+    const ixs = await this.makeCreateMarginfiAccountIx({
+      authority,
+      marginfiAccountPk,
+      accountIndex,
+      thirdPartyId: createOpts?.thirdPartyId,
+    });
     const signers = [...ixs.keys];
-    // If there was no newAccountKey provided, we need to sign with the ephemeraKeypair we generated.
-    signers.push(accountKeypair);
 
     const tx = new Transaction().add(...ixs.instructions);
+    tx.feePayer = authority;
     const solanaTx = addTransactionMetadata(tx, {
       signers,
       addressLookupTables: this.addressLookupTables,

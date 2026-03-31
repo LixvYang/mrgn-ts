@@ -62,11 +62,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return;
     }
 
-    let marginfiAccounts = await fetchMarginfiAccountAddresses(program, authorityPk, groupPk);
-
-    if (marginfiAccounts.length > 1) {
-      marginfiAccounts = [marginfiAccounts[marginfiAccounts.length - 1]];
-    }
+    const marginfiAccounts = await fetchMarginfiAccountAddresses(program, authorityPk, groupPk);
 
     res.status(200).json({ marginfiAccounts: marginfiAccounts.map((a) => a.toBase58()) });
   } catch (error) {

@@ -1,7 +1,6 @@
 import {
   AddressLookupTableAccount,
   ComputeBudgetProgram,
-  Keypair,
   PublicKey,
   SystemProgram,
   TransactionInstruction,
@@ -44,6 +43,7 @@ import { simulateBundle } from "../transaction/helpers";
 import { AnchorUtils, PullFeed } from "@switchboard-xyz/on-demand";
 import { CrossbarClient } from "@switchboard-xyz/common";
 import { ADDRESS_LOOKUP_TABLE_FOR_GROUP } from "../../constants";
+import { deriveMarginfiAccount, findRandomAvailableAccountIndex } from "@0dotxyz/p0-ts-sdk";
 
 /**
  * Custom error class for health cache simulation failures
@@ -350,7 +350,18 @@ export async function createMarginfiAccountTx(props: {
   marginfiClient: MarginfiClient;
 }): Promise<{ account: MarginfiAccountWrapper; tx: SolanaTransaction }> {
   const authority = props.marginfiAccount?.authority ?? props.marginfiClient.provider.publicKey;
-  const marginfiAccountKeypair = Keypair.generate();
+  const accountIndex = await findRandomAvailableAccountIndex(
+    props.marginfiClient.provider.connection,
+    props.marginfiClient.programId,
+    props.marginfiClient.group.address,
+    authority
+  );
+  const [marginfiAccountPk] = deriveMarginfiAccount(
+    props.marginfiClient.programId,
+    props.marginfiClient.group.address,
+    authority,
+    accountIndex
+  );
 
   // create a dummy account with 15 empty balances to be used in other transactions
   const dummyWrappedI80F48 = bigNumberToWrappedI80F48(new BigNumber(0));
@@ -390,13 +401,13 @@ export async function createMarginfiAccountTx(props: {
     accountFlags: new BN([0, 0, 0]),
   };
 
-  const account = MarginfiAccount.fromAccountParsed(marginfiAccountKeypair.publicKey, rawAccount);
+  const account = MarginfiAccount.fromAccountParsed(marginfiAccountPk, rawAccount);
 
-  const wrappedAccount = new MarginfiAccountWrapper(marginfiAccountKeypair.publicKey, props.marginfiClient, account);
+  const wrappedAccount = new MarginfiAccountWrapper(marginfiAccountPk, props.marginfiClient, account);
 
   return {
     account: wrappedAccount,
-    tx: await props.marginfiClient.createMarginfiAccountTx({ accountKeypair: marginfiAccountKeypair }),
+    tx: await props.marginfiClient.createMarginfiAccountTx({ authority, accountIndex }),
   };
 }
 

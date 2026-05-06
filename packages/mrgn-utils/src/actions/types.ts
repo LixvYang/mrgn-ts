@@ -135,7 +135,7 @@ export interface CalculateLoopingProps
 export interface CalculateRepayCollateralProps
   extends Pick<
     RepayWithCollatProps,
-    "marginfiAccount" | "borrowBank" | "depositBank" | "withdrawAmount" | "connection"
+    "marginfiAccount" | "borrowBank" | "depositBank" | "withdrawAmount" | "connection" | "isMixin"
   > {
   slippageBps: number;
   slippageMode: "DYNAMIC" | "FIXED";
@@ -176,6 +176,7 @@ export type RepayWithCollatProps = {
   depositBank: ExtendedBankInfo;
   quote: QuoteResponse;
   connection: Connection;
+  isMixin?: boolean;
 
   multiStepToast?: MultiStepToastController;
 };

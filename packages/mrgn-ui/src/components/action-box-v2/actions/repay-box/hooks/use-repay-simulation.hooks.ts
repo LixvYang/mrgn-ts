@@ -32,6 +32,7 @@ type RepaySimulationProps = {
   actionTxns: RepayActionTxns;
   simulationResult: SimulationResult | null;
   isRefreshTxn: boolean;
+  isMixin?: boolean;
 
   platformFeeBps: number;
   jupiterOptions: JupiterOptions | null;
@@ -55,6 +56,7 @@ export function useRepaySimulation({
   actionTxns,
 
   simulationResult,
+  isMixin,
 
   platformFeeBps,
   jupiterOptions,
@@ -124,7 +126,8 @@ export function useRepaySimulation({
           !marginfiClient ||
           !selectedBank ||
           !selectedSecondaryBank ||
-          !jupiterOptions
+          !jupiterOptions ||
+          isMixin
         ) {
           setActionTxns({ transactions: [], actionQuote: null });
           return;

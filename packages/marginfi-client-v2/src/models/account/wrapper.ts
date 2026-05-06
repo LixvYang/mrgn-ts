@@ -92,6 +92,8 @@ export const MAX_TX_SIZE = 1232;
 export const MAX_ACCOUNT_KEYS = 64;
 export const BUNDLE_TX_SIZE = 81;
 export const PRIORITY_TX_SIZE = 44;
+// Nonce advance instruction size reservation for Mixin mode
+export const NONCE_ADVANCE_TX_SIZE = 80;
 
 export interface SimulationResult {
   banks: Map<string, Bank>;
@@ -608,6 +610,7 @@ class MarginfiAccountWrapper {
     repayAll = false,
     swap,
     blockhash: blockhashArg,
+    isMixin,
   }: RepayWithCollateralProps): Promise<FlashloanActionResult> {
     const blockhash =
       blockhashArg ?? (await this._program.provider.connection.getLatestBlockhash("confirmed")).blockhash;
@@ -623,9 +626,11 @@ class MarginfiAccountWrapper {
     const withdrawIxs = await this.makeWithdrawIx(withdrawAmount, depositBankAddress, withdrawAll, {
       createAtas: false,
       wrapAndUnwrapSol: false,
+      isMixin,
     });
     const repayIxs = await this.makeRepayIx(repayAmount, borrowBankAddress, repayAll, {
       wrapAndUnwrapSol: false,
+      isMixin,
     });
     const { instructions: updateFeedIxs, luts: feedLuts } = await this.makeUpdateFeedIx([
       depositBankAddress,
@@ -684,8 +689,10 @@ class MarginfiAccountWrapper {
     const txSize = getTxSize(flashloanTx);
     const accountKeys = getAccountKeys(flashloanTx, addressLookupTableAccounts);
     const txToManyKeys = accountKeys > MAX_ACCOUNT_KEYS;
-    const txToBig = txSize > MAX_TX_SIZE;
-    const canBeDownsized = txToManyKeys && txToBig && txSize - PRIORITY_TX_SIZE <= MAX_TX_SIZE;
+    // Reserve space for nonce advance instruction in Mixin mode
+    const effectiveMaxTxSize = isMixin ? MAX_TX_SIZE - NONCE_ADVANCE_TX_SIZE : MAX_TX_SIZE;
+    const txToBig = txSize > effectiveMaxTxSize;
+    const canBeDownsized = txToManyKeys && txToBig && txSize - PRIORITY_TX_SIZE <= effectiveMaxTxSize;
 
     if (canBeDownsized) {
       // wallets won't add a priority fee if tx space is limited
@@ -697,7 +704,7 @@ class MarginfiAccountWrapper {
       });
 
       const txSize = getTxSize(flashloanTx);
-      const txToBig = txSize > MAX_TX_SIZE;
+      const txToBig = txSize > effectiveMaxTxSize;
 
       // this shouldn't trigger, but just in case
       if (txToBig) {

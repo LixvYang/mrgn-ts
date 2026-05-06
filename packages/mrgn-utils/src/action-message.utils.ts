@@ -38,6 +38,7 @@ interface CheckActionAvailableProps {
   selectedSecondaryBank: ExtendedBankInfo | null;
   actionQuote: QuoteResponse | null;
   maxOverflowHit?: boolean;
+  isMixin?: boolean;
 }
 
 interface CheckLendActionAvailableProps {
@@ -155,6 +156,7 @@ export function checkRepayActionAvailable({
   selectedSecondaryBank,
   actionQuote,
   maxOverflowHit,
+  isMixin,
 }: CheckActionAvailableProps): ActionMessageType[] {
   let checks: ActionMessageType[] = [];
 
@@ -171,7 +173,7 @@ export function checkRepayActionAvailable({
     selectedBank.address.toString().toLowerCase() === selectedSecondaryBank.address.toString().toLowerCase()
   ) {
     repayChecks = canBeRepaid(selectedBank, true, amount);
-  } else if (selectedBank && selectedSecondaryBank) {
+  } else if (selectedBank && selectedSecondaryBank && !isMixin) {
     repayChecks = canBeRepaidCollat(selectedBank, selectedSecondaryBank, actionQuote, maxOverflowHit);
   }
   if (repayChecks) checks.push(...repayChecks);

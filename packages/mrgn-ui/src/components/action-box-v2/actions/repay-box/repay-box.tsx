@@ -221,6 +221,7 @@ export const RepayBox = ({
     actionTxns,
     simulationResult,
     isRefreshTxn,
+    isMixin: getMixinVars().isMixin,
     platformFeeBps,
     jupiterOptions,
 
@@ -290,6 +291,7 @@ export const RepayBox = ({
       marginfiAccount: selectedAccount,
       actionQuote: actionTxns?.actionQuote ?? null,
       maxOverflowHit,
+      isMixin: getMixinVars().isMixin,
     });
   }, [amount, connected, selectedBank, selectedSecondaryBank, actionTxns.actionQuote, maxOverflowHit, selectedAccount]);
 

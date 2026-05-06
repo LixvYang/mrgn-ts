@@ -42,7 +42,7 @@ export const STATIC_SIMULATION_ERRORS: { [key: string]: ActionMessageType } = {
   TX_SIZE: {
     isEnabled: false,
     actionMethod: "WARNING",
-    description: "Unable to find a Jupiter quote for this pairing, please try again.",
+    description: "交易体积过大，请尝试减少交易金额后重试。",
     retry: true,
     code: 103,
   },

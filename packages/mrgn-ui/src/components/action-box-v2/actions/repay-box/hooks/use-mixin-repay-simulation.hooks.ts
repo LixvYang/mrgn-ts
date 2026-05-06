@@ -381,6 +381,11 @@ async function handleRepayMixinSimulation({
     return [req1];
   } catch (error) {
     console.error("Error in handleLendMixinSimulation:", error);
+    if (error instanceof ActionProcessingError) {
+      setErrorMessage(error.details);
+    } else {
+      setErrorMessage({ isEnabled: false, actionMethod: "WARNING", description: "交易处理失败，请稍后重试。" });
+    }
     setIsLoading({ isLoading: false, status: SimulationStatus.COMPLETE });
     return [];
   }

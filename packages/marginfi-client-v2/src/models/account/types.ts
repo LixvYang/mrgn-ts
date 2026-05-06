@@ -88,6 +88,7 @@ export type RepayWithCollateralTxProps = {
    * @deprecated This property is no longer supported.
    */
   repayOpts?: MakeRepayIxOpts;
+  isMixin?: boolean;
 };
 
 export interface TransactionBuilderResult {

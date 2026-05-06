@@ -48,7 +48,7 @@ export async function calculateRepayTransactions(props: CalculateRepayTransactio
       depositBank: props.selectedSecondaryBank,
       marginfiAccount: props.marginfiAccount,
       connection: props.connection,
-      platformFeeBps: props.platformFeeBps,
+      platformFeeBps: 0,
       slippageMode: props.jupiterOptions?.slippageMode,
       slippageBps: props.jupiterOptions?.slippageBps,
       withdrawAmount: props.repayAmount,

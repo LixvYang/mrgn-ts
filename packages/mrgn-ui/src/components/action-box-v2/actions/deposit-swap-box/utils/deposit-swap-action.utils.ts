@@ -1,4 +1,4 @@
-import { createJupiterApiClient, QuoteResponse } from "@jup-ag/api";
+import { QuoteResponse } from "@jup-ag/api";
 import { TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 
 import { createMarginfiAccountTx, MarginfiAccountWrapper, MarginfiClient } from "@mrgnlabs/marginfi-client-v2";
@@ -14,6 +14,7 @@ import {
 } from "@mrgnlabs/mrgn-common";
 import {
   deserializeInstruction,
+  createMarginfiJupiterApiClient,
   getAdressLookupTableAccounts,
   getSwapQuoteWithRetry,
   STATIC_SIMULATION_ERRORS,
@@ -100,7 +101,7 @@ export async function createSwapTx(props: GenerateDepositSwapTxnsProps) {
     throw new ActionProcessingError(STATIC_SIMULATION_ERRORS.BANK_NOT_PROVIDED_CHECK);
   }
 
-  const jupiterQuoteApi = createJupiterApiClient();
+  const jupiterQuoteApi = createMarginfiJupiterApiClient();
   const mintDecimals = isExtendedBankInfo(props.swapBank)
     ? props.swapBank.info.state.mintDecimals
     : props.swapBank.mintDecimals;

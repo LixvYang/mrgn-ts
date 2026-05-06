@@ -1,4 +1,4 @@
-import { QuoteResponse, createJupiterApiClient } from "@jup-ag/api";
+import { QuoteResponse } from "@jup-ag/api";
 import { ExtendedBankInfo } from "@mrgnlabs/mrgn-state";
 import {
   SolanaTransaction,
@@ -8,7 +8,12 @@ import {
   TransactionType,
 } from "@mrgnlabs/mrgn-common";
 import { Connection, PublicKey, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
-import { getSwapQuoteWithRetry, deserializeInstruction, getAdressLookupTableAccounts } from "./actions";
+import {
+  createMarginfiJupiterApiClient,
+  getSwapQuoteWithRetry,
+  deserializeInstruction,
+  getAdressLookupTableAccounts,
+} from "./actions";
 
 /**
  * Quote token Swap Transaction Logic
@@ -54,7 +59,7 @@ export async function createSwapTx({
   jupiterOptions,
   platformFeeBps,
 }: CreateSwapTxProps): Promise<CreateSwapTxResponse> {
-  const jupiterQuoteApi = createJupiterApiClient();
+  const jupiterQuoteApi = createMarginfiJupiterApiClient();
 
   const swapQuote = await getSwapQuoteWithRetry({
     swapMode: "ExactIn",

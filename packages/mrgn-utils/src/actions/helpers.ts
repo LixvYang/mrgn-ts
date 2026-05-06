@@ -11,6 +11,14 @@ import { WalletToken } from "@mrgnlabs/mrgn-common";
 import { ActionProcessingError } from "./types";
 import { STATIC_SIMULATION_ERRORS } from "../errors";
 
+export const JUPITER_SWAP_API_BASE_PATH = "https://lite-api.jup.ag/swap/v1";
+
+export function createMarginfiJupiterApiClient() {
+  return createJupiterApiClient({
+    basePath: JUPITER_SWAP_API_BASE_PATH,
+  });
+}
+
 // ------------------------------------------------------------------//
 // Helpers //
 // ------------------------------------------------------------------//
@@ -104,7 +112,7 @@ export async function getSwapQuoteWithRetry(
   maxRetries = 5,
   timeout = 1500
 ): Promise<QuoteResponse> {
-  const jupiterQuoteApi = createJupiterApiClient();
+  const jupiterQuoteApi = createMarginfiJupiterApiClient();
   let attempt = 0;
   while (attempt < maxRetries) {
     try {

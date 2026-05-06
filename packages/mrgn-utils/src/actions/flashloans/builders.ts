@@ -1,4 +1,4 @@
-import { createJupiterApiClient, QuoteGetRequest } from "@jup-ag/api";
+import { QuoteGetRequest } from "@jup-ag/api";
 import { AccountInfo, AddressLookupTableAccount, PublicKey } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
 
@@ -12,7 +12,12 @@ import {
   WSOL_MINT,
 } from "@mrgnlabs/mrgn-common";
 
-import { deserializeInstruction, getAdressLookupTableAccounts, getSwapQuoteWithRetry } from "../helpers";
+import {
+  createMarginfiJupiterApiClient,
+  deserializeInstruction,
+  getAdressLookupTableAccounts,
+  getSwapQuoteWithRetry,
+} from "../helpers";
 import { isWholePosition } from "../../mrgnUtils";
 import {
   ActionMessageType,
@@ -313,7 +318,7 @@ export async function loopingBuilder({
 }: LoopingProps): Promise<FlashloanBuilderResponse> {
   if (!marginfiAccount) throw new Error("not initialized");
 
-  const jupiterQuoteApi = createJupiterApiClient();
+  const jupiterQuoteApi = createMarginfiJupiterApiClient();
   let feeAccountInfo: AccountInfo<any> | null = null;
 
   const feeMint = quote.swapMode === "ExactIn" ? quote.outputMint : quote.inputMint;
@@ -386,7 +391,7 @@ export async function repayWithCollatBuilder({
   quote,
   connection,
 }: RepayWithCollatProps): Promise<FlashloanBuilderResponse> {
-  const jupiterQuoteApi = createJupiterApiClient();
+  const jupiterQuoteApi = createMarginfiJupiterApiClient();
   let feeAccountInfo: AccountInfo<any> | null = null;
 
   const feeMint = quote.swapMode === "ExactIn" ? quote.outputMint : quote.inputMint;
@@ -440,7 +445,7 @@ export async function closePositionBuilder({
   quote,
   connection,
 }: ClosePositionProps): Promise<FlashloanBuilderResponse> {
-  const jupiterQuoteApi = createJupiterApiClient();
+  const jupiterQuoteApi = createMarginfiJupiterApiClient();
   let feeAccountInfo: AccountInfo<any> | null = null;
 
   const feeMint = quote.swapMode === "ExactIn" ? quote.outputMint : quote.inputMint;

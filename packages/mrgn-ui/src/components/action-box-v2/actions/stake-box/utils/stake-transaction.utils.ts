@@ -1,6 +1,6 @@
 // this holds all the logic to create the stake transactions
 
-import { createJupiterApiClient, QuoteResponse } from "@jup-ag/api";
+import { QuoteResponse } from "@jup-ag/api";
 import * as SplStakePool from "@solana/spl-stake-pool";
 import { makeUnwrapSolIx } from "@mrgnlabs/marginfi-client-v2";
 import { ExtendedBankInfo, ActionType } from "@mrgnlabs/mrgn-state";
@@ -17,6 +17,7 @@ import {
 } from "@mrgnlabs/mrgn-common";
 import {
   getSwapQuoteWithRetry,
+  createMarginfiJupiterApiClient,
   STATIC_SIMULATION_ERRORS,
   deserializeInstruction,
   getAdressLookupTableAccounts,
@@ -334,7 +335,7 @@ export const createSwapToSolTx = async ({
   jupiterOptions,
   platformFeeBps,
 }: CreateSwapToSolTxProps): Promise<{ quote?: QuoteResponse; tx?: SolanaTransaction; error?: ActionMessageType }> => {
-  const jupiterQuoteApi = createJupiterApiClient();
+  const jupiterQuoteApi = createMarginfiJupiterApiClient();
 
   const swapQuote = await getSwapQuoteWithRetry({
     amount: uiToNative(inputMintOpts.amount, inputMintOpts.mintDecimals).toNumber(),

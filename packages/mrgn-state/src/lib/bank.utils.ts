@@ -31,6 +31,27 @@ import {
 import { FEE_MARGIN } from "./firebase.utils";
 import { getConfig } from "../config";
 
+export const MIXIN_REPAY_INTEREST_BUFFER_MIN = 1e-8;
+
+export function calculateMixinRepayAmountWithInterestBuffer({
+  debtAmount,
+  borrowingRate,
+  mintDecimals,
+  minutesDelay = 24 * 60,
+}: {
+  debtAmount: number;
+  borrowingRate: number;
+  mintDecimals: number;
+  minutesDelay?: number;
+}) {
+  const roundedDebtAmount = ceil(debtAmount, mintDecimals);
+  const minutesPerYear = 365 * 24 * 60;
+  const interestBuffer = roundedDebtAmount * borrowingRate * (minutesDelay / minutesPerYear);
+  const bufferWithMargin = Math.max(interestBuffer * 1.5, MIXIN_REPAY_INTEREST_BUFFER_MIN);
+
+  return ceil(roundedDebtAmount + bufferWithMargin, mintDecimals);
+}
+
 export function makeExtendedBankMetadata(
   bank: Bank,
   tokenMetadata: TokenMetadata,
@@ -274,17 +295,11 @@ export function makeExtendedBankInfo(
     const debtAmount = ceil(position.amount, bankInfo.mintDecimals);
     maxRepay = Math.min(debtAmount, walletBalance);
     if (getConfig().isMixin) {
-      // 添加缓冲金额以应对交易打包延迟期间的利息累积
-      // 假设最大延迟 10 分钟，使用年化借款利率计算
-      const minutesDelay = 10;
-      const minutesPerYear = 365 * 24 * 60;
-      const interestBuffer = debtAmount * bankInfo.borrowingRate * (minutesDelay / minutesPerYear);
-
-      // 添加 50% 的安全边际，确保足够但不过度
-      const bufferWithMargin = interestBuffer * 1.5;
-
-      // 最终还款金额 = 债务金额 + 缓冲金额，并向上取整
-      maxRepay = ceil(debtAmount + bufferWithMargin, bankInfo.mintDecimals);
+      maxRepay = calculateMixinRepayAmountWithInterestBuffer({
+        debtAmount,
+        borrowingRate: bankInfo.borrowingRate,
+        mintDecimals: bankInfo.mintDecimals,
+      });
     }
   }
 

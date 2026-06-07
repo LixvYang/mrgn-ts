@@ -48,6 +48,12 @@ export const RepayAction = ({
 
   const handleMaxClick = () => {
     if (selectedBank) {
+      if (!isRepayCollat && selectedBank.isActive) {
+        console.log("Repay MAX amount recalculation:", {
+          originalAmount: selectedBank.position.amount,
+          recalculatedAmount: maxAmount,
+        });
+      }
       onSetAmountRaw(maxAmount.toString());
     }
   };

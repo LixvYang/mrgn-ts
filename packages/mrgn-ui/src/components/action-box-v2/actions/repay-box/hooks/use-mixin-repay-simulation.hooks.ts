@@ -29,7 +29,12 @@ import {
   UserResponse,
 } from "@mixin.dev/mixin-node-sdk";
 
-import { AccountSummary, ActionType, ExtendedBankInfo } from "@mrgnlabs/mrgn-state";
+import {
+  AccountSummary,
+  ActionType,
+  calculateMixinRepayAmountWithInterestBuffer,
+  ExtendedBankInfo,
+} from "@mrgnlabs/mrgn-state";
 import {
   BroadcastMethodType,
   DEFAULT_PROCESS_TX_OPTS,
@@ -52,6 +57,7 @@ import {
   ActionProcessingError,
   JupiterOptions,
   RepayActionTxns,
+  isWholePosition,
 } from "@mrgnlabs/mrgn-utils";
 
 // import { calculateSummary, generateActionTxns } from "../utils";
@@ -238,6 +244,25 @@ async function handleRepayMixinSimulation({
     //   throw new Error("Repay collateral not supported");
     // }
 
+    const recalculatedAmount =
+      actionType === ActionType.Repay && selectedBank.isActive && isWholePosition(selectedBank, amount)
+        ? Math.max(
+            amount,
+            calculateMixinRepayAmountWithInterestBuffer({
+              debtAmount: selectedBank.position.amount,
+              borrowingRate: selectedBank.info.state.borrowingRate,
+              mintDecimals: selectedBank.info.state.mintDecimals,
+            })
+          )
+        : amount;
+
+    if (actionType === ActionType.Repay) {
+      console.log("Mixin repay amount recalculation:", {
+        originalAmount: amount,
+        recalculatedAmount,
+      });
+    }
+
     const props: CalculateRepayTransactionsProps = {
       marginfiAccount: account,
       selectedBank: selectedBank,
@@ -245,7 +270,7 @@ async function handleRepayMixinSimulation({
       connection: marginfiClient.provider.connection,
       platformFeeBps,
       jupiterOptions,
-      repayAmount: amount,
+      repayAmount: recalculatedAmount,
       actionType,
       isMixin: true,
     };
@@ -357,7 +382,7 @@ async function handleRepayMixinSimulation({
       computerAccount,
       rentMap,
       invoice,
-      amount,
+      amount: recalculatedAmount,
       // actionTxns: repayActionTxns.actionTxns,
     });
     resultTrace = repayResultTrace;

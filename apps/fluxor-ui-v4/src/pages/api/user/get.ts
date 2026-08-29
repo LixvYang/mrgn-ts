@@ -1,5 +1,5 @@
 import { NextApiResponse } from "next";
-import { getFirebaseUserByWallet, initFirebaseIfNeeded } from "./utils";
+import { getFirebaseUserByWallet, initFirebaseIfNeeded, isFirebaseConfigured } from "./utils";
 import { NextApiRequest } from "../utils";
 import { STATUS_INTERNAL_ERROR, STATUS_NOT_FOUND, STATUS_OK, firebaseApi } from "@mrgnlabs/mrgn-state";
 
@@ -18,6 +18,10 @@ export type UserGetResponse =
     };
 
 export default async function handler(req: NextApiRequest<UserGetRequest>, res: NextApiResponse<UserGetResponse>) {
+  if (!isFirebaseConfigured()) {
+    return res.status(STATUS_NOT_FOUND).json({ error: "User not found" });
+  }
+
   const { wallet } = req.body;
 
   try {

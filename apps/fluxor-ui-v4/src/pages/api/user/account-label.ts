@@ -16,7 +16,7 @@ import {
   STATUS_INTERNAL_ERROR,
 } from "@mrgnlabs/mrgn-state";
 
-import { initFirebaseIfNeeded } from "./utils";
+import { initFirebaseIfNeeded, isFirebaseConfigured } from "./utils";
 import { NextApiRequest } from "../utils";
 
 export type AccountLabelRequest = {
@@ -29,6 +29,10 @@ export type AccountLabelRequest = {
 initFirebaseIfNeeded();
 
 export default async function handler(req: NextApiRequest<AccountLabelRequest>, res: NextApiResponse) {
+  if (!isFirebaseConfigured()) {
+    return res.status(STATUS_OK).json({ success: true, data: {} });
+  }
+
   if (req.method === "POST") {
     const { method, signedDataRaw, account, label } = req.body;
 

@@ -1,5 +1,5 @@
 import { NextApiResponse } from "next";
-import { getLastUsedWallet, initFirebaseIfNeeded } from "./utils";
+import { getLastUsedWallet, initFirebaseIfNeeded, isFirebaseConfigured } from "./utils";
 import { NextApiRequest } from "../utils";
 import { STATUS_INTERNAL_ERROR, STATUS_NOT_FOUND, STATUS_OK } from "@mrgnlabs/mrgn-state";
 
@@ -22,6 +22,10 @@ export default async function handler(
   res: NextApiResponse<UserWalletResponse>
 ) {
   const { wallet } = req.query as { wallet: string };
+
+  if (!isFirebaseConfigured()) {
+    return res.status(STATUS_NOT_FOUND).json({ error: "User not found" });
+  }
 
   if (!wallet) {
     return res.status(STATUS_NOT_FOUND).json({ error: "Wallet address is required" });

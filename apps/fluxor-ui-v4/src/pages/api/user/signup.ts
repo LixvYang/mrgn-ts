@@ -1,6 +1,12 @@
 import * as admin from "firebase-admin";
 import * as Sentry from "@sentry/nextjs";
-import { createFirebaseUser, getFirebaseUserByWallet, initFirebaseIfNeeded, logSignupAttempt } from "./utils";
+import {
+  createFirebaseUser,
+  getFirebaseUserByWallet,
+  initFirebaseIfNeeded,
+  isFirebaseConfigured,
+  logSignupAttempt,
+} from "./utils";
 import { NextApiRequest, NextApiResponse } from "next";
 import { is } from "superstruct";
 import { MEMO_PROGRAM_ID } from "@mrgnlabs/mrgn-common";
@@ -21,6 +27,10 @@ interface SignupRequestBody {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  if (!isFirebaseConfigured()) {
+    return res.status(STATUS_INTERNAL_ERROR).json({ error: "Firebase is not configured" });
   }
 
   const { walletAddress, payload, walletId } = req.body as SignupRequestBody;

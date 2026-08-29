@@ -1,5 +1,5 @@
 import * as admin from "firebase-admin";
-import { initFirebaseIfNeeded } from "./utils";
+import { initFirebaseIfNeeded, isFirebaseConfigured } from "./utils";
 import { NextApiRequest } from "../utils";
 import { STATUS_BAD_REQUEST, STATUS_OK } from "@mrgnlabs/mrgn-state";
 
@@ -12,6 +12,10 @@ export interface LoginRequest {
 }
 
 export default async function handler(req: NextApiRequest<LoginRequest>, res: any) {
+  if (!isFirebaseConfigured()) {
+    return res.status(STATUS_OK).json({ success: true });
+  }
+
   const { walletAddress, email, loginType } = req.body;
 
   try {

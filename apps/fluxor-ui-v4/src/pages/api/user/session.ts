@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { initFirebaseIfNeeded } from "./utils";
+import { initFirebaseIfNeeded, isFirebaseConfigured } from "./utils";
 import * as admin from "firebase-admin";
 import { STATUS_BAD_REQUEST, STATUS_INTERNAL_ERROR, STATUS_OK } from "@mrgnlabs/mrgn-state";
 
@@ -13,6 +13,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (!idToken) {
       return res.status(STATUS_BAD_REQUEST).json({ error: "Missing ID token" });
+    }
+
+    if (!isFirebaseConfigured()) {
+      return res.status(STATUS_INTERNAL_ERROR).json({ error: "Firebase is not configured" });
     }
 
     initFirebaseIfNeeded();

@@ -56,7 +56,18 @@ export const logLoginAttempt = async (
   }
 };
 
+export function isFirebaseConfigured() {
+  return Boolean(
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY
+  );
+}
+
 export function initFirebaseIfNeeded() {
+  // Skip initialization when server-side Firebase credentials are absent,
+  // so routes can degrade gracefully instead of throwing app/invalid-credential.
+  if (!isFirebaseConfigured()) {
+    return;
+  }
   // Check if the app is already initialized to avoid initializing multiple times
   if (!admin.apps.length) {
     admin.initializeApp({

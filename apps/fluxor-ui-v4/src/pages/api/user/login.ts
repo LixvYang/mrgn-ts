@@ -1,6 +1,6 @@
 import * as admin from "firebase-admin";
 import * as Sentry from "@sentry/nextjs";
-import { getFirebaseUserByWallet, initFirebaseIfNeeded, logLoginAttempt } from "./utils";
+import { getFirebaseUserByWallet, initFirebaseIfNeeded, isFirebaseConfigured, logLoginAttempt } from "./utils";
 import { NextApiRequest, NextApiResponse } from "next";
 import { MEMO_PROGRAM_ID } from "@mrgnlabs/mrgn-common";
 import { PublicKey, Transaction } from "@solana/web3.js";
@@ -28,6 +28,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (!walletAddress) {
       return res.status(STATUS_BAD_REQUEST).json({ error: "Missing required fields" });
+    }
+
+    if (!isFirebaseConfigured()) {
+      return res.status(STATUS_NOT_FOUND).json({ error: "User not found" });
     }
 
     initFirebaseIfNeeded();

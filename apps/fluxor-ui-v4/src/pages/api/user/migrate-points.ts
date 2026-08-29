@@ -1,6 +1,6 @@
 import * as admin from "firebase-admin";
 import * as Sentry from "@sentry/nextjs";
-import { getFirebaseUserByWallet, initFirebaseIfNeeded, logLoginAttempt } from "./utils";
+import { getFirebaseUserByWallet, initFirebaseIfNeeded, isFirebaseConfigured, logLoginAttempt } from "./utils";
 import { NextApiRequest } from "../utils";
 import { MEMO_PROGRAM_ID } from "@mrgnlabs/mrgn-common";
 import { PublicKey, Transaction } from "@solana/web3.js";
@@ -25,6 +25,10 @@ export interface MigrationRequest {
 }
 
 export default async function handler(req: NextApiRequest<MigrationRequest>, res: any) {
+  if (!isFirebaseConfigured()) {
+    return res.status(STATUS_INTERNAL_ERROR).json({ error: "Firebase is not configured" });
+  }
+
   const { method, signedDataRaw } = req.body;
 
   let signer;

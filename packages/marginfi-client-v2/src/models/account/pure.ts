@@ -1,3 +1,10 @@
+/**
+ * INPUT: Marginfi client/program state, account models, banks, oracle prices, and transaction helpers
+ * OUTPUT: Pure MarginfiAccount model operations and v0.1.10 instruction builders
+ * POSITION: Core account domain model for lending, borrowing, repayment, and health operations
+ *
+ * SYNC: If this file changes, update this header and ./folder.md
+ */
 import { ComputeBudgetProgram, PublicKey, TransactionInstruction } from "@solana/web3.js";
 
 import {
@@ -15,6 +22,7 @@ import {
 import BigNumber from "bignumber.js";
 
 import { MarginfiProgram } from "../../types";
+import { getMarginfiRuntimeAccountClient } from "../../anchor-runtime";
 import { makeWrapSolIxs, makeUnwrapSolIx } from "../../utils";
 
 import { Bank } from "../bank";
@@ -82,7 +90,11 @@ class MarginfiAccount implements MarginfiAccountType {
   ) {}
 
   static async fetch(address: PublicKey, client: MarginfiClient): Promise<MarginfiAccount> {
-    const data: MarginfiAccountRaw = await client.program.account.marginfiAccount.fetch(address);
+    const marginfiAccountClient = getMarginfiRuntimeAccountClient<MarginfiAccountRaw>(
+      client.program,
+      "marginfiAccount"
+    );
+    const data = await marginfiAccountClient.fetch(address);
     return MarginfiAccount.fromAccountParsed(address, data);
   }
 
@@ -854,11 +866,6 @@ class MarginfiAccount implements MarginfiAccountType {
 
     const repayIxs = [];
 
-    // Add emissions-related instructions if necessary
-    if (repayAll && !bank.emissionsMint.equals(PublicKey.default)) {
-      repayIxs.push(...(await this.makeWithdrawEmissionsIx(program, banks, mintDatas, bankAddress)).instructions);
-    }
-
     // Add repay-related instructions
     const userAta = getAssociatedTokenAddressSync(bank.mint, this.authority, true, mintData.tokenProgram); // We allow off curve addresses here to support Fuse.
 
@@ -943,11 +950,6 @@ class MarginfiAccount implements MarginfiAccountType {
 
     const withdrawIxs = [];
 
-    // Add emissions-related instructions if necessary
-    if (withdrawAll && !bank.emissionsMint.equals(PublicKey.default) && mintData.emissionTokenProgram) {
-      withdrawIxs.push(...(await this.makeWithdrawEmissionsIx(program, bankMap, mintDatas, bankAddress)).instructions);
-    }
-
     const userAta = getAssociatedTokenAddressSync(bank.mint, this.authority, true, mintData.tokenProgram); // We allow off curve addresses here to support Fuse.
 
     if (createAtas) {
@@ -973,7 +975,7 @@ class MarginfiAccount implements MarginfiAccountType {
     if (withdrawOpts.observationBanksOverride) {
       remainingAccounts.push(...withdrawOpts.observationBanksOverride);
     } else {
-      const accountMetas = computeHealthAccountMetas(healthAccounts, bankMetadataMap);
+      const accountMetas = computeHealthAccountMetas(healthAccounts, bankMetadataMap, true, withdrawAll ? [bank] : []);
       remainingAccounts.push(...accountMetas);
     }
 

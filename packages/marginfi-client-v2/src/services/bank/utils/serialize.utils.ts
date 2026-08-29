@@ -1,3 +1,10 @@
+/**
+ * INPUT: SDK bank models, configuration values, and numeric conversion helpers
+ * OUTPUT: Anchor-compatible bank values and transport DTOs
+ * POSITION: Serialization boundary between SDK domain types and marginfi v0.1.10 data contracts
+ *
+ * SYNC: If this file changes, update this header and ./folder.md
+ */
 import BigNumber from "bignumber.js";
 import BN from "bn.js";
 
@@ -9,6 +16,7 @@ import {
   BankConfigOpt,
   RiskTier,
   OperationalState,
+  OperationalStateRaw,
   OracleSetup,
   OracleSetupRaw,
   BankTypeDto,
@@ -61,14 +69,33 @@ function serializeBankConfigOpt(bankConfigOpt: BankConfigOpt): BankConfigOptRaw 
     freezeSettings: bankConfigOpt.freezeSettings,
     tokenlessRepaymentsAllowed: bankConfigOpt.tokenlessRepaymentsAllowed,
     oracleMaxConfidence: bankConfigOpt.oracleMaxConfidence,
+    liquidationLiquidatorFee: bankConfigOpt.liquidationLiquidatorFee ?? null,
+    liquidationInsuranceFee: bankConfigOpt.liquidationInsuranceFee ?? null,
+    circuitBreakerEnabled: bankConfigOpt.circuitBreakerEnabled ?? null,
+    cbDeviationBpsTiers: bankConfigOpt.cbDeviationBpsTiers ?? null,
+    cbTierDurationsSeconds: bankConfigOpt.cbTierDurationsSeconds ?? null,
+    cbEscalationWindowMult: bankConfigOpt.cbEscalationWindowMult ?? null,
+    cbEmaAlphaBps: bankConfigOpt.cbEmaAlphaBps ?? null,
+    cbWindowSeconds: bankConfigOpt.cbWindowSeconds ?? null,
+    cbWindowMaxUpBps: bankConfigOpt.cbWindowMaxUpBps ?? null,
+    cbWindowMaxDownBps: bankConfigOpt.cbWindowMaxDownBps ?? null,
   };
 }
 
 function serializeInterestRateConfig(interestRateConfig: InterestRateConfig): InterestRateConfigRaw {
+  const optimalUtilizationRate = bigNumberToWrappedI80F48(interestRateConfig.optimalUtilizationRate);
+  const plateauInterestRate = bigNumberToWrappedI80F48(interestRateConfig.plateauInterestRate);
+  const maxInterestRate = bigNumberToWrappedI80F48(interestRateConfig.maxInterestRate);
+
   return {
-    optimalUtilizationRate: bigNumberToWrappedI80F48(interestRateConfig.optimalUtilizationRate),
-    plateauInterestRate: bigNumberToWrappedI80F48(interestRateConfig.plateauInterestRate),
-    maxInterestRate: bigNumberToWrappedI80F48(interestRateConfig.maxInterestRate),
+    optimalUtilizationRate,
+    plateauInterestRate,
+    maxInterestRate,
+    // IDL v0.1.10 renamed these fields to placeholder0/1/2; emit both so the
+    // Anchor coder picks the right one regardless of which IDL version it holds.
+    placeholder0: optimalUtilizationRate,
+    placeholder1: plateauInterestRate,
+    placeholder2: maxInterestRate,
 
     insuranceFeeFixedApr: bigNumberToWrappedI80F48(interestRateConfig.insuranceFeeFixedApr),
     insuranceIrFee: bigNumberToWrappedI80F48(interestRateConfig.insuranceIrFee),
@@ -92,9 +119,7 @@ function serializeRiskTier(riskTier: RiskTier): RiskTierRaw {
   }
 }
 
-function serializeOperationalState(
-  operationalState: OperationalState
-): { paused: {} } | { operational: {} } | { reduceOnly: {} } {
+function serializeOperationalState(operationalState: OperationalState): OperationalStateRaw {
   switch (operationalState) {
     case OperationalState.Paused:
       return { paused: {} };
@@ -102,6 +127,14 @@ function serializeOperationalState(
       return { operational: {} };
     case OperationalState.ReduceOnly:
       return { reduceOnly: {} };
+    case OperationalState.KilledByBankruptcy:
+      return { killedByBankruptcy: {} };
+    case OperationalState.Uninitialized:
+      return { uninitialized: {} };
+    case OperationalState.ReduceOnlyWithBorrowingPower:
+      return { reduceOnlyWithBorrowingPower: {} };
+    case OperationalState.CircuitBroken:
+      return { circuitBroken: {} };
     default:
       throw new Error(`Invalid operational state "${operationalState}"`);
   }
@@ -135,6 +168,16 @@ function serializeOracleSetupToIndex(oracleSetup: OracleSetup): number {
       return 11;
     case OracleSetup.SolendSwitchboardPull:
       return 12;
+    case OracleSetup.FixedKamino:
+      return 13;
+    case OracleSetup.FixedDrift:
+      return 14;
+    case OracleSetup.JuplendPythPull:
+      return 15;
+    case OracleSetup.JuplendSwitchboardPull:
+      return 16;
+    case OracleSetup.FixedJuplend:
+      return 17;
     default:
       return 0;
   }
@@ -168,6 +211,16 @@ function serializeOracleSetup(oracleSetup: OracleSetup): OracleSetupRaw {
       return { solendPythPull: {} };
     case OracleSetup.SolendSwitchboardPull:
       return { solendSwitchboardPull: {} };
+    case OracleSetup.FixedKamino:
+      return { fixedKamino: {} };
+    case OracleSetup.FixedDrift:
+      return { fixedDrift: {} };
+    case OracleSetup.JuplendPythPull:
+      return { juplendPythPull: {} };
+    case OracleSetup.JuplendSwitchboardPull:
+      return { juplendSwitchboardPull: {} };
+    case OracleSetup.FixedJuplend:
+      return { fixedJuplend: {} };
     default:
       throw new Error(`Invalid oracle setup "${oracleSetup}"`);
   }
@@ -198,6 +251,8 @@ function toBankDto(bank: BankType): BankTypeDto {
     totalLiabilityShares: bank.totalLiabilityShares.toString(),
     emissionsActiveBorrowing: bank.emissionsActiveBorrowing,
     emissionsActiveLending: bank.emissionsActiveLending,
+    stakedOracleDisabled: bank.stakedOracleDisabled,
+    stakedOracleUsesOnramp: bank.stakedOracleUsesOnramp,
     emissionsRate: bank.emissionsRate,
     emissionsMint: bank.emissionsMint.toBase58(),
     emissionsRemaining: bank.emissionsRemaining.toString(),
@@ -225,6 +280,16 @@ function toBankDto(bank: BankType): BankTypeDto {
           solendReserve: bank.solendIntegrationAccounts.solendReserve.toBase58(),
           solendObligation: bank.solendIntegrationAccounts.solendObligation.toBase58(),
         }
+      : undefined,
+    jupLendIntegrationAccounts: bank.jupLendIntegrationAccounts
+      ? {
+          jupLendingState: bank.jupLendIntegrationAccounts.jupLendingState.toBase58(),
+          jupFTokenVault: bank.jupLendIntegrationAccounts.jupFTokenVault.toBase58(),
+          jupFTokenAta: bank.jupLendIntegrationAccounts.jupFTokenAta.toBase58(),
+        }
+      : undefined,
+    stakedIntegrationAccounts: bank.stakedIntegrationAccounts
+      ? { validatorVoteAccount: bank.stakedIntegrationAccounts.validatorVoteAccount.toBase58() }
       : undefined,
   };
 }
@@ -384,7 +449,17 @@ function bankConfigRawToDto(bankConfigRaw: BankConfigRaw): BankConfigRawDto {
     oracleSetup: bankConfigRaw.oracleSetup,
     oracleKeys: bankConfigRaw.oracleKeys.map((key) => key.toBase58()),
     oracleMaxAge: bankConfigRaw.oracleMaxAge,
-    interestRateConfig: bankConfigRaw.interestRateConfig,
+    // Normalize the IDL v0.1.10 placeholder0/1/2 curve params back to the legacy
+    // field names so DTO consumers keep a stable shape across program versions.
+    interestRateConfig: {
+      ...bankConfigRaw.interestRateConfig,
+      optimalUtilizationRate:
+        bankConfigRaw.interestRateConfig.optimalUtilizationRate ?? bankConfigRaw.interestRateConfig.placeholder0!,
+      plateauInterestRate:
+        bankConfigRaw.interestRateConfig.plateauInterestRate ?? bankConfigRaw.interestRateConfig.placeholder1!,
+      maxInterestRate:
+        bankConfigRaw.interestRateConfig.maxInterestRate ?? bankConfigRaw.interestRateConfig.placeholder2!,
+    },
     configFlags: bankConfigRaw.configFlags,
     oracleMaxConfidence: bankConfigRaw.oracleMaxConfidence,
     fixedPrice: bankConfigRaw.fixedPrice,

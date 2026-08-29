@@ -1,3 +1,10 @@
+/**
+ * INPUT: Serializable bank values and raw Anchor-compatible bank fields
+ * OUTPUT: DTO contracts for bank cache and transport boundaries
+ * POSITION: Bank serialization and persistence type definitions
+ *
+ * SYNC: If this file changes, update this header and ./folder.md
+ */
 import { WrappedI80F48 } from "@mrgnlabs/mrgn-common";
 import {
   AssetTag,
@@ -21,9 +28,14 @@ export interface RatePointDto {
 
 export interface InterestRateConfigDto {
   // Curve Params
-  optimalUtilizationRate: string;
-  plateauInterestRate: string;
-  maxInterestRate: string;
+  // NOTE: optional because IDL v0.1.10 renamed these to placeholder0/1/2; see
+  // toLegacyInterestRateCurve() in deserialize.utils.ts
+  optimalUtilizationRate?: string;
+  plateauInterestRate?: string;
+  maxInterestRate?: string;
+  placeholder0?: string;
+  placeholder1?: string;
+  placeholder2?: string;
 
   // Fees
   insuranceFeeFixedApr: string;
@@ -110,6 +122,8 @@ export interface BankTypeDto {
 
   emissionsActiveBorrowing: boolean;
   emissionsActiveLending: boolean;
+  stakedOracleDisabled?: boolean;
+  stakedOracleUsesOnramp?: boolean;
   emissionsRate: number;
   emissionsMint: string;
   emissionsRemaining: string;
@@ -133,6 +147,14 @@ export interface BankTypeDto {
   solendIntegrationAccounts?: {
     solendReserve: string;
     solendObligation: string;
+  };
+  jupLendIntegrationAccounts?: {
+    jupLendingState: string;
+    jupFTokenVault: string;
+    jupFTokenAta: string;
+  };
+  stakedIntegrationAccounts?: {
+    validatorVoteAccount: string;
   };
 }
 

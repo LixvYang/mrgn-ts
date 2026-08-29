@@ -5,8 +5,9 @@ import { aprToApy, BankMetadataMap, composeRemainingAccounts, nativeToUi, shorte
 
 import { MarginfiAccountType, BalanceType } from "../types";
 import { MarginRequirementType } from "../../../models/account";
-import { findPoolAddress, findPoolStakeAddress, findPoolMintAddress } from "../../../vendor";
+import { findPoolAddress, findPoolOnRampAddress } from "../../../vendor";
 import {
+  AssetTag,
   BankType,
   computeInterestRates,
   computeAssetUsdValue,
@@ -369,32 +370,49 @@ export function computeHealthCheckAccounts(
 export function computeHealthAccountMetas(
   banksToInclude: BankType[],
   bankMetadataMap?: BankMetadataMap,
-  enableSorting = true
+  enableSorting = true,
+  trailingBanks: BankType[] = []
 ): PublicKey[] {
   let wrapperFn = enableSorting ? composeRemainingAccounts : (banksAndOracles: PublicKey[][]) => banksAndOracles.flat();
 
-  const accounts = wrapperFn(
-    banksToInclude.map((bank) => {
-      const keys = [bank.address, bank.oracleKey];
+  const computeBankRiskAccountKeys = (bank: BankType): PublicKey[] => {
+    const keys = bank.oracleKey.equals(PublicKey.default) ? [bank.address] : [bank.address, bank.oracleKey];
 
-      // for staked collateral banks (assetTag === 2), include additional accounts
-      if (bank.config.assetTag === 2) {
-        const bankMetadata = bankMetadataMap?.[bank.address.toBase58()];
+    if (
+      bank.config.assetTag === AssetTag.KAMINO ||
+      bank.config.assetTag === AssetTag.DRIFT ||
+      bank.config.assetTag === AssetTag.SOLEND ||
+      bank.config.assetTag === AssetTag.JUPLEND
+    ) {
+      const integrationOracle = bank.config.oracleKeys[1];
+      if (integrationOracle) keys.push(integrationOracle);
+    }
 
-        if (!bankMetadata || !bankMetadata.validatorVoteAccount) {
-          throw Error(`Bank metadata for ${bank.address.toBase58()} not found`);
+    if (bank.config.assetTag === AssetTag.STAKED) {
+      const lstMint = bank.config.oracleKeys[1];
+      const poolStake = bank.config.oracleKeys[2];
+      if (lstMint) keys.push(lstMint);
+      if (poolStake) keys.push(poolStake);
+
+      const configuredOnramp = bank.config.oracleKeys[3];
+      if (configuredOnramp && !configuredOnramp.equals(PublicKey.default)) {
+        keys.push(configuredOnramp);
+      } else if (bank.stakedOracleUsesOnramp) {
+        const metadataVoteAccount = bankMetadataMap?.[bank.address.toBase58()]?.validatorVoteAccount;
+        const validatorVoteAccount =
+          bank.stakedIntegrationAccounts?.validatorVoteAccount ??
+          (metadataVoteAccount ? new PublicKey(metadataVoteAccount) : undefined);
+        if (validatorVoteAccount && !validatorVoteAccount.equals(PublicKey.default)) {
+          keys.push(findPoolOnRampAddress(findPoolAddress(validatorVoteAccount)));
         }
-
-        const pool = findPoolAddress(new PublicKey(bankMetadata.validatorVoteAccount));
-        const solPool = findPoolStakeAddress(pool);
-        const lstMint = findPoolMintAddress(pool);
-
-        keys.push(lstMint, solPool);
       }
+    }
 
-      return keys;
-    })
-  );
+    return keys;
+  };
+
+  const accounts = wrapperFn(banksToInclude.map(computeBankRiskAccountKeys));
+  for (const bank of trailingBanks) accounts.push(...computeBankRiskAccountKeys(bank));
 
   return accounts;
 }

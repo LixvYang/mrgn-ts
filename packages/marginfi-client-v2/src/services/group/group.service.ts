@@ -1,3 +1,10 @@
+/**
+ * INPUT: Marginfi program, group/bank public keys, bank configuration, and native-stake addresses
+ * OUTPUT: Instruction wrappers for group-level and bank-creation operations
+ * POSITION: Group service bridging SDK inputs to marginfi v0.1.10 instruction builders
+ *
+ * SYNC: If this file changes, update this header and ./folder.md
+ */
 import { PublicKey, StakeProgram, SystemProgram, SYSVAR_RENT_PUBKEY, TransactionInstruction } from "@solana/web3.js";
 import BN from "bn.js";
 
@@ -76,7 +83,9 @@ export async function makeAddPermissionlessStakedBankIx(
       feePayer: feePayer,
       bankMint: lstMint,
       solPool,
+      poolOnramp: onRampAddress,
       stakePool: poolAddress,
+      validatorVoteAccount: voteAccountAddress,
     },
     remainingKeys.map((key) => ({ pubkey: key, isSigner: false, isWritable: false })),
     {

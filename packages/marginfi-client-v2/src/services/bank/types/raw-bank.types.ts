@@ -1,3 +1,10 @@
+/**
+ * INPUT: Anchor-decoded fields from the Marginfi program IDL
+ * OUTPUT: Raw on-chain bank, oracle, configuration, and e-mode shapes
+ * POSITION: Serialization boundary between Anchor and public bank models
+ *
+ * SYNC: If this file changes, update this header and ./folder.md
+ */
 import { PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 
@@ -122,6 +129,17 @@ interface BankConfigOptRaw {
   permissionlessBadDebtSettlement: boolean | null;
   freezeSettings: boolean | null;
   tokenlessRepaymentsAllowed: boolean | null;
+
+  liquidationLiquidatorFee: number | null;
+  liquidationInsuranceFee: number | null;
+  circuitBreakerEnabled: boolean | null;
+  cbDeviationBpsTiers: [number, number, number] | null;
+  cbTierDurationsSeconds: [number, number, number] | null;
+  cbEscalationWindowMult: number | null;
+  cbEmaAlphaBps: number | null;
+  cbWindowSeconds: number | null;
+  cbWindowMaxUpBps: number | null;
+  cbWindowMaxDownBps: number | null;
 }
 
 interface BankConfigCompactRaw
@@ -131,7 +149,14 @@ interface BankConfigCompactRaw
 
 type RiskTierRaw = { collateral: {} } | { isolated: {} };
 
-type OperationalStateRaw = { paused: {} } | { operational: {} } | { reduceOnly: {} } | { killedByBankruptcy: {} };
+type OperationalStateRaw =
+  | { paused: {} }
+  | { operational: {} }
+  | { reduceOnly: {} }
+  | { killedByBankruptcy: {} }
+  | { uninitialized: {} }
+  | { reduceOnlyWithBorrowingPower: {} }
+  | { circuitBroken: {} };
 
 interface RatePointRaw {
   util: number;
@@ -140,9 +165,15 @@ interface RatePointRaw {
 
 interface InterestRateConfigRaw {
   // Curve Params
+  // NOTE: IDL v0.1.10 renamed these to placeholder0/1/2 ("DEPRECATED placeholder field.
+  // Formerly used for legacy curve math."). Anchor decodes them under the new names, so
+  // accept both shapes and normalize via toLegacyInterestRateCurve() before use.
   optimalUtilizationRate: WrappedI80F48;
   plateauInterestRate: WrappedI80F48;
   maxInterestRate: WrappedI80F48;
+  placeholder0?: WrappedI80F48;
+  placeholder1?: WrappedI80F48;
+  placeholder2?: WrappedI80F48;
 
   // Fees
   insuranceFeeFixedApr: WrappedI80F48;
@@ -178,7 +209,12 @@ type OracleSetupRaw =
   | { driftPythPull: {} }
   | { driftSwitchboardPull: {} }
   | { solendPythPull: {} }
-  | { solendSwitchboardPull: {} };
+  | { solendSwitchboardPull: {} }
+  | { fixedKamino: {} }
+  | { fixedDrift: {} }
+  | { juplendPythPull: {} }
+  | { juplendSwitchboardPull: {} }
+  | { fixedJuplend: {} };
 
 interface OracleConfigOptRaw {
   setup: OracleSetupRaw;

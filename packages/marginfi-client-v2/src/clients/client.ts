@@ -15,6 +15,7 @@ import {
 } from "@solana/web3.js";
 import bs58 from "bs58";
 import { AccountType, Environment, MarginfiConfig, MarginfiProgram } from "../types";
+import { getMarginfiRuntimeAccountClient } from "../anchor-runtime";
 import { getConfig } from "../config";
 import instructions from "../instructions";
 import { MarginfiAccount, MarginRequirementType } from "../models/account";
@@ -322,9 +323,10 @@ class MarginfiClient {
     const debug = require("debug")("mfi:client");
     // Fetch & shape all accounts of Bank type (~ bank discovery)
     let bankDatasKeyed: { address: PublicKey; data: BankRaw }[] = [];
+    const bankAccountClient = getMarginfiRuntimeAccountClient<BankRaw>(program, "bank");
     if (bankAddresses && bankAddresses.length > 0) {
       debug("Using preloaded bank addresses, skipping gpa call", bankAddresses.length, "banks");
-      let bankAccountsData = await program.account.bank.fetchMultiple(bankAddresses);
+      let bankAccountsData = await bankAccountClient.fetchMultiple(bankAddresses);
       for (let i = 0; i < bankAccountsData.length; i++) {
         if (bankAccountsData[i] !== null) {
           bankDatasKeyed.push({
@@ -334,7 +336,7 @@ class MarginfiClient {
         }
       }
     } else {
-      let bankAccountsData = await program.account.bank.all([
+      let bankAccountsData = await bankAccountClient.all([
         { memcmp: { offset: 8 + 32 + 1, bytes: groupAddress.toBase58() } },
       ]);
       // filter out all integrators (KAMINO, DRIFT, SOLEND)
@@ -556,7 +558,10 @@ class MarginfiClient {
   async getMultipleMarginfiAccounts(pubkeys: PublicKey[]): Promise<MarginfiAccountWrapper[]> {
     require("debug")("mfi:client")("Fetching %s marginfi accounts", pubkeys);
 
-    const accounts = await this.program.account.marginfiAccount.fetchMultiple(pubkeys);
+    const accounts = await getMarginfiRuntimeAccountClient<MarginfiAccountRaw>(
+      this.program,
+      "marginfiAccount"
+    ).fetchMultiple(pubkeys);
 
     return accounts.map((account, index) => {
       if (!account) {
@@ -608,7 +613,7 @@ class MarginfiClient {
     const _authority = authority ? translateAddress(authority) : this.provider.wallet.publicKey;
 
     const marginfiAccounts = (
-      await this.program.account.marginfiAccount.all([
+      await getMarginfiRuntimeAccountClient<MarginfiAccountRaw>(this.program, "marginfiAccount").all([
         {
           memcmp: {
             bytes: this.groupAddress.toBase58(),

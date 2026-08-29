@@ -1,3 +1,10 @@
+/**
+ * INPUT: Marginfi Anchor program, transaction arguments, and Solana account public keys
+ * OUTPUT: Builders for marginfi v0.1.10 transaction instructions
+ * POSITION: SDK instruction-construction boundary between client models and the on-chain program
+ *
+ * SYNC: If this file changes, update this header and ./folder.md
+ */
 import { AccountMeta, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 
@@ -5,6 +12,7 @@ import { TOKEN_PROGRAM_ID } from "@mrgnlabs/mrgn-common";
 
 import { MarginfiProgram } from "./types";
 import type { BankConfigCompactRaw, BankConfigOptRaw } from "./services";
+import { getMarginfiRuntimeMethods } from "./anchor-runtime";
 
 async function makeInitMarginfiAccountIx(
   mfProgram: MarginfiProgram,
@@ -15,7 +23,7 @@ async function makeInitMarginfiAccountIx(
     feePayer: PublicKey;
   }
 ) {
-  return mfProgram.methods.marginfiAccountInitialize().accounts(accounts).instruction();
+  return getMarginfiRuntimeMethods(mfProgram).marginfiAccountInitialize().accounts(accounts).instruction();
 }
 
 async function makeInitMarginfiAccountPdaIx(
@@ -31,7 +39,7 @@ async function makeInitMarginfiAccountPdaIx(
     thirdPartyId?: number;
   }
 ) {
-  return mfProgram.methods
+  return getMarginfiRuntimeMethods(mfProgram)
     .marginfiAccountInitializePda(args.accountIndex, args.thirdPartyId ?? null)
     .accountsPartial({
       marginfiGroup: accounts.marginfiGroup,
@@ -70,6 +78,7 @@ async function makeKaminoDepositIx(
   },
   args: {
     amount: BN;
+    refreshReserve?: boolean;
   },
   remainingAccounts: AccountMeta[] = []
 ) {
@@ -89,8 +98,8 @@ async function makeKaminoDepositIx(
     ...optionalAccounts
   } = accounts;
 
-  return mfProgram.methods
-    .kaminoDeposit(args.amount)
+  return getMarginfiRuntimeMethods(mfProgram)
+    .kaminoDeposit(args.amount, args.refreshReserve ?? null)
     .accounts(accounts)
     .accountsPartial(optionalAccounts)
     .remainingAccounts(remainingAccounts)
@@ -118,7 +127,7 @@ async function makeDepositIx(
 ) {
   const { marginfiAccount, signerTokenAccount, bank, tokenProgram, ...optionalAccounts } = accounts;
 
-  return mfProgram.methods
+  return getMarginfiRuntimeMethods(mfProgram)
     .lendingAccountDeposit(args.amount, args.depositUpToLimit ?? null)
     .accounts({
       marginfiAccount,
@@ -152,7 +161,7 @@ async function makeRepayIx(
 ) {
   const { marginfiAccount, signerTokenAccount, bank, tokenProgram, ...optionalAccounts } = accounts;
 
-  return mfProgram.methods
+  return getMarginfiRuntimeMethods(mfProgram)
     .lendingAccountRepay(args.amount, args.repayAll ?? null)
     .accounts({
       marginfiAccount,
@@ -209,14 +218,13 @@ async function makeKaminoWithdrawIx(
     ...optionalAccounts
   } = accounts;
 
-  return mfProgram.methods
-    .kaminoWithdraw(args.amount, args.isFinalWithdrawal)
+  return getMarginfiRuntimeMethods(mfProgram)
+    .kaminoWithdraw(args.amount, args.isFinalWithdrawal ? 1 : 0)
     .accounts({
       marginfiAccount,
       bank,
       destinationTokenAccount,
       lendingMarket,
-      reserveLiquidityMint,
       lendingMarketAuthority,
       reserveLiquiditySupply,
       reserveCollateralMint,
@@ -225,7 +233,10 @@ async function makeKaminoWithdrawIx(
       obligationFarmUserState,
       reserveFarmState,
     })
-    .accountsPartial(optionalAccounts)
+    .accountsPartial({
+      mint: reserveLiquidityMint,
+      ...optionalAccounts,
+    })
     .remainingAccounts(remainingAccounts)
     .instruction();
 }
@@ -250,7 +261,7 @@ async function makeWithdrawIx(
 ) {
   const { marginfiAccount, bank, destinationTokenAccount, tokenProgram, ...optionalAccounts } = accounts;
 
-  return mfProgram.methods
+  return getMarginfiRuntimeMethods(mfProgram)
     .lendingAccountWithdraw(args.amount, args.withdrawAll ?? null)
     .accounts({
       marginfiAccount,
@@ -282,7 +293,7 @@ async function makeBorrowIx(
 ) {
   const { marginfiAccount, bank, destinationTokenAccount, tokenProgram, ...optionalAccounts } = accounts;
 
-  return mfProgram.methods
+  return getMarginfiRuntimeMethods(mfProgram)
     .lendingAccountBorrow(args.amount)
     .accounts({
       marginfiAccount,
@@ -324,7 +335,7 @@ function makeLendingAccountLiquidateIx(
     ...optionalAccounts
   } = accounts;
 
-  return mfiProgram.methods
+  return getMarginfiRuntimeMethods(mfiProgram)
     .lendingAccountLiquidate(args.assetAmount, args.liquidateeAccounts, args.liquidatorAccounts)
     .accounts({
       assetBank,
@@ -338,9 +349,12 @@ function makeLendingAccountLiquidateIx(
     .instruction();
 }
 
-function makelendingAccountWithdrawEmissionIx(
-  mfiProgram: MarginfiProgram,
-  accounts: {
+/**
+ * @deprecated Emissions withdrawals were removed from the marginfi program in v0.1.9.
+ */
+async function makelendingAccountWithdrawEmissionIx(
+  _mfiProgram: MarginfiProgram,
+  _accounts: {
     // Required accounts
     marginfiAccount: PublicKey;
     destinationAccount: PublicKey;
@@ -351,19 +365,8 @@ function makelendingAccountWithdrawEmissionIx(
     authority?: PublicKey;
     emissionsMint?: PublicKey;
   }
-) {
-  const { marginfiAccount, destinationAccount, bank, tokenProgram, ...optionalAccounts } = accounts;
-
-  return mfiProgram.methods
-    .lendingAccountWithdrawEmissions()
-    .accounts({
-      marginfiAccount,
-      destinationAccount,
-      bank,
-      tokenProgram,
-    })
-    .accountsPartial(optionalAccounts)
-    .instruction();
+): Promise<never> {
+  throw new Error("Emissions withdrawals are not supported by marginfi v0.1.10");
 }
 
 function makePoolConfigureBankIx(
@@ -380,9 +383,11 @@ function makePoolConfigureBankIx(
   }
 ) {
   const { bank, ...optionalAccounts } = accounts;
+  // Anchor's generated MethodsNamespace exceeds TypeScript's instantiation
+  // depth for the v0.1.10 BankConfigOpt. The public inputs above remain typed.
+  const configureBank = getMarginfiRuntimeMethods(mfiProgram).lendingPoolConfigureBank;
 
-  return mfiProgram.methods
-    .lendingPoolConfigureBank(args.bankConfigOpt)
+  return configureBank(args.bankConfigOpt)
     .accounts({
       bank,
     })
@@ -405,7 +410,7 @@ function makeBeginFlashLoanIx(
 ) {
   const { marginfiAccount, ...optionalAccounts } = accounts;
 
-  return mfiProgram.methods
+  return getMarginfiRuntimeMethods(mfiProgram)
     .lendingAccountStartFlashloan(args.endIndex)
     .accounts({
       marginfiAccount,
@@ -426,7 +431,7 @@ function makeEndFlashLoanIx(
 ) {
   const { marginfiAccount, ...optionalAccounts } = accounts;
 
-  return mfiProgram.methods
+  return getMarginfiRuntimeMethods(mfiProgram)
     .lendingAccountEndFlashloan()
     .accounts({
       marginfiAccount,
@@ -453,7 +458,7 @@ async function makeAccountTransferToNewAccountIx(
   const { oldMarginfiAccount, newMarginfiAccount, newAuthority, globalFeeWallet, feePayer, ...optionalAccounts } =
     accounts;
 
-  return mfProgram.methods
+  return getMarginfiRuntimeMethods(mfProgram)
     .transferToNewAccount()
     .accounts({
       oldMarginfiAccount,
@@ -476,7 +481,7 @@ async function makeGroupInitIx(
     isArenaGroup?: boolean;
   }
 ) {
-  return mfProgram.methods
+  return getMarginfiRuntimeMethods(mfProgram)
     .marginfiGroupInitialize()
     .accounts({
       marginfiGroup: accounts.marginfiGroup,
@@ -518,7 +523,7 @@ async function makeLendingPoolConfigureBankOracleIx(
 ) {
   const { bank, ...optionalAccounts } = accounts;
 
-  return mfProgram.methods
+  return getMarginfiRuntimeMethods(mfProgram)
     .lendingPoolConfigureBankOracle(args.setup, args.feedId)
     .accounts({
       bank,
@@ -543,7 +548,9 @@ async function makePoolAddPermissionlessStakedBankIx(
     feePayer: PublicKey;
     bankMint: PublicKey;
     solPool: PublicKey;
+    poolOnramp: PublicKey;
     stakePool: PublicKey;
+    validatorVoteAccount: PublicKey;
     // Optional accounts - to override inference
     marginfiGroup?: PublicKey;
     /**
@@ -573,19 +580,23 @@ async function makePoolAddPermissionlessStakedBankIx(
     feePayer,
     bankMint,
     solPool,
+    poolOnramp,
     stakePool,
+    validatorVoteAccount,
     tokenProgram = TOKEN_PROGRAM_ID,
     ...optionalAccounts
   } = accounts;
 
-  return mfProgram.methods
+  return getMarginfiRuntimeMethods(mfProgram)
     .lendingPoolAddBankPermissionless(args.seed ?? new BN(0))
     .accounts({
       stakedSettings,
       feePayer,
       bankMint,
       solPool,
+      poolOnramp,
       stakePool,
+      validatorVoteAccount,
       tokenProgram,
     })
     .accountsPartial(optionalAccounts)
@@ -612,7 +623,7 @@ async function makePoolAddBankIx(
 ) {
   const { marginfiGroup, feePayer, bankMint, bank, tokenProgram, ...optionalAccounts } = accounts;
 
-  return mfProgram.methods
+  return getMarginfiRuntimeMethods(mfProgram)
     .lendingPoolAddBank({
       ...args.bankConfig,
       configFlags: 0,
@@ -640,7 +651,7 @@ async function makeCloseAccountIx(
   }
 ) {
   const { marginfiAccount, feePayer, ...optionalAccounts } = accounts;
-  return mfProgram.methods
+  return getMarginfiRuntimeMethods(mfProgram)
     .marginfiAccountClose()
     .accounts({
       marginfiAccount,
@@ -676,7 +687,7 @@ async function makePulseHealthIx(
    */
   remainingAccounts: AccountMeta[] = []
 ) {
-  return mfProgram.methods
+  return getMarginfiRuntimeMethods(mfProgram)
     .lendingAccountPulseHealth()
     .accounts({
       marginfiAccount: accounts.marginfiAccount,

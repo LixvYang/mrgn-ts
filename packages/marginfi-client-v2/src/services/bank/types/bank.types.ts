@@ -1,3 +1,10 @@
+/**
+ * INPUT: Solana public keys and numeric types used by decoded Marginfi bank accounts
+ * OUTPUT: Public bank, oracle, integration, and configuration types
+ * POSITION: Canonical client-side bank type definitions
+ *
+ * SYNC: If this file changes, update this header and ./folder.md
+ */
 import { PublicKey } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
 
@@ -11,6 +18,9 @@ export enum OperationalState {
   Operational = "Operational",
   ReduceOnly = "ReduceOnly",
   KilledByBankruptcy = "KilledByBankruptcy",
+  Uninitialized = "Uninitialized",
+  ReduceOnlyWithBorrowingPower = "ReduceOnlyWithBorrowingPower",
+  CircuitBroken = "CircuitBroken",
 }
 
 export interface RatePoint {
@@ -57,6 +67,11 @@ export enum OracleSetup {
   DriftSwitchboardPull = "DriftSwitchboardPull",
   SolendPythPull = "SolendPythPull",
   SolendSwitchboardPull = "SolendSwitchboardPull",
+  FixedKamino = "FixedKamino",
+  FixedDrift = "FixedDrift",
+  JuplendPythPull = "JuplendPythPull",
+  JuplendSwitchboardPull = "JuplendSwitchboardPull",
+  FixedJuplend = "FixedJuplend",
 }
 export enum AssetTag {
   DEFAULT = 0,
@@ -65,6 +80,7 @@ export enum AssetTag {
   KAMINO = 3,
   DRIFT = 4,
   SOLEND = 5,
+  JUPLEND = 6,
 }
 
 export enum BankConfigFlag {
@@ -93,6 +109,17 @@ export interface BankConfigOpt {
   permissionlessBadDebtSettlement: boolean | null;
   freezeSettings: boolean | null;
   tokenlessRepaymentsAllowed: boolean | null;
+
+  liquidationLiquidatorFee?: number | null;
+  liquidationInsuranceFee?: number | null;
+  circuitBreakerEnabled?: boolean | null;
+  cbDeviationBpsTiers?: [number, number, number] | null;
+  cbTierDurationsSeconds?: [number, number, number] | null;
+  cbEscalationWindowMult?: number | null;
+  cbEmaAlphaBps?: number | null;
+  cbWindowSeconds?: number | null;
+  cbWindowMaxUpBps?: number | null;
+  cbWindowMaxDownBps?: number | null;
 }
 
 export interface BankConfigType {
@@ -158,6 +185,8 @@ export interface BankType {
   emissionsRate: number;
   emissionsMint: PublicKey;
   emissionsRemaining: BigNumber;
+  stakedOracleDisabled?: boolean;
+  stakedOracleUsesOnramp?: boolean;
 
   oracleKey: PublicKey;
   emode: EmodeSettingsType;
@@ -177,6 +206,14 @@ export interface BankType {
   solendIntegrationAccounts?: {
     solendReserve: PublicKey;
     solendObligation: PublicKey;
+  };
+  jupLendIntegrationAccounts?: {
+    jupLendingState: PublicKey;
+    jupFTokenVault: PublicKey;
+    jupFTokenAta: PublicKey;
+  };
+  stakedIntegrationAccounts?: {
+    validatorVoteAccount: PublicKey;
   };
 }
 

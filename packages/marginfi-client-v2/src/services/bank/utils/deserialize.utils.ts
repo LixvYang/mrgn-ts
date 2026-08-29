@@ -16,6 +16,7 @@ import {
   EmodeSettingsType,
   EmodeTag,
   InterestRateConfig,
+  InterestRateConfigRaw,
   OperationalState,
   OperationalStateRaw,
   OracleSetup,
@@ -111,6 +112,8 @@ export function parseBankRaw(
 
   const emissionsActiveBorrowing = (flags & 1) > 0;
   const emissionsActiveLending = (flags & 2) > 0;
+  const stakedOracleDisabled = (flags & (1 << 9)) > 0;
+  const stakedOracleUsesOnramp = (flags & (1 << 10)) > 0;
 
   // @todo existence checks here should be temporary - remove once all banks have emission configs
   const emissionsRate = accountParsed.emissionsRate.toNumber();
@@ -134,7 +137,9 @@ export function parseBankRaw(
 
   let kaminoIntegrationAccounts,
     driftIntegrationAccounts,
-    solendIntegrationAccounts = undefined;
+    solendIntegrationAccounts,
+    jupLendIntegrationAccounts,
+    stakedIntegrationAccounts = undefined;
 
   switch (config.assetTag) {
     case AssetTag.KAMINO:
@@ -156,6 +161,18 @@ export function parseBankRaw(
         solendObligation: accountParsed.integrationAcc2,
       };
 
+      break;
+    case AssetTag.JUPLEND:
+      jupLendIntegrationAccounts = {
+        jupLendingState: accountParsed.integrationAcc1,
+        jupFTokenVault: accountParsed.integrationAcc2,
+        jupFTokenAta: accountParsed.integrationAcc3,
+      };
+      break;
+    case AssetTag.STAKED:
+      stakedIntegrationAccounts = {
+        validatorVoteAccount: accountParsed.integrationAcc1,
+      };
       break;
     default:
       break;
@@ -185,6 +202,8 @@ export function parseBankRaw(
     totalLiabilityShares,
     emissionsActiveBorrowing,
     emissionsActiveLending,
+    stakedOracleDisabled,
+    stakedOracleUsesOnramp,
     emissionsRate,
     emissionsMint,
     emissionsRemaining,
@@ -199,6 +218,8 @@ export function parseBankRaw(
     kaminoIntegrationAccounts,
     driftIntegrationAccounts,
     solendIntegrationAccounts,
+    jupLendIntegrationAccounts,
+    stakedIntegrationAccounts,
   };
 }
 
@@ -231,6 +252,8 @@ export function dtoToBank(bankDto: BankTypeDto): BankType {
     totalLiabilityShares: new BigNumber(bankDto.totalLiabilityShares),
     emissionsActiveBorrowing: bankDto.emissionsActiveBorrowing,
     emissionsActiveLending: bankDto.emissionsActiveLending,
+    stakedOracleDisabled: bankDto.stakedOracleDisabled,
+    stakedOracleUsesOnramp: bankDto.stakedOracleUsesOnramp,
     emissionsRate: bankDto.emissionsRate,
     emissionsMint: new PublicKey(bankDto.emissionsMint),
     emissionsRemaining: new BigNumber(bankDto.emissionsRemaining),
@@ -260,6 +283,16 @@ export function dtoToBank(bankDto: BankTypeDto): BankType {
           solendReserve: new PublicKey(bankDto.solendIntegrationAccounts.solendReserve),
           solendObligation: new PublicKey(bankDto.solendIntegrationAccounts.solendObligation),
         }
+      : undefined,
+    jupLendIntegrationAccounts: bankDto.jupLendIntegrationAccounts
+      ? {
+          jupLendingState: new PublicKey(bankDto.jupLendIntegrationAccounts.jupLendingState),
+          jupFTokenVault: new PublicKey(bankDto.jupLendIntegrationAccounts.jupFTokenVault),
+          jupFTokenAta: new PublicKey(bankDto.jupLendIntegrationAccounts.jupFTokenAta),
+        }
+      : undefined,
+    stakedIntegrationAccounts: bankDto.stakedIntegrationAccounts
+      ? { validatorVoteAccount: new PublicKey(bankDto.stakedIntegrationAccounts.validatorVoteAccount) }
       : undefined,
   };
 }
@@ -304,9 +337,13 @@ export function dtoToBankConfig(bankConfigDto: BankConfigDto): BankConfigType {
 
 export function dtoToInterestRateConfig(interestRateConfigDto: InterestRateConfigDto): InterestRateConfig {
   return {
-    optimalUtilizationRate: new BigNumber(interestRateConfigDto.optimalUtilizationRate),
-    plateauInterestRate: new BigNumber(interestRateConfigDto.plateauInterestRate),
-    maxInterestRate: new BigNumber(interestRateConfigDto.maxInterestRate),
+    optimalUtilizationRate: new BigNumber(
+      interestRateConfigDto.optimalUtilizationRate ?? interestRateConfigDto.placeholder0 ?? 0
+    ),
+    plateauInterestRate: new BigNumber(
+      interestRateConfigDto.plateauInterestRate ?? interestRateConfigDto.placeholder1 ?? 0
+    ),
+    maxInterestRate: new BigNumber(interestRateConfigDto.maxInterestRate ?? interestRateConfigDto.placeholder2 ?? 0),
     insuranceFeeFixedApr: new BigNumber(interestRateConfigDto.insuranceFeeFixedApr),
     insuranceIrFee: new BigNumber(interestRateConfigDto.insuranceIrFee),
     protocolFixedFeeApr: new BigNumber(interestRateConfigDto.protocolFixedFeeApr),
@@ -408,6 +445,25 @@ export function dtoToBankConfigRaw(bankConfigDto: BankConfigRawDto): BankConfigR
  * Bank config deserialization
  */
 
+/**
+ * Normalize the interest rate curve params across IDL versions.
+ * v0.1.10 renamed optimal_utilization_rate / plateau_interest_rate / max_interest_rate
+ * to placeholder0/1/2, so Anchor-decoded accounts carry the new names while legacy
+ * payloads (cached DTOs, older program forks) still use the old ones.
+ */
+function toLegacyInterestRateCurve(interestRateConfigRaw: InterestRateConfigRaw): InterestRateConfigRaw {
+  const optimalUtilizationRate = interestRateConfigRaw.optimalUtilizationRate ?? interestRateConfigRaw.placeholder0!;
+  const plateauInterestRate = interestRateConfigRaw.plateauInterestRate ?? interestRateConfigRaw.placeholder1!;
+  const maxInterestRate = interestRateConfigRaw.maxInterestRate ?? interestRateConfigRaw.placeholder2!;
+
+  return {
+    ...interestRateConfigRaw,
+    optimalUtilizationRate,
+    plateauInterestRate,
+    maxInterestRate,
+  };
+}
+
 export function parseBankConfigRaw(bankConfigRaw: BankConfigRaw): BankConfigType {
   const assetWeightInit = wrappedI80F48toBigNumber(bankConfigRaw.assetWeightInit);
   const assetWeightMaint = wrappedI80F48toBigNumber(bankConfigRaw.assetWeightMaint);
@@ -423,19 +479,20 @@ export function parseBankConfigRaw(bankConfigRaw: BankConfigRaw): BankConfigType
   const oracleSetup = parseOracleSetup(bankConfigRaw.oracleSetup);
   const oracleKeys = bankConfigRaw.oracleKeys;
   const oracleMaxAge = bankConfigRaw.oracleMaxAge === 0 ? DEFAULT_ORACLE_MAX_AGE : bankConfigRaw.oracleMaxAge;
+  const interestRateConfigRaw = toLegacyInterestRateCurve(bankConfigRaw.interestRateConfig);
   const interestRateConfig = {
-    insuranceFeeFixedApr: wrappedI80F48toBigNumber(bankConfigRaw.interestRateConfig.insuranceFeeFixedApr),
-    maxInterestRate: wrappedI80F48toBigNumber(bankConfigRaw.interestRateConfig.maxInterestRate),
-    insuranceIrFee: wrappedI80F48toBigNumber(bankConfigRaw.interestRateConfig.insuranceIrFee),
-    optimalUtilizationRate: wrappedI80F48toBigNumber(bankConfigRaw.interestRateConfig.optimalUtilizationRate),
-    plateauInterestRate: wrappedI80F48toBigNumber(bankConfigRaw.interestRateConfig.plateauInterestRate),
-    protocolFixedFeeApr: wrappedI80F48toBigNumber(bankConfigRaw.interestRateConfig.protocolFixedFeeApr),
-    protocolIrFee: wrappedI80F48toBigNumber(bankConfigRaw.interestRateConfig.protocolIrFee),
-    protocolOriginationFee: wrappedI80F48toBigNumber(bankConfigRaw.interestRateConfig.protocolOriginationFee),
-    zeroUtilRate: bankConfigRaw.interestRateConfig.zeroUtilRate,
-    hundredUtilRate: bankConfigRaw.interestRateConfig.hundredUtilRate,
-    points: bankConfigRaw.interestRateConfig.points,
-    curveType: bankConfigRaw.interestRateConfig.curveType,
+    insuranceFeeFixedApr: wrappedI80F48toBigNumber(interestRateConfigRaw.insuranceFeeFixedApr),
+    maxInterestRate: wrappedI80F48toBigNumber(interestRateConfigRaw.maxInterestRate),
+    insuranceIrFee: wrappedI80F48toBigNumber(interestRateConfigRaw.insuranceIrFee),
+    optimalUtilizationRate: wrappedI80F48toBigNumber(interestRateConfigRaw.optimalUtilizationRate),
+    plateauInterestRate: wrappedI80F48toBigNumber(interestRateConfigRaw.plateauInterestRate),
+    protocolFixedFeeApr: wrappedI80F48toBigNumber(interestRateConfigRaw.protocolFixedFeeApr),
+    protocolIrFee: wrappedI80F48toBigNumber(interestRateConfigRaw.protocolIrFee),
+    protocolOriginationFee: wrappedI80F48toBigNumber(interestRateConfigRaw.protocolOriginationFee),
+    zeroUtilRate: interestRateConfigRaw.zeroUtilRate,
+    hundredUtilRate: interestRateConfigRaw.hundredUtilRate,
+    points: interestRateConfigRaw.points,
+    curveType: interestRateConfigRaw.curveType,
   };
   const oracleMaxConfidence = bankConfigRaw.oracleMaxConfidence;
   const fixedPrice = wrappedI80F48toBigNumber(bankConfigRaw.fixedPrice);
@@ -480,6 +537,14 @@ export function parseOperationalState(operationalStateRaw: OperationalStateRaw):
       return OperationalState.Operational;
     case "reduceonly":
       return OperationalState.ReduceOnly;
+    case "killedbybankruptcy":
+      return OperationalState.KilledByBankruptcy;
+    case "uninitialized":
+      return OperationalState.Uninitialized;
+    case "reduceonlywithborrowingpower":
+      return OperationalState.ReduceOnlyWithBorrowingPower;
+    case "circuitbroken":
+      return OperationalState.CircuitBroken;
     default:
       throw new Error(`Invalid operational state "${operationalStateRaw}"`);
   }
@@ -514,6 +579,16 @@ export function parseOracleSetup(oracleSetupRaw: OracleSetupRaw): OracleSetup {
       return OracleSetup.SolendPythPull;
     case "solendswitchboardpull":
       return OracleSetup.SolendSwitchboardPull;
+    case "fixedkamino":
+      return OracleSetup.FixedKamino;
+    case "fixeddrift":
+      return OracleSetup.FixedDrift;
+    case "juplendpythpull":
+      return OracleSetup.JuplendPythPull;
+    case "juplendswitchboardpull":
+      return OracleSetup.JuplendSwitchboardPull;
+    case "fixedjuplend":
+      return OracleSetup.FixedJuplend;
     default:
       return OracleSetup.None;
   }

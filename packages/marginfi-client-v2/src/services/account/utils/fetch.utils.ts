@@ -6,6 +6,7 @@ import { MarginfiAccount } from "../../../models/account";
 import { Bank } from "../../../models/bank";
 import { OraclePrice } from "../../../services/price";
 import { MarginfiProgram } from "../../../types";
+import { getMarginfiRuntimeAccountClient } from "../../../anchor-runtime";
 
 import { HealthCacheSimulationError, simulateAccountHealthCacheWithFallback } from "../account.service";
 import { MarginfiAccountType, MarginfiAccountRaw } from "../types";
@@ -18,7 +19,7 @@ export const fetchMarginfiAccountAddresses = async (
   group: PublicKey
 ): Promise<PublicKey[]> => {
   const marginfiAccounts = (
-    await program.account.marginfiAccount.all([
+    await getMarginfiRuntimeAccountClient<MarginfiAccountRaw>(program, "marginfiAccount").all([
       {
         memcmp: {
           bytes: group.toBase58(),
@@ -45,10 +46,10 @@ export const fetchMarginfiAccountData = async (
   bankMetadataMap: BankMetadataMap,
   emodePairs: EmodePair[]
 ): Promise<{ marginfiAccount: MarginfiAccountType; error?: HealthCacheSimulationError }> => {
-  const marginfiAccountRaw: MarginfiAccountRaw = await program.account.marginfiAccount.fetch(
-    marginfiAccountPk,
-    "confirmed"
-  );
+  const marginfiAccountRaw = await getMarginfiRuntimeAccountClient<MarginfiAccountRaw>(
+    program,
+    "marginfiAccount"
+  ).fetch(marginfiAccountPk, "confirmed");
   const marginfiAccount = MarginfiAccount.fromAccountParsed(marginfiAccountPk, marginfiAccountRaw);
   const activeEmodePairs = marginfiAccount.computeActiveEmodePairs(emodePairs);
 

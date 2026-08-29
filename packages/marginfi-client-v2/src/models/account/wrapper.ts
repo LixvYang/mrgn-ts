@@ -1,3 +1,10 @@
+/**
+ * INPUT: Marginfi client/program state, account model, wallet, banks, oracles, and transaction services
+ * OUTPUT: Client-bound Marginfi account operations, transaction builders, reload, and encoding helpers
+ * POSITION: Stateful account wrapper used by applications and transaction workflows
+ *
+ * SYNC: If this file changes, update this header and ./folder.md
+ */
 import {
   Amount,
   DEFAULT_COMMITMENT,
@@ -86,6 +93,7 @@ import {
 import instructions from "../../instructions";
 import { AnchorUtils, PullFeed } from "@switchboard-xyz/on-demand";
 import { CrossbarClient } from "@switchboard-xyz/common";
+import { getMarginfiRuntimeAccountClient } from "../../anchor-runtime";
 
 // Temporary imports
 export const MAX_TX_SIZE = 1232;
@@ -2011,7 +2019,10 @@ class MarginfiAccountWrapper {
     feePayer: PublicKey
   ): Promise<Transaction> {
     const [feeStateKey] = PublicKey.findProgramAddressSync([Buffer.from("feestate", "utf-8")], this._program.programId);
-    const feeState = await this._program.account.feeState.fetch(feeStateKey);
+    const feeState = await getMarginfiRuntimeAccountClient<{ globalFeeWallet: PublicKey }>(
+      this._program,
+      "feeState"
+    ).fetch(feeStateKey);
 
     const ixs = await this.makeAccountTransferToNewAccountIx(
       newMarginfiAccount,
@@ -2104,10 +2115,10 @@ class MarginfiAccountWrapper {
   ): Promise<MarginfiAccountRaw> {
     const mergedCommitment = commitment ?? program.provider.connection.commitment ?? DEFAULT_COMMITMENT;
 
-    const data: MarginfiAccountRaw = (await program.account.marginfiAccount.fetch(
+    const data = await getMarginfiRuntimeAccountClient<MarginfiAccountRaw>(program, "marginfiAccount").fetch(
       accountAddress,
       mergedCommitment
-    )) as any;
+    );
 
     if (!data.group.equals(config.groupPk))
       throw Error(`Marginfi account tied to group ${data.group.toBase58()}. Expected: ${config.groupPk.toBase58()}`);
@@ -2122,7 +2133,10 @@ class MarginfiAccountWrapper {
 
   async reload() {
     require("debug")(`mfi:margin-account:${this.address.toBase58().toString()}:loader`)("Reloading account data");
-    const marginfiAccountAi = await this._program.account.marginfiAccount.getAccountInfo(this.address);
+    const marginfiAccountAi = await getMarginfiRuntimeAccountClient<MarginfiAccountRaw>(
+      this._program,
+      "marginfiAccount"
+    ).getAccountInfo(this.address);
     if (!marginfiAccountAi) throw new Error(`Failed to fetch data for marginfi account ${this.address.toBase58()}`);
     const marginfiAccountParsed = MarginfiAccount.decode(marginfiAccountAi.data, this._program.idl);
     if (!marginfiAccountParsed.group.equals(this._config.groupPk))

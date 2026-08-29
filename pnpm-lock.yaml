@@ -2160,8 +2160,8 @@ importers:
   packages/marginfi-client-v2:
     dependencies:
       '@0dotxyz/p0-ts-sdk':
-        specifier: 2.1.1
-        version: 2.1.1(bufferutil@4.0.9)(debug@4.4.0)(typescript@5.7.3)(utf-8-validate@5.0.10)
+        specifier: 2.7.4
+        version: 2.7.4(bufferutil@4.0.9)(debug@4.4.0)(typescript@5.7.3)(utf-8-validate@5.0.10)
       '@coral-xyz/anchor':
         specifier: ^0.30.1
         version: 0.30.1(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)
@@ -2870,8 +2870,8 @@ importers:
 
 packages:
 
-  '@0dotxyz/p0-ts-sdk@2.1.1':
-    resolution: {integrity: sha512-I7FT9h5U8WQtdXZJL2qIVbsR0BbXqK8l/WWEEPILbiNDmLk+JBQXBle1dKa259J+thKr/9Zjg4lsBs11s1oPog==}
+  '@0dotxyz/p0-ts-sdk@2.7.4':
+    resolution: {integrity: sha512-8RAzqGCLa+pdwqohsr8u/ODpf+QMB0zfWgi/gFGKsabgFJmrjEtFr7pDmqisNJ4kkz7vTn6kZS5pAfRAleU6yQ==}
     engines: {node: '>=18.0.0'}
 
   '@adraffy/ens-normalize@1.11.0':
@@ -4993,9 +4993,6 @@ packages:
   '@jup-ag/api@6.0.39':
     resolution: {integrity: sha512-cejW4IWf3dKM5ucmqu5jWtlPZ46LJJOCrx3s5vKmEIB+0X9ykSZsKkcIHFBCOqf3/lSbGyU7THZqXuxjKK9//g==}
 
-  '@jup-ag/api@6.0.47':
-    resolution: {integrity: sha512-ani+i7I4DKnCu55/CrZjlU/71xCwUBfR6lrDAZRx0S/zmiMTKQudNwMjAYnZV5CXPerYt5MDD9GWIAKQxp2Q/g==}
-
   '@jup-ag/common@6.1.0':
     resolution: {integrity: sha512-OqPSRBOPBmCG38AE/t4IEWWcM/T1ouZIy9XD5nAd3pzsdrvhOer3AryCr+k7EmQ8i/17xaPWZL+axrQK633ndw==}
     engines: {node: '>=10'}
@@ -5219,6 +5216,10 @@ packages:
 
   '@mrgnlabs/tsconfig@0.0.1':
     resolution: {integrity: sha512-A6iucmS1v9UpXgGzkRsyDXqv2zUr8tgBMEQS+vRo0X7gZpg4uBAco8Xk7MK9WNzn766EhH9Ox402xT1SU/akPQ==}
+
+  '@msgpack/msgpack@3.1.3':
+    resolution: {integrity: sha512-47XIizs9XZXvuJgoaJUIE2lFoID8ugvc0jzSHP+Ptfk8nTbnR8g788wv48N03Kx0UkAv559HWRQ3yzOgzlRNUA==}
+    engines: {node: '>= 18'}
 
   '@native-to-anchor/buffer-layout@0.1.0':
     resolution: {integrity: sha512-7Ykz9KRAm53XqHj5blDUKPX+OXAPO4GZBW4zJhfHGIAbzmqsUFh9kMqR66Bak3mp6wyv1OVTwSr8ZGHKswPxDg==}
@@ -5615,7 +5616,7 @@ packages:
 
   '@paulmillr/qr@0.2.1':
     resolution: {integrity: sha512-IHnV6A+zxU7XwmKFinmYjUcwlyK9+xkG3/s9KcQhI9BjQKycrJ1JRO+FbNYPwZiPKW3je/DR0k7w8/gLa5eaxQ==}
-    deprecated: 'The package is now available as "qr": npm install qr'
+    deprecated: 'Switch to "qr" (new package name) for security updates: npm install qr'
 
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
@@ -6691,6 +6692,7 @@ packages:
   '@safe-global/safe-gateway-typescript-sdk@3.22.9':
     resolution: {integrity: sha512-7ojVK/crhOaGowEO8uYWaopZzcr5rR76emgllGIfjCLR70aY4PbASpi9Pbs+7jIRzPDBBkM0RBo+zYx5UduX8Q==}
     engines: {node: '>=16'}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   '@scure/base@1.1.9':
     resolution: {integrity: sha512-8YKhl8GHiNI/pU2VMaofa2Tor7PJRAjwQLBBuilkJ9L5+13yVbC7JO/wS7piioAvPSwR3JKM1IJ/u4xQzbcXKg==}
@@ -7528,9 +7530,11 @@ packages:
   '@swc/helpers@0.5.5':
     resolution: {integrity: sha512-KGYxvIOXcceOAbEk4bi/dVLEK9z8sZ0uBB3Il5b1rhfClSpcX0yfRO0KmTkqR2cnQDymwLB+25ZyMzICg/cm/A==}
 
-  '@switchboard-xyz/common-legacy@1.1.0':
-    resolution: {integrity: sha512-8MWCkOK0ystMWY5Txlh1o+8ZJ4ksUrifWWpNJoyds7qtmTaY2nSK8gKG7AORTtktTOS9K9tdDR4RSYoLtZAJOA==}
+  '@switchboard-xyz/common-legacy@1.1.1':
+    resolution: {integrity: sha512-RBMjERmrqaekV1y8PW/V/nyQmLdZRkFKk8LLnlXVILR8XyUJvF+4KRm8RIvV9YtdwSeSYsM2iNC6C5jjIgDhoA==}
     engines: {node: '>=20'}
+    peerDependencies:
+      '@switchboard-xyz/common': '>=5.8.5 <6'
 
   '@switchboard-xyz/common@2.5.19':
     resolution: {integrity: sha512-Bzj1bu2U69YRh2OoNjkrafdREeB1KH+wmeFkBsASDjlhy/xXjey2Ry2HUTAIzdg2DMtfP6DoCW2Nn9ZQD5IO+Q==}
@@ -7540,8 +7544,8 @@ packages:
     resolution: {integrity: sha512-vYTsHlv5yGpKkQR9Laua2G1ZPyquWAcLV1ARBQgSX4QTpp9QasfDqlKhDGPfHKY8zXoDCCtX/zv9i5B3x8rXwQ==}
     engines: {node: '>=20'}
 
-  '@switchboard-xyz/common@5.7.0':
-    resolution: {integrity: sha512-bKrzYxv8NohgEJgbZTrHP479p+rINT7fYbRtwk0hFBBqJTZC4aStq6BP9fjBi4ww2REM4pD2+692Lqc5VtSdsg==}
+  '@switchboard-xyz/common@5.8.5':
+    resolution: {integrity: sha512-FAbrTCdhQrOSMzxbpFIoJejeP95MJgXtgezzl+Hwms7wqSw9WTx52aHPLp/EUeGEj21rn9MuNlV0uvKNFxk5DA==}
     engines: {node: '>=20'}
 
   '@switchboard-xyz/on-demand@1.2.65':
@@ -7553,8 +7557,8 @@ packages:
     resolution: {integrity: sha512-+YL0+BUlJXEtX4MHS+1+0CpzS2z5z7moM58FqXixBu8Zm6L/KVZ4K29LHhRUW8sLZ4Lmet/JOLNMVCYDI+F8HQ==}
     engines: {node: '>= 18'}
 
-  '@switchboard-xyz/on-demand@3.9.0':
-    resolution: {integrity: sha512-6rRGCiPoSaWgBL/ixnOKf/O42BXQdZFpQz81bAvdwCCvjmOTruZ5Ie+iJadDe3339vvPGRrJd4UTuHoU/scJ1Q==}
+  '@switchboard-xyz/on-demand@3.10.6':
+    resolution: {integrity: sha512-5tP7eEQkJr5aK+5JOZ09Vbsx0jT9jQNRpDTJHLKMc1Ro5jSUfm/9Q5e6voau/U9rPVgFU5S/lUa5/MUfWozURQ==}
     engines: {node: '>= 18'}
 
   '@tabler/icons-react@2.47.0':
@@ -8268,6 +8272,9 @@ packages:
   '@types/ws@7.4.7':
     resolution: {integrity: sha512-JQbbmxZTZehdc2iszGKs5oC3NFnjeay7mtAWrdt7qNtAVK0g19muApzAy4bm9byz79xa2ZnO/BOBC2R8RC5Lww==}
 
+  '@types/ws@8.18.1':
+    resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
+
   '@types/ws@8.5.14':
     resolution: {integrity: sha512-bd/YFLW+URhBzMXurx7lWByOu+xzU9+kb3RboOteXYDfW+tr+JZa99OyNmPINEGB/ahzKrEuc8rcv4gnpJmxTw==}
 
@@ -8339,6 +8346,7 @@ packages:
 
   '@ungap/structured-clone@1.3.0':
     resolution: {integrity: sha512-WmoN8qaIAo7WTYWbAZuG8PYEhn5fkz7dZrqTBZ7dtt//lL2Gwms1IcnQ5yHqjDfX8Ft5j4YzDM23f87zBfDe9g==}
+    deprecated: Potential CWE-502 - Update to 1.3.1 or higher
 
   '@vercel/analytics@1.5.0':
     resolution: {integrity: sha512-MYsBzfPki4gthY5HnYN7jgInhAZ7Ac1cYDoRWFomwGHWEX7odTEzbtg9kf/QSo7XEsEAqlQugA6gJ2WS2DEa3g==}
@@ -9770,6 +9778,7 @@ packages:
 
   crypto-js@4.2.0:
     resolution: {integrity: sha512-KALDyEYgpY+Rlob/iriUtjV6d5Eq+Y191A5g4UqLAi8CyGP9N1+FdVbkc1SxKc2r4YAYqG8JzO2KGL+AizD70Q==}
+    deprecated: Active development of CryptoJS has been discontinued. This library is no longer maintained.
 
   crypto-random-string@2.0.0:
     resolution: {integrity: sha512-v1plID3y9r/lPhviJ1wrXpLeyUIGAZ2SHNYTEapm7/8A9nLPoyvVp3RK/EPFqn5kEznyWgYZNsRtYYIWbuG8KA==}
@@ -10487,6 +10496,7 @@ packages:
   eslint@9.20.1:
     resolution: {integrity: sha512-m1mM33o6dBUjxl2qb6wv6nGNwCAsns1eKtaQ4l/NPHeTvhiUPbtdfMyktxN4B3fgHIgsYh1VT3V9txblpQHq+g==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
     peerDependencies:
       jiti: '*'
@@ -13701,6 +13711,7 @@ packages:
   recharts@2.15.1:
     resolution: {integrity: sha512-v8PUTUlyiDe56qUj82w/EDVuzEFXwEHp9/xOowGAZwfLjB9uAy3GllQVIYMWF6nU+qibx85WF75zD7AjqoT54Q==}
     engines: {node: '>=14'}
+    deprecated: 1.x and 2.x branches are no longer active. Bump to Recharts v3 to receive latest features and bugfixes. See https://github.com/recharts/recharts/wiki/3.0-migration-guide
     peerDependencies:
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -15151,10 +15162,12 @@ packages:
 
   uuid@8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   uuid@9.0.1:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   uuidv4@6.2.13:
@@ -15489,6 +15502,18 @@ packages:
       utf-8-validate:
         optional: true
 
+  ws@8.21.3:
+    resolution: {integrity: sha512-201TZ/kPWxoPr/OKWjquZR1SWKXcvxdH+e1xrx89b3YbmzLMFCLfnaG1HFIgWzJOEWZ7MvpK++odZufgYR50Rw==}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: '>=5.0.2'
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
+
   xmlcreate@2.0.4:
     resolution: {integrity: sha512-nquOebG4sngPmGPICTS5EnxqhKbCmz5Ox5hsszI2T6U5qdrJizBc+0ilYSEjTSzU0yZcmvppztXe/5Al5fUwdg==}
 
@@ -15524,6 +15549,11 @@ packages:
 
   yaml@2.8.2:
     resolution: {integrity: sha512-mplynKqc1C2hTVYxd0PU2xQAc22TI1vShAYGksCCfxbn/dFwnHTNi1bvYsBTkhdUNtGIf5xNOg938rrSSYvS9A==}
+    engines: {node: '>= 14.6'}
+    hasBin: true
+
+  yaml@2.9.0:
+    resolution: {integrity: sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA==}
     engines: {node: '>= 14.6'}
     hasBin: true
 
@@ -15624,23 +15654,26 @@ packages:
 
 snapshots:
 
-  '@0dotxyz/p0-ts-sdk@2.1.1(bufferutil@4.0.9)(debug@4.4.0)(typescript@5.7.3)(utf-8-validate@5.0.10)':
+  '@0dotxyz/p0-ts-sdk@2.7.4(bufferutil@4.0.9)(debug@4.4.0)(typescript@5.7.3)(utf-8-validate@5.0.10)':
     dependencies:
       '@coral-xyz/anchor': 0.30.1(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)
       '@coral-xyz/borsh': 0.30.1(@solana/web3.js@1.98.4(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10))
-      '@jup-ag/api': 6.0.47
+      '@msgpack/msgpack': 3.1.3
       '@solana/buffer-layout': 4.0.1
       '@solana/buffer-layout-utils': 0.3.0(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)
       '@solana/web3.js': 1.98.4(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)
-      '@switchboard-xyz/common': 5.7.0(bufferutil@4.0.9)(debug@4.4.0)(typescript@5.7.3)(utf-8-validate@5.0.10)
-      '@switchboard-xyz/on-demand': 3.9.0(bufferutil@4.0.9)(debug@4.4.0)(typescript@5.7.3)(utf-8-validate@5.0.10)
+      '@switchboard-xyz/common': 5.8.5(bufferutil@4.0.9)(debug@4.4.0)(typescript@5.7.3)(utf-8-validate@5.0.10)
+      '@switchboard-xyz/on-demand': 3.10.6(bufferutil@4.0.9)(debug@4.4.0)(typescript@5.7.3)(utf-8-validate@5.0.10)
+      '@types/ws': 8.18.1
       bignumber.js: 9.1.2
       bn.js: 5.2.1
       borsh: 2.0.0
       bs58: 6.0.0
+      buffer: 6.0.3
       decimal.js: 10.5.0
       superstruct: 1.0.4
-      yaml: 2.8.2
+      ws: 8.21.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+      yaml: 2.9.0
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -18607,8 +18640,6 @@ snapshots:
 
   '@jup-ag/api@6.0.39': {}
 
-  '@jup-ag/api@6.0.47': {}
-
   '@jup-ag/common@6.1.0(@solana/web3.js@1.98.4(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10))(bn.js@5.2.1)(bufferutil@4.0.9)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.3)(utf-8-validate@5.0.10)':
     dependencies:
       '@coral-xyz/anchor': 0.29.0(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)
@@ -19179,6 +19210,8 @@ snapshots:
       - utf-8-validate
 
   '@mrgnlabs/tsconfig@0.0.1': {}
+
+  '@msgpack/msgpack@3.1.3': {}
 
   '@native-to-anchor/buffer-layout@0.1.0(bufferutil@4.0.9)(typescript@4.9.5)(utf-8-validate@5.0.10)':
     dependencies:
@@ -22706,7 +22739,7 @@ snapshots:
       '@supabase/node-fetch': 2.6.15
       '@types/phoenix': 1.6.6
       '@types/ws': 8.5.14
-      ws: 8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+      ws: 8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -22751,17 +22784,12 @@ snapshots:
       '@swc/counter': 0.1.3
       tslib: 2.8.1
 
-  '@switchboard-xyz/common-legacy@1.1.0(bufferutil@4.0.9)(debug@4.4.0)(typescript@5.7.3)(utf-8-validate@5.0.10)':
+  '@switchboard-xyz/common-legacy@1.1.1(@switchboard-xyz/common@5.8.5(bufferutil@4.0.9)(debug@4.4.0)(typescript@5.7.3)(utf-8-validate@5.0.10))(debug@4.4.0)':
     dependencies:
-      '@switchboard-xyz/common': 5.7.0(bufferutil@4.0.9)(debug@4.4.0)(typescript@5.7.3)(utf-8-validate@5.0.10)
+      '@switchboard-xyz/common': 5.8.5(bufferutil@4.0.9)(debug@4.4.0)(typescript@5.7.3)(utf-8-validate@5.0.10)
       axios: 1.10.0(debug@4.4.0)
-      bs58: 6.0.0
     transitivePeerDependencies:
-      - bufferutil
       - debug
-      - encoding
-      - typescript
-      - utf-8-validate
 
   '@switchboard-xyz/common@2.5.19(bufferutil@4.0.9)(debug@4.4.0)(typescript@4.9.5)(utf-8-validate@5.0.10)':
     dependencies:
@@ -22823,7 +22851,7 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@switchboard-xyz/common@5.7.0(bufferutil@4.0.9)(debug@4.4.0)(typescript@5.7.3)(utf-8-validate@5.0.10)':
+  '@switchboard-xyz/common@5.8.5(bufferutil@4.0.9)(debug@4.4.0)(typescript@5.7.3)(utf-8-validate@5.0.10)':
     dependencies:
       '@solana/web3.js': 1.98.4(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)
       axios: 1.10.0(debug@4.4.0)
@@ -22834,6 +22862,7 @@ snapshots:
       decimal.js: 10.5.0
       js-sha256: 0.11.0
       protobufjs: 7.4.0
+      yaml: 2.9.0
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -22879,22 +22908,23 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@switchboard-xyz/on-demand@3.9.0(bufferutil@4.0.9)(debug@4.4.0)(typescript@5.7.3)(utf-8-validate@5.0.10)':
+  '@switchboard-xyz/on-demand@3.10.6(bufferutil@4.0.9)(debug@4.4.0)(typescript@5.7.3)(utf-8-validate@5.0.10)':
     dependencies:
       '@coral-xyz/anchor-31': '@coral-xyz/anchor@0.31.1(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)'
       '@isaacs/ttlcache': 1.4.1
+      '@noble/hashes': 1.8.0
       '@solana/spl-token': 0.4.14(@solana/web3.js@1.98.4(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)
       '@solana/web3.js': 1.98.4(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)
-      '@switchboard-xyz/common': 5.7.0(bufferutil@4.0.9)(debug@4.4.0)(typescript@5.7.3)(utf-8-validate@5.0.10)
-      '@switchboard-xyz/common-legacy': 1.1.0(bufferutil@4.0.9)(debug@4.4.0)(typescript@5.7.3)(utf-8-validate@5.0.10)
+      '@switchboard-xyz/common': 5.8.5(bufferutil@4.0.9)(debug@4.4.0)(typescript@5.7.3)(utf-8-validate@5.0.10)
+      '@switchboard-xyz/common-legacy': 1.1.1(@switchboard-xyz/common@5.8.5(bufferutil@4.0.9)(debug@4.4.0)(typescript@5.7.3)(utf-8-validate@5.0.10))(debug@4.4.0)
       axios: 1.10.0(debug@4.4.0)
       bs58: 6.0.0
       buffer: 6.0.3
       events: 3.3.0
-      isomorphic-ws: 5.0.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))
+      isomorphic-ws: 5.0.0(ws@8.21.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))
       js-yaml: 4.1.0
       tweetnacl: 1.0.3
-      ws: 8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+      ws: 8.21.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -23973,6 +24003,10 @@ snapshots:
   '@types/web@0.0.119': {}
 
   '@types/ws@7.4.7':
+    dependencies:
+      '@types/node': 20.19.25
+
+  '@types/ws@8.18.1':
     dependencies:
       '@types/node': 20.19.25
 
@@ -28386,6 +28420,10 @@ snapshots:
     dependencies:
       ws: 8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)
 
+  isomorphic-ws@5.0.0(ws@8.21.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)):
+    dependencies:
+      ws: 8.21.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+
   isows@1.0.6(ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)):
     dependencies:
       ws: 8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
@@ -30812,7 +30850,7 @@ snapshots:
   postcss-load-config@4.0.2(postcss@8.5.3)(ts-node@10.9.2(@types/node@20.17.19)(typescript@5.7.3)):
     dependencies:
       lilconfig: 3.1.3
-      yaml: 2.7.0
+      yaml: 2.8.2
     optionalDependencies:
       postcss: 8.5.3
       ts-node: 10.9.2(@types/node@20.17.19)(typescript@5.7.3)
@@ -30820,7 +30858,7 @@ snapshots:
   postcss-load-config@4.0.2(postcss@8.5.3)(ts-node@10.9.2(@types/node@20.19.25)(typescript@5.7.3)):
     dependencies:
       lilconfig: 3.1.3
-      yaml: 2.7.0
+      yaml: 2.8.2
     optionalDependencies:
       postcss: 8.5.3
       ts-node: 10.9.2(@types/node@20.19.25)(typescript@5.7.3)
@@ -30828,7 +30866,7 @@ snapshots:
   postcss-load-config@4.0.2(postcss@8.5.3)(ts-node@10.9.2(@types/node@20.19.4)(typescript@5.7.3)):
     dependencies:
       lilconfig: 3.1.3
-      yaml: 2.7.0
+      yaml: 2.8.2
     optionalDependencies:
       postcss: 8.5.3
       ts-node: 10.9.2(@types/node@20.19.4)(typescript@5.7.3)
@@ -33638,6 +33676,11 @@ snapshots:
       bufferutil: 4.0.9
       utf-8-validate: 5.0.10
 
+  ws@8.21.3(bufferutil@4.0.9)(utf-8-validate@5.0.10):
+    optionalDependencies:
+      bufferutil: 4.0.9
+      utf-8-validate: 5.0.10
+
   xmlcreate@2.0.4:
     optional: true
 
@@ -33658,6 +33701,8 @@ snapshots:
   yaml@2.7.0: {}
 
   yaml@2.8.2: {}
+
+  yaml@2.9.0: {}
 
   yargs-parser@13.1.2:
     dependencies:

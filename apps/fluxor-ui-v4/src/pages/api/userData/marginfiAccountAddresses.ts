@@ -1,16 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { Connection, PublicKey } from "@solana/web3.js";
 
-import {
-  fetchMarginfiAccountAddresses,
-  MARGINFI_IDL,
-  MarginfiIdlType,
-  MarginfiProgram,
-} from "@mrgnlabs/marginfi-client-v2";
-import { Wallet } from "@mrgnlabs/mrgn-common";
-
 import config from "~/config/marginfi";
+import { resolveMarginfiAccounts } from "~/lib/marginfiAccountIndex";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { authority, group } = req.query;
@@ -31,40 +23,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: "PRIVATE_RPC_ENDPOINT_OVERRIDE is not set" });
   }
 
+  let authorityPk: PublicKey;
+  let groupPk: PublicKey;
+  try {
+    authorityPk = new PublicKey(authority);
+    groupPk = new PublicKey(group);
+  } catch {
+    return res.status(400).json({ error: "Invalid authority or group address" });
+  }
+
   try {
     const connection = new Connection(process.env.PRIVATE_RPC_ENDPOINT_OVERRIDE);
 
-    const idl = { ...MARGINFI_IDL, address: config.mfiConfig.programId.toBase58() } as unknown as MarginfiIdlType;
-    const provider = new AnchorProvider(connection, {} as Wallet, {
-      ...AnchorProvider.defaultOptions(),
-      commitment: connection.commitment ?? AnchorProvider.defaultOptions().commitment,
-    });
+    // 不再每个请求跑一次 getProgramAccounts：按 group 建一次索引并缓存，这里只是查 map。
+    // 索引建不起来（RPC 拒绝索引类请求）时内部会回落到 knownMarginfiAccounts 静态快照。
+    const marginfiAccounts = await resolveMarginfiAccounts(
+      connection,
+      config.mfiConfig.programId,
+      groupPk.toBase58(),
+      authorityPk.toBase58()
+    );
 
-    const program = new Program(idl, provider) as any as MarginfiProgram;
-
-    const authorityPk = new PublicKey(authority);
-    const groupPk = new PublicKey(group);
-
-    // 临时解决一下
-    if (
-      authorityPk.toBase58() === "J7V72Ap7pfxT3SDPwCYu2Cjvg7Put79Dix45BwQUeFeW" &&
-      groupPk.toBase58() === "4X38G7YHpS1jjc7hAKvT2dzcGuTCaZfhyDx56Qs9Tk51"
-    ) {
-      res.status(200).json({ marginfiAccounts: ["7g1RboWwS2cTVEaiDWYes7DBQBbeJSUCRJihH6rZTP5r"] });
-      return;
-    }
-
-    if (
-      authorityPk.toBase58() === "DnpeSizw2obsEnDUe9tdTKPvuUMvEKFn7xfu7QGJBppn" &&
-      groupPk.toBase58() === "4X38G7YHpS1jjc7hAKvT2dzcGuTCaZfhyDx56Qs9Tk51"
-    ) {
-      res.status(200).json({ marginfiAccounts: ["Fh2xgsstK4d9d4qJZUWprYKqYszKsc9LPxtjKJzrU8TF"] });
-      return;
-    }
-
-    const marginfiAccounts = await fetchMarginfiAccountAddresses(program, authorityPk, groupPk);
-
-    res.status(200).json({ marginfiAccounts: marginfiAccounts.map((a) => a.toBase58()) });
+    res.status(200).json({ marginfiAccounts });
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ error: "Error processing request" });

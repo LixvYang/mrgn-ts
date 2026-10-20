@@ -245,7 +245,8 @@ function parseOraclePriceData(oracleSetup: OracleSetup, rawData: Buffer, fixedPr
           lowestPrice: price,
           highestPrice: price,
         },
-        timestamp: BigNumber(Date.now()),
+        // seconds, consistent with other oracle timestamps
+        timestamp: BigNumber(Math.floor(Date.now() / 1000)),
       };
       return fixedOraclePrice;
     }

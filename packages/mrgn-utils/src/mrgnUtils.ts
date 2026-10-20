@@ -169,6 +169,16 @@ export function isBankOracleStale(bank: ExtendedBankInfo) {
     return false;
   }
 
+  // fixed prices live in the bank config: the program applies no max age to them
+  if (
+    bank.info.rawBank.config.oracleSetup === OracleSetup.Fixed ||
+    bank.info.rawBank.config.oracleSetup === OracleSetup.FixedKamino ||
+    bank.info.rawBank.config.oracleSetup === OracleSetup.FixedDrift ||
+    bank.info.rawBank.config.oracleSetup === OracleSetup.FixedJuplend
+  ) {
+    return false;
+  }
+
   const maxAge = bank.info.rawBank.config.oracleMaxAge;
 
   const threshold = maxAge + 3 * 60; // seconds

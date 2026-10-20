@@ -1,12 +1,13 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
 
-import { BankMetadata, WSOL_MINT } from "@mrgnlabs/mrgn-common";
+import { BankMetadata, WSOL_MINT, wrappedI80F48toBigNumber } from "@mrgnlabs/mrgn-common";
 
-import { BankRaw } from "../../bank";
+import { BankRaw, OracleSetup, parseOracleSetup } from "../../bank";
 import { PythPushFeedIdMap, buildFeedIdMap } from "../../../utils";
 
 import { OraclePrice, PriceWithConfidence } from "../types";
+import { parsePriceInfo } from "./compute.utils";
 import BN from "bn.js";
 import { parseSwbOraclePriceData, vendor } from "../../..";
 
@@ -326,6 +327,10 @@ export const fetchSwbOracleData = async (
         "solendSwitchboardPull" in bank.data.config.oracleSetup)
   );
 
+  if (switchboardBanks.length === 0) {
+    return { bankOraclePriceMap: new Map() };
+  }
+
   let oracleKeyMap: Record<string, { feedId: string; stdev: string; rawPrice: string }>;
 
   if (opts?.useApiEndpoint) {
@@ -604,6 +609,22 @@ export const fetchOracleData = async (
   // Map swb data
   swbData.bankOraclePriceMap.forEach((oraclePrice, bankAddress) => {
     bankOraclePriceMap.set(bankAddress, oraclePrice);
+  });
+
+  // Map fixed-price banks: the price is stored in the bank config, there is no oracle account.
+  // Built here rather than at module scope: bank <-> price is a circular import, so OracleSetup
+  // can still be undefined while this module is first evaluated.
+  const FIXED_ORACLE_SETUPS = [
+    OracleSetup.Fixed,
+    OracleSetup.FixedKamino,
+    OracleSetup.FixedDrift,
+    OracleSetup.FixedJuplend,
+  ];
+  banks.forEach((bank) => {
+    const oracleSetup = parseOracleSetup(bank.data.config.oracleSetup);
+    if (!FIXED_ORACLE_SETUPS.includes(oracleSetup)) return;
+    const fixedPrice = wrappedI80F48toBigNumber(bank.data.config.fixedPrice);
+    bankOraclePriceMap.set(bank.address.toBase58(), parsePriceInfo(oracleSetup, Buffer.alloc(0), fixedPrice));
   });
 
   // Get SOL bank

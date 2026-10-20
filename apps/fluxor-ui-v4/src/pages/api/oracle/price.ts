@@ -22,6 +22,7 @@ import {
   MintLayout,
   RawMint,
   Wallet,
+  wrappedI80F48toBigNumber,
 } from "@mrgnlabs/mrgn-common";
 import { Connection, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
@@ -114,6 +115,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         oracleKey,
         oracleSetup: parseOracleSetup(b.data.config.oracleSetup),
         maxAge: b.data.config.oracleMaxAge,
+        fixedPrice: wrappedI80F48toBigNumber(b.data.config.fixedPrice),
       };
     });
 
@@ -126,7 +128,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     for (const index in requestedOraclesData) {
       const oracleData = requestedOraclesData[index];
       const priceDataRaw = oracleAis[index];
-      let oraclePrice = parsePriceInfo(oracleData.oracleSetup, priceDataRaw.data);
+      let oraclePrice = parsePriceInfo(oracleData.oracleSetup, priceDataRaw.data, oracleData.fixedPrice);
 
       if (oraclePrice.priceRealtime.price.isNaN()) {
         oraclePrice = {
